@@ -1,0 +1,53 @@
+{
+  "common": {
+    "next": "Next",
+    "finish": "Finish",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "continue": "Continue"
+  },
+  "language": {
+    "title": "Choose Your Language",
+    "subtitle": "Select your preferred language to continue",
+    "english": "English",
+    "french": "French",
+    "hausa": "Hausa",
+    "yoruba": "Yoruba",
+    "igbo": "Igbo",
+    "swahili": "Swahili"
+  },
+  "onboarding": {
+    "title": "Disciple Training School",
+    "subtitle": "Faith Community App",
+    "getStarted": "Get Started",
+    "login": "Log In",
+    "welcome": "Welcome to"
+  },
+  "auth": {
+    "signUp": "Sign Up",
+    "signIn": "Sign In",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?"
+  },
+  "tellUsMore": {
+    "title": "Tell Us More About Yourself",
+    "subtitle": "Help us personalize your experience",
+    "fullName": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "preferredLanguage": "Preferred Language",
+    "selectLanguage": "Select your preferred language"
+  },
+  "home": {
+    "title": "Home",
+    "welcome": "Welcome"
+  }
+}

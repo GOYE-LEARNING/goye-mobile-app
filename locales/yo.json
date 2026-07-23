@@ -1,0 +1,53 @@
+{
+  "common": {
+    "next": "Atẹle",
+    "finish": "Pari",
+    "back": "Pada",
+    "save": "Fipamọ",
+    "cancel": "Fagile",
+    "loading": "Ngbale...",
+    "error": "Aṣiṣe",
+    "success": "Aṣeyọri",
+    "continue": "Tẹsiwaju"
+  },
+  "language": {
+    "title": "Yan Ede Rẹ",
+    "subtitle": "Yan ede ti o fẹ lati tẹsiwaju",
+    "english": "Gẹẹsi",
+    "french": "Faranse",
+    "hausa": "Hausa",
+    "yoruba": "Yoruba",
+    "igbo": "Igbo",
+    "swahili": "Swahili"
+  },
+  "onboarding": {
+    "title": "Ile-iwe Ikẹkọ Awọn Ọmọ-ẹhin",
+    "subtitle": "App Agbegbe Igbagbo",
+    "getStarted": "Bẹrẹ",
+    "login": "Wọle",
+    "welcome": "Kaabo si"
+  },
+  "auth": {
+    "signUp": "Forukọsilẹ",
+    "signIn": "Wọle",
+    "email": "Imeeli",
+    "password": "Ọrọ igbaniwọle",
+    "confirmPassword": "Jẹrisi ọrọ igbaniwọle",
+    "forgotPassword": "Tími pàdánù ọ̀rọ̀ ìgbaniwọlé?",
+    "dontHaveAccount": "O ko ni akọọlẹ?",
+    "alreadyHaveAccount": "O ni akọọlẹ tẹlẹ?"
+  },
+  "tellUsMore": {
+    "title": "Sọ fun wa nipa ara rẹ",
+    "subtitle": "Ran wa lọwọ lati ṣe iriri tirẹ",
+    "fullName": "Orukọ kikun",
+    "email": "Adirẹsi imeeli",
+    "phone": "Nọmba foonu",
+    "preferredLanguage": "Ede ti o fẹ",
+    "selectLanguage": "Yan ede ti o fẹ"
+  },
+  "home": {
+    "title": "Ile",
+    "welcome": "Kaabo"
+  }
+}

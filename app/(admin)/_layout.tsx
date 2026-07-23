@@ -1,24 +1,28 @@
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@/contexts/UserContext';
-import { useTheme } from '@/contexts/ThemeContext';
 
-export default function TabsLayout() {
-  const { isInstructor, isAdmin } = useUser();
-  const { colors, isDark } = useTheme();
+export default function AdminLayout() {
+  const { isAdmin, user } = useUser();
 
-  const shouldShowMyCourses = isInstructor || isAdmin;
+  // Protect admin routes - only admins can access
+  if (!isAdmin) {
+    return <Redirect href="/(tabs)/home" />;
+  }
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.brand,
-        tabBarInactiveTintColor: isDark ? '#666666' : 'grey',
+        tabBarActiveTintColor: '#3F1F22',
+        tabBarInactiveTintColor: 'grey',
         tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: colors.border,
+          backgroundColor: '#fff',
           borderTopWidth: 1,
+          borderTopColor: '#f0f0f0',
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
           fontSize: 12,
@@ -39,7 +43,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="courses"
         options={{
-          title: shouldShowMyCourses ? 'My Courses' : 'Courses',
+          title: 'Courses',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="book" size={size} color={color} />
           ),
@@ -47,9 +51,9 @@ export default function TabsLayout() {
       />
 
       <Tabs.Screen
-        name="community"
+        name="users"
         options={{
-          title: 'Community',
+          title: 'Users',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people" size={size} color={color} />
           ),
@@ -63,6 +67,14 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
+        }}
+      />
+
+      {/* Hide the index route from tabs */}
+      <Tabs.Screen
+        name="index"
+        options={{
+          href: null, // This hides it from the tab bar
         }}
       />
     </Tabs>

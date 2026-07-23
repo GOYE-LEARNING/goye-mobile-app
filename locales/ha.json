@@ -1,0 +1,53 @@
+{
+  "common": {
+    "next": "Na gaba",
+    "finish": "Kammala",
+    "back": "Baya",
+    "save": "Ajiye",
+    "cancel": "Soke",
+    "loading": "Ana lodi...",
+    "error": "Kuskure",
+    "success": "Nasara",
+    "continue": "Ci gaba"
+  },
+  "language": {
+    "title": "Zaɓi Yaren ku",
+    "subtitle": "Zaɓi yaren da kuka fi so don ci gaba",
+    "english": "Turanci",
+    "french": "Faransanci",
+    "hausa": "Hausa",
+    "yoruba": "Yarbanci",
+    "igbo": "Ibo",
+    "swahili": "Swahili"
+  },
+  "onboarding": {
+    "title": "Makarantar Horar da Almajirai",
+    "subtitle": "Manhajar Al'ummar Imani",
+    "getStarted": "Fara",
+    "login": "Shiga",
+    "welcome": "Barka da zuwa"
+  },
+  "auth": {
+    "signUp": "Yi rajista",
+    "signIn": "Shiga",
+    "email": "Imel",
+    "password": "Kalmar sirri",
+    "confirmPassword": "Tabbatar da kalmar sirri",
+    "forgotPassword": "Ka manta kalmar sirri?",
+    "dontHaveAccount": "Ba ka da asusu?",
+    "alreadyHaveAccount": "Kana da asusu?"
+  },
+  "tellUsMore": {
+    "title": "Faɗa mana ƙarin game da kai",
+    "subtitle": "Taimaka mana mu keɓance kwarewarka",
+    "fullName": "Cikakken suna",
+    "email": "Adireshin imel",
+    "phone": "Lambar waya",
+    "preferredLanguage": "Yaren da aka fi so",
+    "selectLanguage": "Zaɓi yaren da kuka fi so"
+  },
+  "home": {
+    "title": "Gida",
+    "welcome": "Barka da zuwa"
+  }
+}

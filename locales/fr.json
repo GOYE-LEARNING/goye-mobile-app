@@ -1,0 +1,53 @@
+{
+  "common": {
+    "next": "Suivant",
+    "finish": "Terminer",
+    "back": "Retour",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "continue": "Continuer"
+  },
+  "language": {
+    "title": "Choisissez votre langue",
+    "subtitle": "Sélectionnez votre langue préférée pour continuer",
+    "english": "Anglais",
+    "french": "Français",
+    "hausa": "Haoussa",
+    "yoruba": "Yoruba",
+    "igbo": "Igbo",
+    "swahili": "Swahili"
+  },
+  "onboarding": {
+    "title": "École de Formation de Disciples",
+    "subtitle": "Application de Communauté de Foi",
+    "getStarted": "Commencer",
+    "login": "Connexion",
+    "welcome": "Bienvenue à"
+  },
+  "auth": {
+    "signUp": "S'inscrire",
+    "signIn": "Se connecter",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "forgotPassword": "Mot de passe oublié?",
+    "dontHaveAccount": "Vous n'avez pas de compte?",
+    "alreadyHaveAccount": "Vous avez déjà un compte?"
+  },
+  "tellUsMore": {
+    "title": "Parlez-nous de vous",
+    "subtitle": "Aidez-nous à personnaliser votre expérience",
+    "fullName": "Nom complet",
+    "email": "Adresse e-mail",
+    "phone": "Numéro de téléphone",
+    "preferredLanguage": "Langue préférée",
+    "selectLanguage": "Sélectionnez votre langue préférée"
+  },
+  "home": {
+    "title": "Accueil",
+    "welcome": "Bienvenue"
+  }
+}

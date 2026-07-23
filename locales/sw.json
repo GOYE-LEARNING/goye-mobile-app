@@ -1,0 +1,53 @@
+{
+  "common": {
+    "next": "Ifuatayo",
+    "finish": "Maliza",
+    "back": "Rudi",
+    "save": "Hifadhi",
+    "cancel": "Ghairi",
+    "loading": "Inapakia...",
+    "error": "Hitilafu",
+    "success": "Mafanikio",
+    "continue": "Endelea"
+  },
+  "language": {
+    "title": "Chagua Lugha Yako",
+    "subtitle": "Chagua lugha unayopenda ili kuendelea",
+    "english": "Kiingereza",
+    "french": "Kifaransa",
+    "hausa": "Kihausa",
+    "yoruba": "Kiyoruba",
+    "igbo": "Kiigbo",
+    "swahili": "Kiswahili"
+  },
+  "onboarding": {
+    "title": "Shule ya Mafunzo ya Wanafunzi",
+    "subtitle": "Programu ya Jumuiya ya Imani",
+    "getStarted": "Anza",
+    "login": "Ingia",
+    "welcome": "Karibu"
+  },
+  "auth": {
+    "signUp": "Jisajili",
+    "signIn": "Ingia",
+    "email": "Barua pepe",
+    "password": "Nenosiri",
+    "confirmPassword": "Thibitisha nenosiri",
+    "forgotPassword": "Umesahau nenosiri?",
+    "dontHaveAccount": "Huna akaunti?",
+    "alreadyHaveAccount": "Una akaunti tayari?"
+  },
+  "tellUsMore": {
+    "title": "Tuambie Zaidi Kuhusu Wewe",
+    "subtitle": "Tusaidie kuboresha uzoefu wako",
+    "fullName": "Jina Kamili",
+    "email": "Anwani ya barua pepe",
+    "phone": "Nambari ya simu",
+    "preferredLanguage": "Lugha Unayopenda",
+    "selectLanguage": "Chagua lugha unayopenda"
+  },
+  "home": {
+    "title": "Nyumbani",
+    "welcome": "Karibu"
+  }
+}

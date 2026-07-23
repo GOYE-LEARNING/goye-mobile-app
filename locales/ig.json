@@ -1,0 +1,53 @@
+{
+  "common": {
+    "next": "Ọzọ",
+    "finish": "Mechie",
+    "back": "Laghachi",
+    "save": "Chekwa",
+    "cancel": "Kagbuo",
+    "loading": "Na-ebu...",
+    "error": "Njehie",
+    "success": "Ọganihu",
+    "continue": "Gaa n'ihu"
+  },
+  "language": {
+    "title": "Họrọ Asụsụ Gị",
+    "subtitle": "Họrọ asụsụ kachasị mma gị iji gaa n'ihu",
+    "english": "Bekee",
+    "french": "Frans",
+    "hausa": "Hausa",
+    "yoruba": "Yoruba",
+    "igbo": "Igbo",
+    "swahili": "Swahili"
+  },
+  "onboarding": {
+    "title": "Ụlọ Akwụkwọ Ọzụzụ Ndị Na-eso ụzọ",
+    "subtitle": "Ngwa Obodo Okwukwe",
+    "getStarted": "Bido",
+    "login": "Banye",
+    "welcome": "Nnọọ na"
+  },
+  "auth": {
+    "signUp": "Deba aha",
+    "signIn": "Banye",
+    "email": "E-mail",
+    "password": "Okwuntughe",
+    "confirmPassword": "Kwado okwuntughe",
+    "forgotPassword": "Echefuru okwuntughe?",
+    "dontHaveAccount": "Ịnweghị akaụntụ?",
+    "alreadyHaveAccount": "Ị nwere akaụntụ?"
+  },
+  "tellUsMore": {
+    "title": "Gwa anyị ihe gbasara gị",
+    "subtitle": "Nyere anyị aka ịhazi ahụmahụ gị",
+    "fullName": "Aha zuru ezu",
+    "email": "Adreesị e-mail",
+    "phone": "Nọmba ekwentị",
+    "preferredLanguage": "Asụsụ kachasị mma gị",
+    "selectLanguage": "Họrọ asụsụ kachasị mma gị"
+  },
+  "home": {
+    "title": "Ụlọ",
+    "welcome": "Nnọọ"
+  }
+}
