@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
-import { AppState, Alert } from 'react-native';
+import { AppState } from 'react-native';
 import { router } from 'expo-router';
 
 import { SignUpProvider } from '@/contexts/SignUpContext';
@@ -33,25 +33,19 @@ function SessionHandler() {
         // Clear all data
         await clearUserData();
         reset();
-        
+
         // Sign out of Google if needed
         if (signOutGoogle) {
           await signOutGoogle();
         }
-        
-        // Show alert to user
-        Alert.alert(
-          'Session Expired',
-          'Your session has expired. Please login again.',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                router.replace('/(auth)/start');
-              }
-            }
-          ]
-        );
+
+        // Web's equivalent (axios.ts) redirects to /auth?session=expired with
+        // no message shown at all — that query param isn't read anywhere. A
+        // stale/dead session (old install, long-idle app) is common enough
+        // that a blocking "Session Expired" alert the user must tap through
+        // is unnecessary friction the web flow doesn't have; just land them
+        // back on the login screen the same way.
+        router.replace('/(auth)/start');
       } catch (error) {
         console.error('[App] Error handling session expiry:', error);
         router.replace('/(auth)/start');
