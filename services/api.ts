@@ -1723,18 +1723,28 @@ export const clearConversation = async (token: string, userId: string) => {
  */
 export const refreshAccessToken = async (refreshToken: string): Promise<any> => {
   try {
-    // ✅ Try different body formats
+    // The backend (UserVerificationController.RefreshToken) only ever reads
+    // refreshToken/deviceId from req.cookies or the x-refresh-token/x-device-id
+    // headers — it never looks at the body. Mobile has no browser cookie jar,
+    // so every refresh was silently doomed regardless of body shape ("No
+    // refresh token or device ID provided"). deviceId is already embedded in
+    // the refresh token's own JWT payload (see login.tsx's debug decode), so
+    // it can be pulled out here with no extra storage or backend change.
+    let deviceId: string | undefined;
+    try {
+      deviceId = JSON.parse(atob(refreshToken.split('.')[1]))?.deviceId;
+    } catch {
+      // Backend will reject with a clear message if this stays undefined.
+    }
+
     const response = await fetch(`${API_CONFIG.BASE_URL}/verify/refresh-token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-refresh-token': refreshToken,
+        ...(deviceId ? { 'x-device-id': deviceId } : {}),
       },
-      body: JSON.stringify({ 
-        refreshToken: refreshToken,
-        // Or try:
-        // refresh_token: refreshToken,
-        // token: refreshToken,
-      }),
+      body: JSON.stringify({ refreshToken }),
     });
 
     const result = await response.json();
