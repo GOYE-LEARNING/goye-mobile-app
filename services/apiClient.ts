@@ -36,6 +36,27 @@ const getRefreshToken = async (): Promise<string | null> => {
 };
 
 /**
+ * expressAuthentication (backend/src/auth/authentication.ts) resolves the
+ * device identity as request.cookies?.deviceId || headers['x-device-id'] ||
+ * a fresh `device_${Date.now()}_${Math.random()}` per call. Mobile has no
+ * cookie jar and, before this, never sent the header — so every regular
+ * request looked like a different, brand-new device to the backend, and its
+ * per-request session upsert kept creating throwaway session rows instead of
+ * updating the one actually created at login. deviceId is already embedded
+ * in the access token's own JWT payload (decoded straight from the token
+ * being sent, so it's always in sync with it, not a possibly-stale
+ * AsyncStorage read), so it costs nothing extra to send.
+ */
+const decodeDeviceId = (jwtToken?: string | null): string | undefined => {
+  if (!jwtToken) return undefined;
+  try {
+    return JSON.parse(atob(jwtToken.split('.')[1]))?.deviceId;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
  * Clear all user data and redirect to login
  */
 const clearUserDataAndRedirect = async () => {
@@ -120,7 +141,8 @@ export const fetchWithAuth = async (
   if (!authToken) {
     authToken = await getToken();
   }
-  
+  const deviceId = decodeDeviceId(authToken);
+
   // Make the request
   let response = await fetch(url, {
     ...options,
@@ -128,6 +150,7 @@ export const fetchWithAuth = async (
       'Content-Type': 'application/json',
       ...options.headers,
       ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+      ...(deviceId ? { 'x-device-id': deviceId } : {}),
     },
   });
 
@@ -139,12 +162,14 @@ export const fetchWithAuth = async (
     if (isRefreshing) {
       return new Promise((resolve) => {
         refreshSubscribers.push(async (newToken: string) => {
+          const retryDeviceId = decodeDeviceId(newToken);
           const retryResponse = await fetch(url, {
             ...options,
             headers: {
               'Content-Type': 'application/json',
               ...options.headers,
               'Authorization': `Bearer ${newToken}`,
+              ...(retryDeviceId ? { 'x-device-id': retryDeviceId } : {}),
             },
           });
           resolve(retryResponse);
@@ -161,14 +186,16 @@ export const fetchWithAuth = async (
       if (newToken) {
         isRefreshing = false;
         notifySubscribers(newToken);
-        
+
         // Retry the original request with new token
+        const newDeviceId = decodeDeviceId(newToken);
         response = await fetch(url, {
           ...options,
           headers: {
             'Content-Type': 'application/json',
             ...options.headers,
             'Authorization': `Bearer ${newToken}`,
+            ...(newDeviceId ? { 'x-device-id': newDeviceId } : {}),
           },
         });
       } else {
