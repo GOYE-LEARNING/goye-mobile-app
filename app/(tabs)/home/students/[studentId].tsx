@@ -1,5 +1,6 @@
 // app/(tabs)/home/students/[studentId].tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -224,9 +225,16 @@ export default function StudentDetail() {
           </View>
 
           {/* Message Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.messageButton}
-            onPress={() => router.push(`/(tabs)/home/students/${studentId}/chat` as any)}
+            onPress={() => router.push({
+              pathname: '/(tabs)/community/chat/[userId]',
+              params: {
+                userId: studentId,
+                name: studentData.student.full_name,
+                avatarUri: avatarUri || '',
+              },
+            } as any)}
           >
             <Ionicons name="chatbubble-outline" size={20} color="white" />
             <Text style={styles.messageButtonText}>Message Student</Text>

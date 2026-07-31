@@ -9,6 +9,8 @@ import { router } from 'expo-router';
 import { SignUpProvider } from '@/contexts/SignUpContext';
 import { UserProvider } from '@/contexts/UserContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { NetworkProvider } from '@/contexts/NetworkContext';
+import { OfflineBanner } from '@/components/OfflineBanner';
 import { initI18n } from '@/lib/i18n';
 import Toast from 'react-native-toast-message';
 import { useUser } from '@/contexts/UserContext';
@@ -93,15 +95,18 @@ export default function RootLayout() {
     <SignUpProvider>
       <UserProvider>
         <ThemeProvider>
-          <SessionHandler />
-          <Stack>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-          </Stack>
-          <StatusBar style="auto" />
-          <Toast />
+          <NetworkProvider>
+            <SessionHandler />
+            <Stack>
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+            </Stack>
+            <StatusBar style="auto" />
+            <OfflineBanner />
+            <Toast />
+          </NetworkProvider>
         </ThemeProvider>
       </UserProvider>
     </SignUpProvider>

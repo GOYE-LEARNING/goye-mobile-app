@@ -7,13 +7,14 @@ import { useState, useEffect } from 'react';
 
 export default function QuizReview() {
   const params = useLocalSearchParams();
-  const { 
-    id: courseId, 
+  const {
+    id: courseId,
     quizId,
     score: scoreParam,
     passed: passedParam,
     correctCount: correctCountParam,
-    totalQuestions: totalQuestionsParam
+    totalQuestions: totalQuestionsParam,
+    answers: answersParam
   } = params;
 
   const [reviewData, setReviewData] = useState({
@@ -34,11 +35,17 @@ export default function QuizReview() {
     const passed = passedParam === 'true';
     const incorrectAnswers = totalQuestions - correctAnswers;
 
-    // Generate question status array
-    const questions = Array.from({ length: totalQuestions }, (_, index) => ({
-      id: index + 1,
-      isCorrect: index < correctAnswers
-    }));
+    // Real per-question results from the submission, not a guess.
+    let realAnswers: { correct: boolean }[] = [];
+    try {
+      realAnswers = answersParam ? JSON.parse(answersParam as string) : [];
+    } catch {
+      realAnswers = [];
+    }
+
+    const questions = realAnswers.length > 0
+      ? realAnswers.map((a, index) => ({ id: index + 1, isCorrect: a.correct }))
+      : Array.from({ length: totalQuestions }, (_, index) => ({ id: index + 1, isCorrect: index < correctAnswers }));
 
     setReviewData({
       score,
@@ -49,7 +56,7 @@ export default function QuizReview() {
       passingGrade: passed,
       questions
     });
-  }, [scoreParam, correctCountParam, totalQuestionsParam, passedParam]);
+  }, [scoreParam, correctCountParam, totalQuestionsParam, passedParam, answersParam]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -200,7 +207,8 @@ export default function QuizReview() {
                 score: reviewData.score.toString(),
                 correctCount: reviewData.correctAnswers.toString(),
                 totalQuestions: reviewData.totalQuestions.toString(),
-                passed: reviewData.passingGrade.toString()
+                passed: reviewData.passingGrade.toString(),
+                answers: answersParam
               }
             } as any);
           }}

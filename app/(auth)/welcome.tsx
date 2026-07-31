@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 
 export default function Welcome() {
@@ -26,7 +27,7 @@ export default function Welcome() {
       <Image
         source={require('@/assets/images/Frame.png')}
         style={styles.illustration}
-        resizeMode="contain"
+        contentFit="contain"
       />
 
       {/* Continue button at bottom */}

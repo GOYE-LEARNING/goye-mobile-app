@@ -1,10 +1,10 @@
 // app/(tabs)/community/chat/[userId].tsx
 import {
   View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Image,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
   Animated,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useRef } from 'react';
@@ -68,16 +68,6 @@ export default function ChatRoom() {
   const [dot3Opacity] = useState(new Animated.Value(0.3));
 
   useEffect(() => {
-  const checkStorage = async () => {
-    const token = await AsyncStorage.getItem('userToken');
-    const user = await AsyncStorage.getItem('userData');
-    console.log('[Storage] token:', token?.substring(0, 20));
-    console.log('[Storage] user:', user ? JSON.parse(user)?.id : null);
-  };
-  checkStorage();
-}, []);
-
-  useEffect(() => {
     if (isTyping) {
       const animation = Animated.loop(
         Animated.sequence([
@@ -105,8 +95,6 @@ export default function ChatRoom() {
   // ─── Socket Setup ────────────────────────────────────────────────────────────
   useEffect(() => {
       console.log('[Socket] useEffect running, token:', !!token, 'userId:', user?.id);
-      console.log('[Socket] token value:', token);
-      console.log('[Socket] user id:', user?.id);
      if (!token || !user?.id) {
     console.log('[Socket] RETURNING EARLY - missing token or user');
     return;
@@ -585,9 +573,8 @@ socket.on('authenticated', (data: any) => {
             {avatarUri ? (
               <Image
                 source={{ uri: avatarUri }}
-                style={StyleSheet.absoluteFill}
-                resizeMode="cover"
-                borderRadius={20}
+                style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
+                contentFit="cover"
               />
             ) : (
               <Text style={[s.headerAvatarInitial, { color: colors.brand }]}>

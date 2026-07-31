@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -215,9 +216,9 @@ export default function CourseDetails() {
         <View style={s.imageContainer}>
           {courseImageUri ? (
             <Image 
-              source={{ uri: courseImageUri }} 
-              style={s.heroImage} 
-              resizeMode="cover"
+              source={{ uri: courseImageUri }}
+              style={s.heroImage}
+              contentFit="cover"
             />
           ) : (
             <View style={[s.heroImagePlaceholder, { backgroundColor: colors.backgroundMuted }]}>

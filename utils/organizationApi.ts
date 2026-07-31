@@ -162,22 +162,6 @@ export const createOrganization = async (data: OrganizationData) => {
       await convertFileToBase64IfNeeded(payload, data.churchLogo, 'church_logo');
     }
     
-    console.log('Submitting organization data (without large base64):', JSON.stringify({
-      ...payload,
-      school: payload.school ? { 
-        ...payload.school, 
-        school_document: payload.school?.school_document ? '[BASE64_DATA]' : '' 
-      } : payload.school,
-      club: payload.club ? { 
-        ...payload.club, 
-        club_document: payload.club?.club_document ? '[BASE64_DATA]' : '' 
-      } : payload.club,
-      church: payload.church ? { 
-        ...payload.church, 
-        church_logo: payload.church?.church_logo ? '[BASE64_DATA]' : '' 
-      } : payload.church,
-    }, null, 2));
-
     const response = await fetch(`${API_CONFIG.BASE_URL}/organizations/auth/create-organization`, {
       method: 'POST',
       headers: {
@@ -187,10 +171,9 @@ export const createOrganization = async (data: OrganizationData) => {
     });
 
     console.log('Response status:', response.status);
-    
+
     const responseText = await response.text();
-    console.log('Response text:', responseText);
-    
+
     let responseData;
     try {
       responseData = JSON.parse(responseText);
@@ -199,21 +182,17 @@ export const createOrganization = async (data: OrganizationData) => {
     }
 
     if (!response.ok) {
-      console.error('API Error Response:', responseData);
       throw new Error(responseData.message || `HTTP ${response.status}: Failed to create organization`);
     }
 
     // FIXED: Extract organization ID from the correct location
-    const organizationId = responseData.data?.id || 
-                          responseData.organizationId || 
-                          responseData.id || 
+    const organizationId = responseData.data?.id ||
+                          responseData.organizationId ||
+                          responseData.id ||
                           responseData._id;
-    
-    console.log('Extracted organization ID:', organizationId);
-    console.log('Full response data:', responseData);
-    
+
     if (!organizationId) {
-      console.warn('No organization ID returned, skipping password generation', responseData);
+      console.warn('No organization ID returned, skipping password generation');
       return {
         success: true,
         data: responseData,

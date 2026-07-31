@@ -1,5 +1,6 @@
 // app/(tabs)/courses/[id]/quizzes.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -68,8 +69,13 @@ export default function Quizzes() {
   const isOwner = isInstructor && course.createdUserId === user?.id;
   const quizzes = course.quiz || [];
 
-  // Calculate completion for students
-  const completedQuizzes = 0; // TODO: Get from enrollment data
+  // Each quiz already includes every student's QuizAttempt records (from
+  // GET /course/get-course/:id) — filter to the current user's own
+  // completed attempt to get real completion/score, no extra fetch needed.
+  const getMyAttempt = (quiz: any) =>
+    quiz.QuizAttempt?.find((a: any) => a.userId === user?.id && a.completed);
+
+  const completedQuizzes = quizzes.filter((q: any) => !!getMyAttempt(q)).length;
   const totalQuizzes = quizzes.length;
 
   return (
@@ -106,7 +112,7 @@ export default function Quizzes() {
           <Image 
             source={{ uri: `data:image/jpeg;base64,${course.course_image}` }}
             style={s.imagePlaceholder}
-            resizeMode="cover"
+            contentFit="cover"
           />
         ) : (
           <View style={[s.imagePlaceholder, { backgroundColor: colors.backgroundMuted, justifyContent: 'center', alignItems: 'center' }]}>
@@ -144,11 +150,12 @@ export default function Quizzes() {
           {isOwner ? (
             <InstructorQuizzesContent courseId={params.id} quizzes={quizzes} colors={colors} />
           ) : (
-            <StudentQuizzesContent 
-              courseId={params.id} 
+            <StudentQuizzesContent
+              courseId={params.id}
               quizzes={quizzes}
               completed={completedQuizzes}
               total={totalQuizzes}
+              userId={user?.id}
               colors={colors}
             />
           )}
@@ -161,22 +168,40 @@ export default function Quizzes() {
 // ==========================================
 // STUDENT VIEW
 // ==========================================
-function StudentQuizzesContent({ courseId, quizzes, completed, total, colors }: any) {
+function StudentQuizzesContent({ courseId, quizzes, completed, total, userId, colors }: any) {
   const getStatusButton = (quiz: any) => {
-    // TODO: Get actual completion status from enrollment
-    const isCompleted = false;
-    const score = 85; // TODO: Get from enrollment
-    
+    const myAttempt = quiz.QuizAttempt?.find((a: any) => a.userId === userId && a.completed);
+    const isCompleted = !!myAttempt;
+    const score = myAttempt?.score ?? 0;
+
     if (isCompleted) {
+      const totalQuestions = quiz.questions?.length || 0;
+      const correctCount = Array.isArray(myAttempt.answers)
+        ? myAttempt.answers.filter((a: any) => a.correct).length
+        : 0;
+
       return (
         <View>
           <View style={stylesLocal.scoreContainer}>
-            <Text style={[stylesLocal.scoreText, { color: colors.success }]}>Score: {score} / 100</Text>
+            <Text style={[stylesLocal.scoreText, { color: colors.success }]}>Score: {score}%</Text>
             <View style={[stylesLocal.completedBadge, { backgroundColor: colors.success }]}>
               <Text style={stylesLocal.completedText}>Completed</Text>
             </View>
           </View>
-          <TouchableOpacity style={[stylesLocal.reviewButton, { borderColor: colors.brand }]}>
+          <TouchableOpacity
+            style={[stylesLocal.reviewButton, { borderColor: colors.brand }]}
+            onPress={() => router.push({
+              pathname: `/(tabs)/courses/${courseId}/quiz/review`,
+              params: {
+                quizId: quiz.id,
+                score: score.toString(),
+                passed: (score >= quiz.passingScore).toString(),
+                correctCount: correctCount.toString(),
+                totalQuestions: totalQuestions.toString(),
+                answers: JSON.stringify(myAttempt.answers || []),
+              },
+            } as any)}
+          >
             <Text style={[stylesLocal.reviewButtonText, { color: colors.brand }]}>Review Quiz</Text>
           </TouchableOpacity>
         </View>

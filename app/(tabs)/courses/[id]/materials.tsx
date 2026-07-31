@@ -1,5 +1,6 @@
 // app/(tabs)/courses/[id]/materials.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -179,7 +180,7 @@ export default function Materials() {
           <Image 
             source={{ uri: `data:image/jpeg;base64,${course.course_image}` }}
             style={s.courseImage}
-            resizeMode="cover"
+            contentFit="cover"
           />
         ) : (
           <View style={[s.courseImage, { backgroundColor: colors.backgroundMuted, justifyContent: 'center', alignItems: 'center' }]}>

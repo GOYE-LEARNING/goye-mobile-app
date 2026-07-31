@@ -1,33 +1,111 @@
 // components/dashboard/InstructorDashboard.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@/contexts/UserContext';
 import { useTheme, lightColors } from '@/contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getTutorOverview, getCourseActivities } from '@/services/api';
+import { NotificationBadge } from '@/components/NotificationBadge';
+import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
+
+interface TopCourse {
+  id: string;
+  course_title: string;
+  course_short_description: string;
+  course_image: string | null;
+  course_level: string;
+  totalStudents: number;
+}
+
+interface CourseActivity {
+  id: string;
+  title: string;
+  message: string;
+  createdAt: string;
+}
+
+const getTimeAgo = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  if (diffHours < 1) return 'Just now';
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return `${Math.floor(diffDays / 7)}w ago`;
+};
 
 export default function InstructorDashboard() {
-  const { user } = useUser();
+  const { user, token } = useUser();
   const { colors } = useTheme();
+  const unreadCount = useUnreadNotificationCount();
+
+  const [topCourse, setTopCourse] = useState<TopCourse | null>(null);
+  const [totalPublishedCourses, setTotalPublishedCourses] = useState(0);
+  const [avgCompletionPercentage, setAvgCompletionPercentage] = useState(0);
+  const [activities, setActivities] = useState<CourseActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchOverview();
+  }, []);
+
+  const fetchOverview = async () => {
+    setLoading(true);
+    try {
+      const result = await getTutorOverview(token!);
+      setTopCourse(result.data?.topCourse ?? null);
+      setTotalPublishedCourses(result.data?.totalPublishedCourses ?? 0);
+      setAvgCompletionPercentage(result.data?.avgCompletionPercentage ?? 0);
+
+      if (result.data?.topCourse?.id) {
+        const activityResult = await getCourseActivities(result.data.topCourse.id, token!);
+        setActivities(activityResult.data || []);
+      }
+    } catch (err) {
+      console.error('[InstructorDashboard] Error fetching overview:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const s = makeStyles(colors);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={s.container} edges={['top']}>
+        <View style={s.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.brand} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
       {/* Header */}
       <View style={s.header}>
         <View style={s.headerLeft}>
-          <Image 
-            source={require('@/assets/images/icon.png')} 
-            style={s.avatar} 
+          <Image
+            source={user?.user_pic ? { uri: user.user_pic } : require('@/assets/images/icon.png')}
+            style={s.avatar}
           />
           <View>
             <Text style={s.greeting}>Good evening</Text>
-            <Text style={s.userName}>Pst. {user?.first_name}</Text>
+            <Text style={s.userName}>{user?.first_name}</Text>
           </View>
         </View>
-        <TouchableOpacity style={s.notificationButton}>
+        <TouchableOpacity
+          style={s.notificationButton}
+          onPress={() => router.push('/(tabs)/home/notifications')}
+        >
           <Ionicons name="notifications-outline" size={24} color={colors.headerText} />
+          <NotificationBadge count={unreadCount} />
         </TouchableOpacity>
       </View>
 
@@ -38,46 +116,60 @@ export default function InstructorDashboard() {
         {/* Overview Section */}
         <View style={s.section}>
           <Text style={s.sectionTitle}>Overview</Text>
-          
-          {/* Top Performing Course Card */}
-          <View style={s.topCourseCard}>
-            <View style={s.topCourseBadge}>
-              <Ionicons name="trophy" size={16} color="#F59E0B" />
-              <Text style={s.topCourseBadgeText}>Top Performing Course</Text>
-            </View>
-            <Text style={s.topCourseTitle}>Empowering Children to Lead</Text>
-            <Text style={s.topCourseDescription}>
-              This introduces the meaning of discipleship, exploring its biblical foundation and the call to follow Jesus.
-            </Text>
-            
-            {/* Stats Row */}
-            <View style={s.topCourseStats}>
-              <View style={s.topCourseStat}>
-                <Text style={s.topCourseStatNumber}>43</Text>
-                <Text style={s.topCourseStatLabel}>Total Students</Text>
-              </View>
-              <View style={s.topCourseStat}>
-                <Text style={s.topCourseStatNumber}>6</Text>
-                <Text style={s.topCourseStatLabel}>Published Courses</Text>
-              </View>
-              <View style={s.topCourseStat}>
-                <Text style={s.topCourseStatNumber}>65%</Text>
-                <Text style={s.topCourseStatLabel}>Avg. Completion</Text>
-              </View>
-            </View>
 
-            <TouchableOpacity style={s.viewCourseButton}>
-              <Text style={s.viewCourseButtonText}>View Course</Text>
-            </TouchableOpacity>
-          </View>
+          {topCourse ? (
+            <View style={s.topCourseCard}>
+              <View style={s.topCourseBadge}>
+                <Ionicons name="trophy" size={16} color="#F59E0B" />
+                <Text style={s.topCourseBadgeText}>Top Performing Course</Text>
+              </View>
+              <Text style={s.topCourseTitle}>{topCourse.course_title}</Text>
+              <Text style={s.topCourseDescription} numberOfLines={2}>
+                {topCourse.course_short_description}
+              </Text>
+
+              <View style={s.topCourseStats}>
+                <View style={s.topCourseStat}>
+                  <Text style={s.topCourseStatNumber}>{topCourse.totalStudents}</Text>
+                  <Text style={s.topCourseStatLabel}>Total Students</Text>
+                </View>
+                <View style={s.topCourseStat}>
+                  <Text style={s.topCourseStatNumber}>{totalPublishedCourses}</Text>
+                  <Text style={s.topCourseStatLabel}>Published Courses</Text>
+                </View>
+                <View style={s.topCourseStat}>
+                  <Text style={s.topCourseStatNumber}>{avgCompletionPercentage}%</Text>
+                  <Text style={s.topCourseStatLabel}>Avg. Completion</Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={s.viewCourseButton}
+                onPress={() => router.push(`/(tabs)/courses/details?id=${topCourse.id}` as any)}
+              >
+                <Text style={s.viewCourseButtonText}>View Course</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={s.emptyCourseCard}>
+              <Ionicons name="book-outline" size={32} color={colors.textMuted} />
+              <Text style={s.emptyCourseText}>No courses yet</Text>
+              <TouchableOpacity
+                style={s.viewCourseButton}
+                onPress={() => router.push('/(tabs)/courses/create')}
+              >
+                <Text style={s.viewCourseButtonText}>Create your first course</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Quick Actions */}
         <View style={s.section}>
           <Text style={s.sectionTitle}>Quick Actions</Text>
-          
+
           <View style={s.quickActionsRow}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={s.quickActionCard}
               onPress={() => router.push('/(tabs)/courses/create')}
             >
@@ -85,7 +177,7 @@ export default function InstructorDashboard() {
               <Text style={s.quickActionText}>Create a Course</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={s.quickActionCard}
               onPress={() => router.push('/(tabs)/home/students')}
             >
@@ -99,65 +191,24 @@ export default function InstructorDashboard() {
         <View style={s.section}>
           <Text style={s.sectionTitle}>Activities</Text>
 
-          <View style={s.activityItem}>
-            <View style={[s.activityIcon, { backgroundColor: '#EBF5FF' }]}>
-              <Ionicons name="document-text" size={20} color="#2563EB" />
-            </View>
-            <View style={s.activityContent}>
-              <Text style={s.activityText}>
-                3 students completed "Biblical Foundation" quiz
-              </Text>
-              <View style={s.activityTimeRow}>
-                <Ionicons name="time-outline" size={14} color={colors.textMuted} />
-                <Text style={s.activityTime}>12h ago</Text>
+          {activities.length === 0 ? (
+            <Text style={s.emptyText}>No recent activity</Text>
+          ) : (
+            activities.map((activity) => (
+              <View key={activity.id} style={s.activityItem}>
+                <View style={[s.activityIcon, { backgroundColor: '#EBF5FF' }]}>
+                  <Ionicons name="document-text" size={20} color="#2563EB" />
+                </View>
+                <View style={s.activityContent}>
+                  <Text style={s.activityText}>{activity.message}</Text>
+                  <View style={s.activityTimeRow}>
+                    <Ionicons name="time-outline" size={14} color={colors.textMuted} />
+                    <Text style={s.activityTime}>{getTimeAgo(activity.createdAt)}</Text>
+                  </View>
+                </View>
               </View>
-            </View>
-          </View>
-
-          <View style={s.activityItem}>
-            <View style={[s.activityIcon, { backgroundColor: '#F0FDF4' }]}>
-              <Ionicons name="people" size={20} color="#22c55e" />
-            </View>
-            <View style={s.activityContent}>
-              <Text style={s.activityText}>
-                3 new students enrolled in "Prayer & Worship"
-              </Text>
-              <View style={s.activityTimeRow}>
-                <Ionicons name="time-outline" size={14} color={colors.textMuted} />
-                <Text style={s.activityTime}>12h ago</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={s.activityItem}>
-            <View style={[s.activityIcon, { backgroundColor: '#F0FDF4' }]}>
-              <Ionicons name="people" size={20} color="#22c55e" />
-            </View>
-            <View style={s.activityContent}>
-              <Text style={s.activityText}>
-                Taves Anderson joined the group "Men's Prayer..."
-              </Text>
-              <View style={s.activityTimeRow}>
-                <Ionicons name="time-outline" size={14} color={colors.textMuted} />
-                <Text style={s.activityTime}>12h ago</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={s.activityItem}>
-            <View style={[s.activityIcon, { backgroundColor: '#FEF3C7' }]}>
-              <Ionicons name="trophy" size={20} color="#F59E0B" />
-            </View>
-            <View style={s.activityContent}>
-              <Text style={s.activityText}>
-                Sarah Johnson completed "Biblical Foundation"
-              </Text>
-              <View style={s.activityTimeRow}>
-                <Ionicons name="time-outline" size={14} color={colors.textMuted} />
-                <Text style={s.activityTime}>12h ago</Text>
-              </View>
-            </View>
-          </View>
+            ))
+          )}
         </View>
 
         <View style={{ height: 40 }} />
@@ -171,6 +222,11 @@ function makeStyles(c: typeof lightColors) {
     container: {
       flex: 1,
       backgroundColor: c.headerBg,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     header: {
       flexDirection: 'row',
@@ -200,6 +256,7 @@ function makeStyles(c: typeof lightColors) {
     },
     notificationButton: {
       padding: 4,
+      position: 'relative',
     },
     content: {
       flex: 1,
@@ -234,6 +291,17 @@ function makeStyles(c: typeof lightColors) {
       shadowOpacity: 0.1,
       shadowRadius: 8,
       elevation: 3,
+    },
+    emptyCourseCard: {
+      backgroundColor: c.cardContent,
+      padding: 32,
+      borderRadius: 12,
+      alignItems: 'center',
+      gap: 12,
+    },
+    emptyCourseText: {
+      fontSize: 14,
+      color: c.textMuted,
     },
     topCourseBadge: {
       flexDirection: 'row',
@@ -343,6 +411,11 @@ function makeStyles(c: typeof lightColors) {
     activityTime: {
       fontSize: 12,
       color: c.textMuted,
+    },
+    emptyText: {
+      fontSize: 14,
+      color: c.textMuted,
+      fontStyle: 'italic',
     },
   });
 }

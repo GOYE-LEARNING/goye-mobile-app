@@ -1,5 +1,6 @@
 // app/(auth)/success.tsx
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useSignUp } from '@/contexts/SignUpContext';
 import { useUser } from '@/contexts/UserContext';
@@ -33,7 +34,7 @@ export default function Success() {
             <Image
               source={require('@/assets/images/Success.png')}
               style={styles.illustration}
-              resizeMode="contain"
+              contentFit="contain"
             />
           </View>
           

@@ -1,5 +1,6 @@
 // components/courses/InstructorCourseCard.tsx
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getImageUri } from '@/utils/helpers';
@@ -35,7 +36,7 @@ export default function InstructorCourseCard({ course }: { course: Course }) {
       <View style={s.courseCardContent}>
         <View style={s.thumbnailContainer}>
           {imageUri ? (
-            <Image source={{ uri: imageUri }} style={s.courseThumbnail} resizeMode="cover" />
+            <Image source={{ uri: imageUri }} style={s.courseThumbnail} contentFit="cover" />
           ) : (
             <View style={[s.courseThumbnail, s.placeholderImage]}>
               <Ionicons name="book-outline" size={32} color={colors.textMuted} />

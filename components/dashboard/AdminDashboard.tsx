@@ -1,43 +1,126 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Image,
+  ActivityIndicator,
+  Modal,
+  TextInput,
+  Alert,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useUser } from '@/contexts/UserContext';
+import { getAdminDashboardStats, sendSuperAdminAnnouncement } from '@/services/api';
+import { NotificationBadge } from '@/components/NotificationBadge';
+import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
+
+interface AdminStats {
+  totalUsers: number;
+  activeUsers: number;
+  newUsersToday: number;
+  totalOrganizations: number;
+  totalCourses: number;
+  totalEnrollments: number;
+  completedEnrollments: number;
+  avgCompletionRate: number;
+  engagementRate: number;
+  userTypeBreakdown: {
+    orgOwners: number;
+    invitedMembers: number;
+    individualUsers: number;
+  };
+}
+
+interface AdminActivity {
+  type: string;
+  id: string;
+  title: string;
+  detail: string;
+  createdAt: string;
+}
+
+const getTimeAgo = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  if (diffHours < 1) return 'Just now';
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return `${Math.floor(diffDays / 7)}w ago`;
+};
+
+const activityIcon = (type: string) => {
+  if (type === 'organization_created') return 'business-outline';
+  if (type === 'course_created') return 'book-outline';
+  return 'person-add-outline';
+};
 
 export default function AdminDashboard() {
-  const { user } = useUser();
-  const [timeFilter, setTimeFilter] = useState('This Week');
+  const { user, token, isSuperAdmin } = useUser();
+  const unreadCount = useUnreadNotificationCount();
 
-  const stats = {
-    activeUsers: 403,
-    newUsers: 14,
-    avgCompletion: 75,
-    engagement: 55,
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [activities, setActivities] = useState<AdminActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [announcementTitle, setAnnouncementTitle] = useState('');
+  const [announcementMessage, setAnnouncementMessage] = useState('');
+  const [sendingAnnouncement, setSendingAnnouncement] = useState(false);
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    setLoading(true);
+    try {
+      const result = await getAdminDashboardStats(token!);
+      setStats(result.stats);
+      setActivities(result.activities || []);
+    } catch (err) {
+      console.error('[AdminDashboard] Error fetching stats:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const userBreakdown = {
-    allUsers: 1340,
-    students: 840,
-    instructors: 553,
-    beginners: 856,
-    intermediate: 453,
-    advanced: 52,
+  const handleSendAnnouncement = async () => {
+    if (!announcementTitle.trim() || !announcementMessage.trim()) {
+      Alert.alert('Required Fields', 'Please enter both a title and a message');
+      return;
+    }
+    setSendingAnnouncement(true);
+    try {
+      const result = await sendSuperAdminAnnouncement(
+        { title: announcementTitle.trim(), message: announcementMessage.trim(), audience: 'all' },
+        token!
+      );
+      Alert.alert('Announcement Sent', `Delivered to ${result.data?.recipientCount ?? 0} user(s).`);
+      setShowAnnouncementModal(false);
+      setAnnouncementTitle('');
+      setAnnouncementMessage('');
+    } catch (err: any) {
+      Alert.alert('Error', err?.message || 'Failed to send announcement');
+    } finally {
+      setSendingAnnouncement(false);
+    }
   };
 
-  const activities = [
-    {
-      id: 1,
-      text: '3 students completed "Biblical Foundation" quiz',
-      time: '12h ago',
-    },
-  ];
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3F1F22" />
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -46,21 +129,25 @@ export default function AdminDashboard() {
         <View style={styles.headerLeft}>
           <Image
             source={
-              user?.user_pic 
+              user?.user_pic
                 ? { uri: user.user_pic }
                 : require('@/assets/images/icon.png')
             }
             style={styles.avatar}
           />
           <View>
-            <Text style={styles.greeting}>Good evening</Text>
+            <Text style={styles.greeting}>Welcome back</Text>
             <Text style={styles.userName}>
               {user?.first_name || 'Admin'}
             </Text>
           </View>
         </View>
-        <TouchableOpacity>
+        <TouchableOpacity
+          style={styles.notificationButton}
+          onPress={() => router.push('/(tabs)/home/notifications')}
+        >
           <Ionicons name="notifications-outline" size={24} color="#fff" />
+          <NotificationBadge count={unreadCount} />
         </TouchableOpacity>
       </View>
 
@@ -71,60 +158,34 @@ export default function AdminDashboard() {
         </View>
 
         {/* Overview Section */}
-        <View style={styles.overviewHeader}>
-          <Text style={styles.sectionTitle}>Overview</Text>
-          <TouchableOpacity style={styles.filterButton}>
-            <Text style={styles.filterText}>{timeFilter}</Text>
-            <Ionicons name="chevron-down" size={16} color="#666" />
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.sectionTitle}>Overview</Text>
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{stats.activeUsers}</Text>
+            <Text style={styles.statValue}>{stats?.activeUsers ?? 0}</Text>
             <Text style={styles.statLabel}>Active Users</Text>
-            <Ionicons
-              name="trending-up"
-              size={20}
-              color="#666"
-              style={styles.statIcon}
-            />
+            <Ionicons name="trending-up" size={20} color="#666" style={styles.statIcon} />
           </View>
 
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{stats.newUsers}</Text>
-            <Text style={styles.statLabel}>New Users</Text>
-            <Ionicons
-              name="people"
-              size={20}
-              color="#666"
-              style={styles.statIcon}
-            />
+            <Text style={styles.statValue}>{stats?.newUsersToday ?? 0}</Text>
+            <Text style={styles.statLabel}>New Today</Text>
+            <Ionicons name="people" size={20} color="#666" style={styles.statIcon} />
           </View>
         </View>
 
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{stats.avgCompletion}%</Text>
+            <Text style={styles.statValue}>{stats?.avgCompletionRate ?? 0}%</Text>
             <Text style={styles.statLabel}>Avg. Completion</Text>
-            <Ionicons
-              name="stats-chart"
-              size={20}
-              color="#666"
-              style={styles.statIcon}
-            />
+            <Ionicons name="stats-chart" size={20} color="#666" style={styles.statIcon} />
           </View>
 
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{stats.engagement}%</Text>
+            <Text style={styles.statValue}>{stats?.engagementRate ?? 0}%</Text>
             <Text style={styles.statLabel}>Engagement</Text>
-            <Ionicons
-              name="bar-chart"
-              size={20}
-              color="#666"
-              style={styles.statIcon}
-            />
+            <Ionicons name="bar-chart" size={20} color="#666" style={styles.statIcon} />
           </View>
         </View>
 
@@ -132,37 +193,31 @@ export default function AdminDashboard() {
         <Text style={styles.sectionTitle}>Users Breakdown</Text>
         <View style={styles.breakdownGrid}>
           <View style={styles.breakdownItem}>
-            <Text style={styles.breakdownValue}>
-              {userBreakdown.allUsers.toLocaleString()}
-            </Text>
+            <Text style={styles.breakdownValue}>{stats?.totalUsers?.toLocaleString() ?? 0}</Text>
             <Text style={styles.breakdownLabel}>All Users</Text>
           </View>
           <View style={styles.breakdownItem}>
-            <Text style={styles.breakdownValue}>{userBreakdown.students}</Text>
-            <Text style={styles.breakdownLabel}>Students</Text>
+            <Text style={styles.breakdownValue}>{stats?.userTypeBreakdown?.individualUsers ?? 0}</Text>
+            <Text style={styles.breakdownLabel}>Individual</Text>
           </View>
           <View style={styles.breakdownItem}>
-            <Text style={styles.breakdownValue}>
-              {userBreakdown.instructors}
-            </Text>
-            <Text style={styles.breakdownLabel}>Instructors</Text>
+            <Text style={styles.breakdownValue}>{stats?.userTypeBreakdown?.orgOwners ?? 0}</Text>
+            <Text style={styles.breakdownLabel}>Org Owners</Text>
           </View>
         </View>
 
         <View style={styles.breakdownGrid}>
           <View style={styles.breakdownItem}>
-            <Text style={styles.breakdownValue}>{userBreakdown.beginners}</Text>
-            <Text style={styles.breakdownLabel}>Beginners</Text>
+            <Text style={styles.breakdownValue}>{stats?.userTypeBreakdown?.invitedMembers ?? 0}</Text>
+            <Text style={styles.breakdownLabel}>Invited Members</Text>
           </View>
           <View style={styles.breakdownItem}>
-            <Text style={styles.breakdownValue}>
-              {userBreakdown.intermediate}
-            </Text>
-            <Text style={styles.breakdownLabel}>Intermediate</Text>
+            <Text style={styles.breakdownValue}>{stats?.totalOrganizations ?? 0}</Text>
+            <Text style={styles.breakdownLabel}>Organizations</Text>
           </View>
           <View style={styles.breakdownItem}>
-            <Text style={styles.breakdownValue}>{userBreakdown.advanced}</Text>
-            <Text style={styles.breakdownLabel}>Advanced</Text>
+            <Text style={styles.breakdownValue}>{stats?.totalCourses ?? 0}</Text>
+            <Text style={styles.breakdownLabel}>Courses</Text>
           </View>
         </View>
 
@@ -177,7 +232,7 @@ export default function AdminDashboard() {
             <Text style={styles.actionText}>Manage Users</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.actionCard}
             onPress={() => router.push('/(admin)/courses')}
           >
@@ -187,29 +242,89 @@ export default function AdminDashboard() {
         </View>
 
         <View style={styles.quickActionsGrid}>
-          <TouchableOpacity style={styles.actionCard}>
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => router.push('/(tabs)/community')}
+          >
             <Ionicons name="people-circle" size={24} color="#3F1F22" />
             <Text style={styles.actionText}>Manage Groups</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionCard}>
-            <Ionicons name="megaphone" size={24} color="#3F1F22" />
-            <Text style={styles.actionText}>Announcement</Text>
-          </TouchableOpacity>
+          {isSuperAdmin && (
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() => setShowAnnouncementModal(true)}
+            >
+              <Ionicons name="megaphone" size={24} color="#3F1F22" />
+              <Text style={styles.actionText}>Announcement</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Activities */}
         <Text style={styles.sectionTitle}>Activities</Text>
-        {activities.map((activity) => (
-          <View key={activity.id} style={styles.activityItem}>
-            <Ionicons name="book-outline" size={24} color="#3F1F22" />
-            <View style={styles.activityContent}>
-              <Text style={styles.activityText}>{activity.text}</Text>
-              <Text style={styles.activityTime}>{activity.time}</Text>
+        {activities.length === 0 ? (
+          <Text style={styles.emptyText}>No recent activity</Text>
+        ) : (
+          activities.map((activity) => (
+            <View key={`${activity.type}-${activity.id}`} style={styles.activityItem}>
+              <Ionicons name={activityIcon(activity.type) as any} size={24} color="#3F1F22" />
+              <View style={styles.activityContent}>
+                <Text style={styles.activityText}>{activity.detail}</Text>
+                <Text style={styles.activityTime}>{getTimeAgo(activity.createdAt)}</Text>
+              </View>
+            </View>
+          ))
+        )}
+      </View>
+
+      <Modal
+        visible={showAnnouncementModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAnnouncementModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>New Announcement</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Title"
+              value={announcementTitle}
+              onChangeText={setAnnouncementTitle}
+              editable={!sendingAnnouncement}
+            />
+            <TextInput
+              style={[styles.modalInput, styles.modalTextArea]}
+              placeholder="Message"
+              value={announcementMessage}
+              onChangeText={setAnnouncementMessage}
+              multiline
+              editable={!sendingAnnouncement}
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowAnnouncementModal(false)}
+                disabled={sendingAnnouncement}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSendButton}
+                onPress={handleSendAnnouncement}
+                disabled={sendingAnnouncement}
+              >
+                {sendingAnnouncement ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.modalSendText}>Send</Text>
+                )}
+              </TouchableOpacity>
             </View>
           </View>
-        ))}
-      </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -218,6 +333,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#3F1F22',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',
@@ -230,6 +351,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+  },
+  notificationButton: {
+    position: 'relative',
   },
   avatar: {
     width: 40,
@@ -262,27 +386,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#000',
   },
-  overviewHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#000',
     marginBottom: 12,
     marginTop: 20,
-  },
-  filterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  filterText: {
-    fontSize: 14,
-    color: '#666',
   },
   statsGrid: {
     flexDirection: 'row',
@@ -369,5 +478,70 @@ const styles = StyleSheet.create({
   activityTime: {
     fontSize: 12,
     color: '#666',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#999',
+    fontStyle: 'italic',
+    marginBottom: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000',
+    marginBottom: 16,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 14,
+    marginBottom: 12,
+    color: '#000',
+  },
+  modalTextArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 4,
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+  },
+  modalCancelText: {
+    color: '#3F1F22',
+    fontWeight: '600',
+  },
+  modalSendButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: '#3F1F22',
+  },
+  modalSendText: {
+    color: '#fff',
+    fontWeight: '600',
   },
 });

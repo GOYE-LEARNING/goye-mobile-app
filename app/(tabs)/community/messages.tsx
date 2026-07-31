@@ -1,8 +1,9 @@
 // app/(tabs)/community/messages.tsx
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, Image, TextInput, RefreshControl, Animated,
+  ActivityIndicator, TextInput, RefreshControl, Animated,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useCallback, useEffect } from 'react';
@@ -284,7 +285,7 @@ export default function MessagesScreen() {
     return (
       <View style={[s.avatar, { width: size, height: size, borderRadius: r }]}>
         {uri ? (
-          <Image source={{ uri }} style={StyleSheet.absoluteFill} borderRadius={r} resizeMode="cover" />
+          <Image source={{ uri }} style={[StyleSheet.absoluteFill, { borderRadius: r }]} contentFit="cover" />
         ) : (
           <Text style={[s.avatarInitial, { fontSize: size * 0.38 }]}>
             {name.charAt(0).toUpperCase() || '?'}

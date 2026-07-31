@@ -7,7 +7,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,9 +26,13 @@ const languages = [
 ];
 
 export default function LanguageSelectScreen() {
-  const { t } = useTranslation();
-  const { setField  } = useSignUp();
-  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+  const { t, i18n } = useTranslation();
+  const { setField } = useSignUp();
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  const isSettingsMode = mode === 'settings';
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(
+    isSettingsMode ? i18n.language : null
+  );
   const [loading, setLoading] = useState(false);
 
   const handleContinue = async () => {
@@ -38,6 +42,11 @@ export default function LanguageSelectScreen() {
   try {
     await AsyncStorage.setItem(HAS_ONBOARDED_LANGUAGE_KEY, 'true');
     await changeAppLanguage(selectedLanguage);
+
+    if (isSettingsMode) {
+      router.back();
+      return;
+    }
 
     const languageNames: { [key: string]: string } = {
       en: 'English',
@@ -62,6 +71,11 @@ export default function LanguageSelectScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
+        {isSettingsMode && (
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={28} color="#3F1F22" />
+          </TouchableOpacity>
+        )}
         <View style={styles.header}>
           <Text style={styles.title}>{t('language.title')}</Text>
           <Text style={styles.subtitle}>{t('language.subtitle')}</Text>
@@ -115,6 +129,10 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 40,
     justifyContent: 'space-between',
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 12,
   },
   header: {
     marginBottom: 32,

@@ -6,10 +6,10 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Image,
   TextInput,
   Dimensions,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';

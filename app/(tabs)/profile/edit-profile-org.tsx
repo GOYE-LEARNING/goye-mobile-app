@@ -1,6 +1,6 @@
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
-  ScrollView, Image, ActivityIndicator, Alert,
+  ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';

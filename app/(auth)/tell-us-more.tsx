@@ -144,16 +144,14 @@ export default function TellUsMore() {
             });
 
             const otpResult = await otpResponse.json();
-            console.log('OTP Response:', otpResult);
 
             if (otpResponse.ok) {
               console.log('✅ OTP sent successfully');
               if (otpResult.sessionToken) {
                 setField('otpSessionToken', otpResult.sessionToken);
-                console.log('🔐 OTP session token saved');
               }
             } else {
-              console.error('❌ Failed to send OTP:', otpResult);
+              console.error('❌ Failed to send OTP:', otpResult.message);
             }
           } catch (otpError) {
             console.error('❌ OTP sending error:', otpError);

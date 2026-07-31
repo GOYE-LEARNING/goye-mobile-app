@@ -1,5 +1,6 @@
 // app/(tabs)/courses/[id]/forums.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -248,9 +249,9 @@ export default function Forums() {
         {/* Course Image */}
         {imageUri ? (
           <Image 
-            source={{ uri: imageUri }} 
+            source={{ uri: imageUri }}
             style={s.courseImage}
-            resizeMode="cover"
+            contentFit="cover"
           />
         ) : (
           <View style={[s.courseImage, s.placeholderImage, { backgroundColor: colors.backgroundMuted }]}>

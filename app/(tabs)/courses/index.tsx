@@ -1,5 +1,5 @@
 // app/(tabs)/courses/index.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -240,14 +240,18 @@ const fetchAllCoursesForStudent = async (filterType: string) => {
       </View>
 
       {/* List */}
-      <ScrollView showsVerticalScrollIndicator={false} style={s.scrollView}>
-        {filteredCourses.length > 0 ? (
-          filteredCourses.map((course) =>
-            isInstructor
-              ? <InstructorCourseCard key={course.id} course={course} />
-              : <StudentCourseCard key={course.id} course={course} />
-          )
-        ) : (
+      <FlatList
+        showsVerticalScrollIndicator={false}
+        style={s.scrollView}
+        contentContainerStyle={s.listContent}
+        data={filteredCourses}
+        keyExtractor={(course) => course.id}
+        renderItem={({ item: course }) =>
+          isInstructor
+            ? <InstructorCourseCard course={course} />
+            : <StudentCourseCard course={course} />
+        }
+        ListEmptyComponent={
           <View style={s.emptyState}>
             <Ionicons
               name={activeFilter === 'enrolled' ? 'bookmark-outline' : 'book-outline'}
@@ -267,9 +271,8 @@ const fetchAllCoursesForStudent = async (filterType: string) => {
                 : 'Check back later for new courses'}
             </Text>
           </View>
-        )}
-        <View style={{ height: 100 }} />
-      </ScrollView>
+        }
+      />
     </SafeAreaView>
   );
 }
@@ -301,6 +304,7 @@ function makeStyles(c: ReturnType<typeof useTheme>['colors']) {
     resultsText:      { fontSize: 14, color: c.textMuted },
 
     scrollView:       { flex: 1, paddingHorizontal: 20 },
+    listContent:      { paddingBottom: 100, flexGrow: 1 },
     emptyState:       { alignItems: 'center', justifyContent: 'center', paddingVertical: 80 },
     emptyText:        { fontSize: 18, fontWeight: '600', color: c.textMuted, marginTop: 16 },
     emptySubtext:     { fontSize: 14, color: c.textMuted, marginTop: 8, textAlign: 'center' },

@@ -204,6 +204,10 @@ export default function QuizTaking() {
           passed: passed.toString(),
           correctCount: correctCount.toString(),
           totalQuestions: currentQuiz.questions.length.toString(),
+          // Real per-question answers from this submission, threaded through
+          // to the review screens so they show what was actually answered
+          // instead of guessing.
+          answers: JSON.stringify(answers),
         },
       } as any);
     } catch (err) {

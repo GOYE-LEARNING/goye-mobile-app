@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,69 +6,75 @@ import {
   FlatList,
   TouchableOpacity,
   TextInput,
-  Image,
+  ActivityIndicator,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useUser } from '@/contexts/UserContext';
+import { getAdminStudents, getAdminTutors, getSuperAdminUsers } from '@/services/api';
 
 type UserRole = 'All' | 'Student' | 'Instructor';
 
-interface User {
+interface AdminUser {
   id: string;
   name: string;
   email: string;
   role: 'Student' | 'Instructor';
-  avatar?: string;
+  avatar?: string | null;
+  isSuspended?: boolean;
 }
 
 export default function UsersScreen() {
+  const { token, isSuperAdmin } = useUser();
   const [selectedFilter, setSelectedFilter] = useState<UserRole>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const users: User[] = [
-    {
-      id: '1',
-      name: 'Kurt Bates',
-      email: 'kurt.bates@gmail.com',
-      role: 'Student',
-    },
-    {
-      id: '2',
-      name: 'James Hall',
-      email: 'jameshall@gmail.com',
-      role: 'Student',
-    },
-    {
-      id: '3',
-      name: 'Alex Buckmaster',
-      email: 'buckmaster.a@ent.com',
-      role: 'Instructor',
-    },
-    {
-      id: '4',
-      name: 'Kathy Pacheco',
-      email: 'k_pacheco@gmail.com',
-      role: 'Student',
-    },
-    {
-      id: '5',
-      name: 'Judith Rodriguez',
-      email: 'jrodriguez@outlook.com',
-      role: 'Instructor',
-    },
-    {
-      id: '6',
-      name: 'Kimberly Mastrangelo',
-      email: 'kva838@outlook.com',
-      role: 'Student',
-    },
-    {
-      id: '7',
-      name: 'Stephanie Sharkey',
-      email: 'stephaniecai@outlook.com',
-      role: 'Instructor',
-    },
-  ];
+  useEffect(() => {
+    fetchUsers();
+  }, [isSuperAdmin]);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      if (isSuperAdmin) {
+        const result = await getSuperAdminUsers(token!);
+        setUsers(
+          (result.data || []).map((u: any) => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            role: u.role === 'student' ? 'Student' : 'Instructor',
+            avatar: u.profilePic,
+            isSuspended: u.isSuspended,
+          }))
+        );
+      } else {
+        const [studentsRes, tutorsRes] = await Promise.all([
+          getAdminStudents(token!),
+          getAdminTutors(token!),
+        ]);
+        const mapEnhanced = (list: any[], role: 'Student' | 'Instructor') =>
+          (list || []).map((u: any) => ({
+            id: u.id,
+            name: u.full_name || `${u.first_name} ${u.last_name}`,
+            email: u.email_address,
+            role,
+            avatar: u.user_pic,
+          }));
+        setUsers([
+          ...mapEnhanced(studentsRes.enhancedStudents, 'Student'),
+          ...mapEnhanced(tutorsRes.enhancedStudents, 'Instructor'),
+        ]);
+      }
+    } catch (err) {
+      console.error('[UsersScreen] Error fetching users:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredUsers = users.filter((user) => {
     const matchesFilter =
@@ -87,7 +93,7 @@ export default function UsersScreen() {
       .toUpperCase();
   };
 
-  const renderUser = ({ item }: { item: User }) => (
+  const renderUser = ({ item }: { item: AdminUser }) => (
     <TouchableOpacity
       style={styles.userCard}
       onPress={() => router.push(`/(admin)/users/${item.id}`)}
@@ -104,6 +110,12 @@ export default function UsersScreen() {
         <Text style={styles.userName}>{item.name}</Text>
         <Text style={styles.userEmail}>{item.email}</Text>
       </View>
+
+      {item.isSuspended && (
+        <View style={styles.suspendedBadge}>
+          <Text style={styles.suspendedBadgeText}>Suspended</Text>
+        </View>
+      )}
 
       <View
         style={[
@@ -171,12 +183,17 @@ export default function UsersScreen() {
       </View>
 
       {/* Users List */}
-      <FlatList
-        data={filteredUsers}
-        renderItem={renderUser}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color="#3F1F22" style={styles.loading} />
+      ) : (
+        <FlatList
+          data={filteredUsers}
+          renderItem={renderUser}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+          ListEmptyComponent={<Text style={styles.emptyText}>No users found</Text>}
+        />
+      )}
     </View>
   );
 }
@@ -241,6 +258,15 @@ const styles = StyleSheet.create({
   listContainer: {
     paddingHorizontal: 20,
   },
+  loading: {
+    marginTop: 40,
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#999',
+    fontSize: 14,
+    marginTop: 40,
+  },
   userCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -300,5 +326,17 @@ const styles = StyleSheet.create({
   },
   instructorBadgeText: {
     color: '#1976D2',
+  },
+  suspendedBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: '#FFEBEE',
+    marginRight: 4,
+  },
+  suspendedBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#F44336',
   },
 });

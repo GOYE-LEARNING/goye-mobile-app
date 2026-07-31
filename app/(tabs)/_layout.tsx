@@ -65,6 +65,10 @@ export default function TabsLayout() {
           ),
         }}
       />
+
+      {/* Org admin management stack — reached from the Profile menu, not the
+          tab bar. Without href: null it would render as an extra tab. */}
+      <Tabs.Screen name="organization" options={{ href: null }} />
     </Tabs>
   );
 }

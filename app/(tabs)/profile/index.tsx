@@ -1,5 +1,6 @@
 // app/(tabs)/profile.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert, ActivityIndicator, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Switch } from 'react-native';
+import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,12 +13,24 @@ import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
 import Toast from 'react-native-toast-message';
+import { useTranslation } from 'react-i18next';
+
+const LANGUAGE_NAMES: { [code: string]: string } = {
+  en: 'English',
+  fr: 'French',
+  ha: 'Hausa',
+  yo: 'Yoruba',
+  ig: 'Igbo',
+  sw: 'Swahili',
+};
 
 export default function Profile() {
   const { token, logout, isOrganizationAdmin, user, clearUserData } = useUser();
   const { reset } = useSignUp();
   const { signOutGoogle } = useGoogleSignIn();
   const { colors, isDark, toggleTheme } = useTheme();
+  const { i18n } = useTranslation();
+  const currentLanguageLabel = LANGUAGE_NAMES[i18n.language] || 'English';
   const [profileData, setProfileData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -220,15 +233,16 @@ export default function Profile() {
     );
   }
 
-  const sharedProps = { 
-    profileData, 
-    onLogout: handleLogout, 
-    onUploadPicture: handleUploadProfilePicture, 
-    uploadingPic, 
-    colors, 
-    isDark, 
-    toggleTheme, 
-    s 
+  const sharedProps = {
+    profileData,
+    onLogout: handleLogout,
+    onUploadPicture: handleUploadProfilePicture,
+    uploadingPic,
+    colors,
+    isDark,
+    toggleTheme,
+    s,
+    currentLanguageLabel,
   };
 
   if (isOrganizationAdmin) return <OrganizationProfileView {...sharedProps} />;
@@ -244,10 +258,11 @@ type ViewProps = {
   isDark: boolean;
   toggleTheme: () => void;
   s: ReturnType<typeof makeStyles>;
+  currentLanguageLabel: string;
 };
 
 // ── Individual Profile ────────────────────────────────────────────────────────
-function IndividualProfileView({ profileData, onLogout, onUploadPicture, uploadingPic, colors, isDark, toggleTheme, s }: ViewProps) {
+function IndividualProfileView({ profileData, onLogout, onUploadPicture, uploadingPic, colors, isDark, toggleTheme, s, currentLanguageLabel }: ViewProps) {
   const avatarUri = profileData.user_pic ? getImageUri(profileData.user_pic) : null;
   const fullName  = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'User';
   const email     = profileData.email_address || 'No email';
@@ -285,7 +300,7 @@ function IndividualProfileView({ profileData, onLogout, onUploadPicture, uploadi
           <MenuItem icon="person-outline" title="Profile" subtitle="Edit personal information" onPress={() => router.push('/(tabs)/profile/edit-profile' as any)} s={s} colors={colors} />
           <MenuItem icon="key-outline" title="Password" subtitle="Change your password" onPress={() => router.push('/(tabs)/profile/change-password' as any)} s={s} colors={colors} />
           <MenuItem icon="notifications-outline" title="Notifications" subtitle="Manage in-app and email notifications" onPress={() => router.push('/(tabs)/profile/notifications' as any)} s={s} colors={colors} />
-          <MenuItem icon="globe-outline" title="Language" subtitle="English" s={s} colors={colors} />
+          <MenuItem icon="globe-outline" title="Language" subtitle={currentLanguageLabel} onPress={() => router.push('/(auth)/language-select?mode=settings' as any)} s={s} colors={colors} />
 
           {/* Dark Mode Toggle */}
           <View style={s.menuItem}>
@@ -315,7 +330,7 @@ function IndividualProfileView({ profileData, onLogout, onUploadPicture, uploadi
 }
 
 // ── Organization Profile ──────────────────────────────────────────────────────
-function OrganizationProfileView({ profileData, onLogout, onUploadPicture, uploadingPic, colors, isDark, toggleTheme, s }: ViewProps) {
+function OrganizationProfileView({ profileData, onLogout, onUploadPicture, uploadingPic, colors, isDark, toggleTheme, s, currentLanguageLabel }: ViewProps) {
   const logoUri   = profileData.organization_logo ? getImageUri(profileData.organization_logo) : null;
   const orgName   = profileData.organization_name || 'Organization';
   const orgType   = profileData.organization_type || '';
@@ -354,10 +369,11 @@ function OrganizationProfileView({ profileData, onLogout, onUploadPicture, uploa
         </View>
 
         <View style={s.menuSection}>
+          <MenuItem icon="grid-outline" title="Manage Organization" subtitle="Members, events, announcements & invites" onPress={() => router.push('/(tabs)/organization' as any)} s={s} colors={colors} />
           <MenuItem icon="business-outline" title="Organization Profile" subtitle="Edit organization information" onPress={() => router.push('/(tabs)/profile/edit-profile-org' as any)} s={s} colors={colors} />
           <MenuItem icon="key-outline" title="Password" subtitle="Change your password" onPress={() => router.push('/(tabs)/profile/change-password' as any)} s={s} colors={colors} />
           <MenuItem icon="notifications-outline" title="Notifications" subtitle="Manage in-app and email notifications" onPress={() => router.push('/(tabs)/profile/notifications' as any)} s={s} colors={colors} />
-          <MenuItem icon="globe-outline" title="Language" subtitle="English" s={s} colors={colors} />
+          <MenuItem icon="globe-outline" title="Language" subtitle={currentLanguageLabel} onPress={() => router.push('/(auth)/language-select?mode=settings' as any)} s={s} colors={colors} />
 
           <View style={s.menuItem}>
             <View style={s.menuItemLeft}>

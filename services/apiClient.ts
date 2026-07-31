@@ -64,8 +64,7 @@ const performRefresh = async (): Promise<string | null> => {
     }
 
     console.log('[API] Refreshing access token...');
-    console.log('[API] Refresh token (first 20 chars):', refreshToken.substring(0, 20) + '...');
-    
+
     const result = await refreshAccessToken(refreshToken);
     
     // Check if refresh failed
@@ -93,7 +92,6 @@ const performRefresh = async (): Promise<string | null> => {
     }
     
     console.log('[API] No token in refresh response');
-    console.log('[API] Response:', JSON.stringify(result, null, 2));
     return null;
   } catch (error: any) {
     console.error('[API] Refresh failed:', error.message);

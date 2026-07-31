@@ -29,13 +29,14 @@ interface QuizData {
 
 export default function DetailedQuizReview() {
   const params = useLocalSearchParams();
-  const { 
-    id: courseId, 
+  const {
+    id: courseId,
     quizId,
     score: scoreParam,
     passed: passedParam,
     correctCount: correctCountParam,
-    totalQuestions: totalQuestionsParam
+    totalQuestions: totalQuestionsParam,
+    answers: answersParam
   } = params;
   
   const { token } = useUser();
@@ -64,24 +65,27 @@ export default function DetailedQuizReview() {
         const foundQuiz = result.data.quiz?.find((q: any) => q.id === quizId);
         
         if (foundQuiz) {
-          // For now, we'll simulate user answers based on the score
-          // In a real app, you'd fetch the actual user answers from the backend
           const score = parseInt(scoreParam as string) || 0;
           const correctCount = parseInt(correctCountParam as string) || 0;
           const totalQuestions = parseInt(totalQuestionsParam as string) || 0;
           const passed = passedParam === 'true';
 
-          // Generate simulated user answers based on correct count
+          // Real per-question answers from the submission (threaded through
+          // from quiz/[quizId]/index.tsx via route params), matched back to
+          // each question by id.
+          let submittedAnswers: { questionId: string; answer: string; correct: boolean }[] = [];
+          try {
+            submittedAnswers = answersParam ? JSON.parse(answersParam as string) : [];
+          } catch {
+            submittedAnswers = [];
+          }
+
           const questionsWithAnswers = foundQuiz.questions.map((question: any, index: number) => {
-            const isCorrect = index < correctCount;
-            const userAnswer = isCorrect 
-              ? question.correctAnswer 
-              : getRandomWrongAnswer(question.options, question.correctAnswer);
-            
+            const submitted = submittedAnswers.find((a) => a.questionId === question.id) ?? submittedAnswers[index];
             return {
               ...question,
-              userAnswer,
-              isCorrect
+              userAnswer: submitted?.answer ?? undefined,
+              isCorrect: submitted?.correct ?? undefined,
             };
           });
 
@@ -107,11 +111,6 @@ export default function DetailedQuizReview() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getRandomWrongAnswer = (options: string[], correctAnswer: string): string => {
-    const wrongOptions = options.filter(opt => opt !== correctAnswer);
-    return wrongOptions[Math.floor(Math.random() * wrongOptions.length)] || options[0];
   };
 
   const getOptionStatus = (questionIndex: number, option: string) => {

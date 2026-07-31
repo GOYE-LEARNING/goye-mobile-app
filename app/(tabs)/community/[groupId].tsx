@@ -1,5 +1,6 @@
 // app/(tabs)/community/[groupId].tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -304,7 +305,7 @@ export default function GroupDetails() {
 
           {/* Cover Image */}
           {coverImageUri && (
-            <Image source={{ uri: coverImageUri }} style={s.coverImage} resizeMode="cover" />
+            <Image source={{ uri: coverImageUri }} style={s.coverImage} contentFit="cover" />
           )}
 
           <View style={s.content}>

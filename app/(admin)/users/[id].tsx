@@ -1,83 +1,140 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
-  Modal,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useUser } from '@/contexts/UserContext';
+import {
+  getAdminStudents,
+  getAdminTutors,
+  getSuperAdminUserDetail,
+  suspendSuperAdminUser,
+} from '@/services/api';
+
+interface Enrollment {
+  id: string;
+  status: string;
+  enrolledAt: string;
+  completedAt?: string | null;
+  courseId: string;
+  courseTitle: string;
+  courseLevel: string;
+}
+
+interface Membership {
+  role: string;
+  joinedAt: string;
+  organizationId: string;
+  organizationName: string;
+}
+
+interface UserDetail {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  level?: string;
+  profilePic?: string | null;
+  isOnline?: boolean;
+  isSuspended?: boolean;
+  lastActive?: string;
+  createdAt?: string;
+  enrollments?: Enrollment[];
+  memberships?: Membership[];
+}
+
+const formatDate = (dateString?: string) => {
+  if (!dateString) return '—';
+  return new Date(dateString).toLocaleDateString(undefined, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+};
 
 export default function UserDetailsScreen() {
-  const { id } = useLocalSearchParams();
-  const [activeTab, setActiveTab] = useState<'Courses' | 'Groups'>('Courses');
-  const [showRemoveModal, setShowRemoveModal] = useState(false);
-  const [isRevoked, setIsRevoked] = useState(false);
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { token, isSuperAdmin } = useUser();
 
-  // Mock user data
-  const user = {
-    name: 'Kurt Bates',
-    email: 'alex_halmiton@gmail.com',
-    level: 'Beginner',
-    joined: '02, May 2024',
-    lastActive: '15, May 2025',
-    status: isRevoked ? 'Revoked' : 'Active',
-    avatar: '',
-    courses: [
-      {
-        id: 1,
-        name: 'Introduction to Discipleship',
-        level: 'Beginner',
-        progress: 100,
-        status: 'Done',
-      },
-      {
-        id: 2,
-        name: 'Biblical Foundation',
-        level: 'Beginner',
-        progress: 100,
-        status: 'Ongoing',
-      },
-      {
-        id: 3,
-        name: 'Prayer & Worship',
-        level: 'Beginner',
-        progress: 100,
-        status: 'Ongoing',
-      },
-    ],
-    groups: [
-      {
-        id: 1,
-        name: 'Young Adult Fellowship',
-        joined: '23, May 2024',
-        role: 'Member',
-      },
-      {
-        id: 2,
-        name: 'Devoted Women Disciples',
-        joined: '23, May 2024',
-        role: 'Member',
-      },
-    ],
+  const [activeTab, setActiveTab] = useState<'Courses' | 'Organizations'>('Courses');
+  const [user, setUser] = useState<UserDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  useEffect(() => {
+    fetchUserDetail();
+  }, [id, isSuperAdmin]);
+
+  const fetchUserDetail = async () => {
+    setLoading(true);
+    try {
+      if (isSuperAdmin) {
+        const result = await getSuperAdminUserDetail(id, token!);
+        setUser(result.data);
+      } else {
+        // Non-super admins have no per-user detail endpoint — fall back to
+        // the basic identity fields already available from the users list.
+        const [studentsRes, tutorsRes] = await Promise.all([
+          getAdminStudents(token!),
+          getAdminTutors(token!),
+        ]);
+        const all = [...(studentsRes.enhancedStudents || []), ...(tutorsRes.enhancedStudents || [])];
+        const match = all.find((u: any) => u.id === id);
+        if (match) {
+          setUser({
+            id: match.id,
+            name: match.full_name || `${match.first_name} ${match.last_name}`,
+            email: match.email_address,
+            role: match.role,
+            profilePic: match.user_pic,
+            isOnline: match.isCurrentlyOnline ?? match.isOnline,
+            lastActive: match.lastActive,
+          });
+        }
+      }
+    } catch (err) {
+      console.error('[UserDetailsScreen] Error fetching user detail:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRemoveUser = () => {
-    setShowRemoveModal(false);
-    // Handle user removal logic
-    router.back();
+  const handleToggleSuspend = async () => {
+    if (!user) return;
+    setUpdatingStatus(true);
+    try {
+      await suspendSuperAdminUser(user.id, !user.isSuspended, token!);
+      setUser({ ...user, isSuspended: !user.isSuspended });
+    } catch (err: any) {
+      Alert.alert('Error', err?.message || 'Failed to update user status');
+    } finally {
+      setUpdatingStatus(false);
+    }
   };
 
-  const handleSuspendAccess = () => {
-    setIsRevoked(true);
-  };
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3F1F22" />
+      </View>
+    );
+  }
 
-  const handleRestoreUser = () => {
-    setIsRevoked(false);
-  };
+  if (!user) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.emptyText}>User not found</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -92,8 +149,8 @@ export default function UserDetailsScreen() {
         {/* User Info Card */}
         <View style={styles.userCard}>
           <View style={styles.avatarContainer}>
-            {user.avatar ? (
-              <Image source={{ uri: user.avatar }} style={styles.avatar} />
+            {user.profilePic ? (
+              <Image source={{ uri: user.profilePic }} style={styles.avatar} />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Ionicons name="person" size={40} color="#666" />
@@ -104,20 +161,22 @@ export default function UserDetailsScreen() {
           <Text style={styles.userName}>{user.name}</Text>
           <Text style={styles.userEmail}>{user.email}</Text>
 
-          <View style={styles.levelBadge}>
-            <Ionicons name="trending-up" size={14} color="#2E7D32" />
-            <Text style={styles.levelText}>{user.level}</Text>
-          </View>
+          {user.level && (
+            <View style={styles.levelBadge}>
+              <Ionicons name="trending-up" size={14} color="#2E7D32" />
+              <Text style={styles.levelText}>{user.level}</Text>
+            </View>
+          )}
 
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Joined</Text>
-              <Text style={styles.infoValue}>{user.joined}</Text>
+              <Text style={styles.infoValue}>{formatDate(user.createdAt)}</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Last active</Text>
-              <Text style={styles.infoValue}>{user.lastActive}</Text>
+              <Text style={styles.infoValue}>{formatDate(user.lastActive)}</Text>
             </View>
           </View>
 
@@ -127,171 +186,130 @@ export default function UserDetailsScreen() {
               <Text
                 style={[
                   styles.statusText,
-                  isRevoked ? styles.revokedStatus : styles.activeStatus,
+                  user.isSuspended ? styles.revokedStatus : styles.activeStatus,
                 ]}
               >
-                {user.status}
+                {user.isSuspended ? 'Suspended' : user.isOnline ? 'Online' : 'Active'}
               </Text>
             </View>
           </View>
 
-          {/* Tabs */}
-          <View style={styles.tabs}>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'Courses' && styles.activeTab]}
-              onPress={() => setActiveTab('Courses')}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === 'Courses' && styles.activeTabText,
-                ]}
-              >
-                Courses
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'Groups' && styles.activeTab]}
-              onPress={() => setActiveTab('Groups')}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === 'Groups' && styles.activeTabText,
-                ]}
-              >
-                Groups
-              </Text>
-            </TouchableOpacity>
-          </View>
+          {isSuperAdmin ? (
+            <>
+              {/* Tabs */}
+              <View style={styles.tabs}>
+                <TouchableOpacity
+                  style={[styles.tab, activeTab === 'Courses' && styles.activeTab]}
+                  onPress={() => setActiveTab('Courses')}
+                >
+                  <Text style={[styles.tabText, activeTab === 'Courses' && styles.activeTabText]}>
+                    Courses
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.tab, activeTab === 'Organizations' && styles.activeTab]}
+                  onPress={() => setActiveTab('Organizations')}
+                >
+                  <Text style={[styles.tabText, activeTab === 'Organizations' && styles.activeTabText]}>
+                    Organizations
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-          {/* Content */}
-          {activeTab === 'Courses' ? (
-            <View style={styles.content}>
-              {user.courses.map((course) => (
-                <View key={course.id} style={styles.courseItem}>
-                  <View style={styles.courseInfo}>
-                    <Text style={styles.courseName}>{course.name}</Text>
-                    <Text style={styles.courseLevel}>{course.level}</Text>
-                    <View style={styles.progressContainer}>
-                      <View style={styles.progressBar}>
+              {/* Content */}
+              {activeTab === 'Courses' ? (
+                <View style={styles.content}>
+                  {(user.enrollments || []).length === 0 ? (
+                    <Text style={styles.emptyText}>No course enrollments</Text>
+                  ) : (
+                    user.enrollments!.map((course) => (
+                      <View key={course.id} style={styles.courseItem}>
+                        <View style={styles.courseInfo}>
+                          <Text style={styles.courseName}>{course.courseTitle}</Text>
+                          <Text style={styles.courseLevel}>{course.courseLevel}</Text>
+                        </View>
                         <View
                           style={[
-                            styles.progressFill,
-                            { width: `${course.progress}%` },
+                            styles.statusBadge,
+                            course.status === 'COMPLETED' ? styles.doneBadge : styles.ongoingBadge,
                           ]}
-                        />
+                        >
+                          <Text
+                            style={[
+                              styles.statusBadgeText,
+                              course.status === 'COMPLETED' ? styles.doneBadgeText : styles.ongoingBadgeText,
+                            ]}
+                          >
+                            {course.status === 'COMPLETED' ? 'Done' : 'Ongoing'}
+                          </Text>
+                        </View>
+                        <Text style={styles.completionText}>
+                          Enrolled {formatDate(course.enrolledAt)}
+                        </Text>
                       </View>
-                    </View>
-                  </View>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      course.status === 'Done'
-                        ? styles.doneBadge
-                        : styles.ongoingBadge,
-                    ]}
+                    ))
+                  )}
+                </View>
+              ) : (
+                <View style={styles.content}>
+                  {(user.memberships || []).length === 0 ? (
+                    <Text style={styles.emptyText}>No organization memberships</Text>
+                  ) : (
+                    user.memberships!.map((membership, idx) => (
+                      <View key={`${membership.organizationId}-${idx}`} style={styles.groupItem}>
+                        <View style={styles.groupInfo}>
+                          <Text style={styles.groupName}>{membership.organizationName}</Text>
+                          <Text style={styles.groupJoined}>Joined {formatDate(membership.joinedAt)}</Text>
+                        </View>
+                        <Text style={styles.groupRole}>{membership.role}</Text>
+                      </View>
+                    ))
+                  )}
+                </View>
+              )}
+
+              {/* Action Buttons */}
+              <View style={styles.actions}>
+                {user.isSuspended ? (
+                  <TouchableOpacity
+                    style={styles.restoreButton}
+                    onPress={handleToggleSuspend}
+                    disabled={updatingStatus}
                   >
-                    <Text
-                      style={[
-                        styles.statusBadgeText,
-                        course.status === 'Done'
-                          ? styles.doneBadgeText
-                          : styles.ongoingBadgeText,
-                      ]}
-                    >
-                      {course.status}
-                    </Text>
-                  </View>
-                  <Text style={styles.completionText}>
-                    {course.progress}% completed
-                  </Text>
-                </View>
-              ))}
-            </View>
+                    {updatingStatus ? (
+                      <ActivityIndicator size="small" color="#2196F3" />
+                    ) : (
+                      <>
+                        <Ionicons name="refresh" size={16} color="#2196F3" />
+                        <Text style={styles.restoreButtonText}>Restore User</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.suspendButton}
+                    onPress={handleToggleSuspend}
+                    disabled={updatingStatus}
+                  >
+                    {updatingStatus ? (
+                      <ActivityIndicator size="small" color="#F44336" />
+                    ) : (
+                      <>
+                        <Ionicons name="close-circle-outline" size={16} color="#F44336" />
+                        <Text style={styles.suspendButtonText}>Suspend Access</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                )}
+              </View>
+            </>
           ) : (
-            <View style={styles.content}>
-              {user.groups.map((group) => (
-                <View key={group.id} style={styles.groupItem}>
-                  <View style={styles.groupInfo}>
-                    <Text style={styles.groupName}>{group.name}</Text>
-                    <Text style={styles.groupJoined}>
-                      Joined {group.joined}
-                    </Text>
-                  </View>
-                  <Text style={styles.groupRole}>{group.role}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {/* Action Buttons */}
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.doneButton}>
-              <Text style={styles.doneButtonText}>Done</Text>
-            </TouchableOpacity>
-
-            {isRevoked ? (
-              <TouchableOpacity
-                style={styles.restoreButton}
-                onPress={handleRestoreUser}
-              >
-                <Ionicons name="refresh" size={16} color="#2196F3" />
-                <Text style={styles.restoreButtonText}>Restore User</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                style={styles.suspendButton}
-                onPress={handleSuspendAccess}
-              >
-                <Ionicons name="close-circle-outline" size={16} color="#F44336" />
-                <Text style={styles.suspendButtonText}>Suspend Access</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {!isRevoked && (
-            <TouchableOpacity
-              style={styles.removeButton}
-              onPress={() => setShowRemoveModal(true)}
-            >
-              <Ionicons name="trash-outline" size={16} color="#F44336" />
-              <Text style={styles.removeButtonText}>Remove User</Text>
-            </TouchableOpacity>
+            <Text style={styles.emptyText}>
+              Detailed activity and account actions require super admin access.
+            </Text>
           )}
         </View>
       </ScrollView>
-
-      {/* Remove Confirmation Modal */}
-      <Modal
-        visible={showRemoveModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowRemoveModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Remove User</Text>
-            <Text style={styles.modalMessage}>
-              Are you sure you want to switch to remove {user.name}?
-            </Text>
-
-            <TouchableOpacity
-              style={styles.removeConfirmButton}
-              onPress={handleRemoveUser}
-            >
-              <Text style={styles.removeConfirmButtonText}>Remove</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => setShowRemoveModal(false)}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -300,6 +318,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
   },
   header: {
     paddingHorizontal: 20,
@@ -438,20 +462,6 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 8,
   },
-  progressContainer: {
-    marginBottom: 8,
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#2E7D32',
-    borderRadius: 3,
-  },
   statusBadge: {
     alignSelf: 'flex-start',
     paddingHorizontal: 12,
@@ -509,21 +519,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     width: '100%',
-    marginBottom: 12,
-  },
-  doneButton: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  doneButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#000',
+    marginTop: 4,
   },
   suspendButton: {
     flex: 1,
@@ -559,59 +555,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#2196F3',
   },
-  removeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 16,
-  },
-  removeButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#F44336',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 12,
-  },
-  modalMessage: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 24,
-  },
-  removeConfirmButton: {
-    backgroundColor: '#F44336',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  removeConfirmButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  cancelButton: {
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#666',
+  emptyText: {
+    fontSize: 14,
+    color: '#999',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginVertical: 12,
   },
 });

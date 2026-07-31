@@ -1,9 +1,10 @@
 // app/(tabs)/community/index.tsx
 import {
   View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity,
-  ActivityIndicator, RefreshControl, Image, Modal,
+  ActivityIndicator, RefreshControl, Modal,
   KeyboardAvoidingView, Platform, FlatList, Dimensions,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useCallback, useRef } from 'react';
@@ -721,7 +722,7 @@ function DiscussionCard({ discussion, currentUserId, onLike, onDelete, onPress, 
         <View style={s.mediaGrid}>
           {images.slice(0, 4).map((img: any, idx: number) => (
             <View key={idx} style={[s.mediaThumb, images.length === 1 && s.mediaThumbFull]}>
-              <Image source={{ uri: img.url }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+              <Image source={{ uri: img.url }} style={StyleSheet.absoluteFill} contentFit="cover" />
               {idx === 3 && images.length > 4 && (
                 <View style={s.mediaMore}>
                   <Text style={s.mediaMoreText}>+{images.length - 4}</Text>
@@ -987,7 +988,7 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
               {mediaItems.map((item, idx) => (
                 <View key={idx} style={s.composerMediaThumb}>
                   {item.type === 'image' ? (
-                    <Image source={{ uri: item.uri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                    <Image source={{ uri: item.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
                   ) : (
                     <View style={[StyleSheet.absoluteFill, { backgroundColor: '#111', alignItems: 'center', justifyContent: 'center' }]}>
                       <Ionicons name="videocam" size={32} color="#fff" />
@@ -1107,12 +1108,13 @@ function GroupsFeed() {
           )}
         </View>
       ) : (
-        <ScrollView
+        <FlatList
+          data={filteredGroups}
+          keyExtractor={(group) => group.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={s.scrollContent}
+          contentContainerStyle={[s.scrollContent, { paddingBottom: 20 }]}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.brand]} />}
-        >
-          {filteredGroups.map((group) => {
+          renderItem={({ item: group }) => {
             const isUserMember = group.member?.some((m: any) => {
               if (m.userId) return m.userId === user?.id;
               if (m.student?.id) return m.student.id === user?.id;
@@ -1121,7 +1123,6 @@ function GroupsFeed() {
             const memberCount = group._count?.member || group.member?.length || 0;
             return (
               <GroupCard
-                key={group.id}
                 id={group.id}
                 name={group.group_title}
                 description={group.group_short_description || group.group_description}
@@ -1138,9 +1139,8 @@ function GroupsFeed() {
                 thumbnail={group.group_image}
               />
             );
-          })}
-          <View style={{ height: 20 }} />
-        </ScrollView>
+          }}
+        />
       )}
     </View>
   );

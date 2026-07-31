@@ -12,6 +12,8 @@ interface User {
   email_address: string;
   role: Role;
   originalRole?: string;
+  adminRole?: string;
+  accountType?: 'ORGANIZATION' | 'USER';
   organizationId?: string;
   user_pic?: string | null;
   phone_number?: string;
@@ -34,6 +36,7 @@ type UserContextType = {
   isInstructor: boolean;
   isStudent: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   isOrganizationAdmin: boolean;
   isAuthenticated: boolean;
   clearUserData: () => Promise<void>;
@@ -47,8 +50,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const isOrganizationAdmin = user?.originalRole?.toLowerCase() === 'administrator';
 
   useEffect(() => {
     loadUserData();
@@ -126,6 +127,26 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const isInstructor = user?.role === 'instructor' || user?.role === 'admin';
   const isStudent = user?.role === 'student';
   const isAdmin = user?.role === 'admin';
+  // AdminProfile.role defaults to "super_admin" on the backend when no
+  // profile row exists, so an admin with no adminRole set is treated the
+  // same way here.
+  const isSuperAdmin = isAdmin && (!user?.adminRole || user.adminRole === 'super_admin');
+
+  // An organization owner's User.role is "org_admin" (OrganizationController
+  // .CreateOrganization), and /user/login returns it as
+  // organization.organization_role. This previously compared against
+  // "administrator" — the value the org *signup form* collects into the separate
+  // Organization.organization_role column, which login never returns — so the
+  // flag was always false and every org-admin screen was unreachable.
+  // accountType is definitive for fresh logins; the role check keeps sessions
+  // already persisted in AsyncStorage working and covers invited members
+  // promoted to org_admin, who log in via the regular-user path.
+  const normalizedOriginalRole = user?.originalRole?.toLowerCase();
+  const isOrganizationAdmin =
+    user?.accountType === 'ORGANIZATION' ||
+    normalizedOriginalRole === 'org_admin' ||
+    normalizedOriginalRole === 'administrator';
+
   const isAuthenticated = !!user && !!token;
 
   return (
@@ -141,6 +162,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         isInstructor,
         isStudent,
         isAdmin,
+        isSuperAdmin,
         isOrganizationAdmin,
         isAuthenticated,
       }}

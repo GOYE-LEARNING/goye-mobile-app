@@ -1,5 +1,5 @@
 // app/(tabs)/courses/[id]/add-module.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -126,12 +126,47 @@ export default function AddModule() {
     }
   };
 
-  const uploadVideo = async (videoUri: string): Promise<string> => {
-    // Temporary: Return the local URI or a placeholder
-    console.log('Video upload not implemented yet, using local URI:', videoUri);
-    
-    // Return a placeholder URL for now
-    return `https://example.com/placeholder-video-${Date.now()}.mp4`;
+  const uploadVideo = async (courseId: string, moduleId: string, videoUri: string): Promise<string> => {
+    const fileName = videoUri.split('/').pop() || `lesson-video-${Date.now()}.mp4`;
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    const mimeType = extension === 'mov' ? 'video/quicktime' : extension === 'avi' ? 'video/x-msvideo' : 'video/mp4';
+
+    const formData = new FormData();
+    formData.append('file', {
+      uri: videoUri,
+      name: fileName,
+      type: mimeType,
+    } as any);
+
+    const response = await fetch(`${API_CONFIG.BASE_URL}/course/upload-lesson-video/${courseId}/${moduleId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Do not set Content-Type — fetch sets the correct multipart boundary automatically.
+      },
+      body: formData,
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || `HTTP ${response.status}: Failed to upload lesson video`);
+    }
+    return result.data.url;
+  };
+
+  const attachLessonVideo = async (lessonId: string, videoUrl: string) => {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/course/update-lesson/${lessonId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ lesson_video: videoUrl }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || `HTTP ${response.status}: Failed to attach lesson video`);
+    }
   };
 
   const validateModule = (module: Module): boolean => {
@@ -169,42 +204,19 @@ export default function AddModule() {
       const results = [];
 
       for (const module of modules) {
-        const moduleData: any = {
+        // Create the module first (without videos — real lesson IDs don't
+        // exist until the module/lessons are persisted, and the upload
+        // endpoint needs a real moduleId).
+        const moduleData = {
           courseId: courseId,
           module_title: module.module_title,
           module_description: module.module_description,
           module_duration: module.module_duration,
-          lesson: []
+          lesson: module.lesson.map((lesson) => ({
+            lesson_title: lesson.lesson_title,
+            lesson_video: '',
+          })),
         };
-
-        // Process lessons for this module
-        // Process lessons for this module
-for (const lesson of module.lesson) {
-  let videoUrl = lesson.lesson_video;
-  
-  // If video is a local URI and upload is needed
-  if (lesson.lesson_video && lesson.lesson_video.startsWith('file://')) {
-    try {
-      videoUrl = await uploadVideo(lesson.lesson_video);
-    } catch (error) {
-      console.warn('Video upload failed, using placeholder:', error);
-      videoUrl = `https://example.com/placeholder-video-${Date.now()}.mp4`;
-    }
-  }
-
-  // Always send a string for lesson_video, never null
-  const lessonData: any = {
-    id: lesson.id,
-    lesson_title: lesson.lesson_title,
-    lesson_video: videoUrl && videoUrl.trim() !== '' ? videoUrl : "", // Empty string instead of null
-    moduleId: module.id
-  };
-
-  moduleData.lesson.push(lessonData);
-}
-
-        // Send module data to backend - courseId in both URL AND body
-        console.log('Sending module data:', JSON.stringify(moduleData, null, 2));
 
         const response = await fetch(`${API_CONFIG.BASE_URL}/course/create-module/${courseId}`, {
           method: 'POST',
@@ -218,21 +230,30 @@ for (const lesson of module.lesson) {
         const result = await response.json();
 
         if (!response.ok) {
-          console.log('Full error details:', {
-            status: response.status,
-            statusText: response.statusText,
-            result: result
-          });
           throw new Error(result.message || `HTTP ${response.status}: Failed to create module`);
+        }
+
+        const createdModuleId = result.data.id;
+        const createdLessons = result.data.lesson as { id: string }[];
+
+        // Upload each lesson's local video (if any) now that we have real
+        // module/lesson ids, then attach the uploaded URL to that lesson.
+        for (let i = 0; i < module.lesson.length; i++) {
+          const lesson = module.lesson[i];
+          const createdLesson = createdLessons[i];
+          if (lesson.lesson_video && lesson.lesson_video.startsWith('file://') && createdLesson) {
+            const videoUrl = await uploadVideo(courseId as string, createdModuleId, lesson.lesson_video);
+            await attachLessonVideo(createdLesson.id, videoUrl);
+          }
         }
 
         results.push(result);
       }
 
       Alert.alert('Success', 'Modules created successfully', [
-        { 
-          text: 'OK', 
-          onPress: () => router.back() 
+        {
+          text: 'OK',
+          onPress: () => router.back()
         }
       ]);
 

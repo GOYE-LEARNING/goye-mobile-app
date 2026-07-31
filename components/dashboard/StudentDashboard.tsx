@@ -3,13 +3,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useUser } from '@/contexts/UserContext';
 import { useState, useEffect } from 'react';
-import { ActivityIndicator, Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import { startGrowthJourney, getGrowthByProgressId } from '@/services/api';
 import { getStudentGroupEvents, getUserProfile } from '@/services/api';
 import { getImageUri } from '@/utils/helpers';
 import { getEnrolledCourses } from '@/services/api';
 import EventCard from '@/components/community/EventCard';
 import { useTheme, lightColors } from '@/contexts/ThemeContext';
+import { NotificationBadge } from '@/components/NotificationBadge';
+import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 
 const { height } = Dimensions.get('window');
 
@@ -17,6 +20,7 @@ export default function Dashboard() {
   const { data } = useSignUp();
   const { user, token } = useUser();
   const { colors } = useTheme();
+  const unreadCount = useUnreadNotificationCount();
 
   const [journeyStarted, setJourneyStarted] = useState(false);
   const [journeyLoading, setJourneyLoading] = useState(false);
@@ -186,8 +190,12 @@ const fetchEnrolledCourse = async () => {
             <Text style={s.userName}>{user?.first_name}</Text>
           </View>
         </View>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/home/notifications')}>
+        <TouchableOpacity
+          style={{ position: 'relative' }}
+          onPress={() => router.push('/(tabs)/home/notifications')}
+        >
           <Ionicons name="notifications-outline" size={24} color={colors.headerText} />
+          <NotificationBadge count={unreadCount} />
         </TouchableOpacity>
       </View>
 

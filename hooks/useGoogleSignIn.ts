@@ -30,6 +30,10 @@ const auth = getAuth(app);
 
 GoogleSignin.configure({
   webClientId: '202109054723-djcegt0ctvgcqdqou19gbf32gdqc6acd.apps.googleusercontent.com',
+  // Required for the native iOS sign-in flow; Android ignores this field.
+  // No default exists yet (iOS was never configured before), so this is the
+  // one value that must come from .env — see .env.example.
+  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
   offlineAccess: true,
 });
 
@@ -57,9 +61,6 @@ export function useGoogleSignIn() {
       const firebaseIdToken = await firebaseResult.user.getIdToken();
 
       const response = await googleAuth(firebaseIdToken);
-
-      console.log("=== GOOGLE AUTH RESPONSE ===");
-      console.log(JSON.stringify(response, null, 2));
 
       const needsProfileCompletion = response.status?.requiresProfileCompletion === true;
 

@@ -19,11 +19,16 @@ const BADGE_ICON_MAP: Record<string, string> = {
 };
 
 export default function SpiritualGrowth() {
-  const params = useLocalSearchParams<{ progressId?: string }>();
+  const params = useLocalSearchParams<{ progressId?: string; tab?: string }>();
   const { token } = useUser();
   const { colors } = useTheme();
 
-  const [activeTab, setActiveTab] = useState<'achievements' | 'certificates' | 'badges'>('achievements');
+  const isValidTab = (tab?: string): tab is 'achievements' | 'certificates' | 'badges' =>
+    tab === 'achievements' || tab === 'certificates' || tab === 'badges';
+
+  const [activeTab, setActiveTab] = useState<'achievements' | 'certificates' | 'badges'>(
+    isValidTab(params.tab) ? params.tab : 'achievements'
+  );
   const [loading, setLoading] = useState(true);
   const [growthData, setGrowthData] = useState<any>(null);
   const [certificates, setCertificates] = useState<any[]>([]);

@@ -41,10 +41,6 @@ export default function VerifyOtp() {
   setLoading(true);
 
   try {
-    console.log('🔐 Verifying OTP...');
-    console.log('Session Token:', data.otpSessionToken);
-    console.log('OTP:', otpValue);
-
     const response = await fetch(`${API_CONFIG.BASE_URL}/user/verify-otp`, {
       method: 'POST',
       headers: {
@@ -57,11 +53,8 @@ export default function VerifyOtp() {
     });
 
     const result = await response.json();
-    
-    console.log('=== OTP VERIFICATION RESPONSE ===');
-    console.log('Status Code:', response.status);
-    console.log('Response Body:', result);
-    console.log('================================');
+
+    if (__DEV__) console.log('[OTP] Verification status:', response.status);
 
     if (response.ok) {
       console.log('✅ OTP verified successfully');

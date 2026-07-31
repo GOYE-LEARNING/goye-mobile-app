@@ -2,9 +2,10 @@
 
 import {
   View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity,
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Image,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
   RefreshControl
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useState, useEffect } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -243,9 +244,9 @@ export default function DiscussionDetail() {
             return (
               <Image 
                 key={idx} 
-                source={{ uri: media.url }} 
-                style={styles.mediaImage} 
-                resizeMode="cover"
+                source={{ uri: media.url }}
+                style={styles.mediaImage}
+                contentFit="cover"
               />
             );
           } else if (media.type === 'video') {

@@ -408,7 +408,7 @@ export const getStudentGroupEvents = async (token: string): Promise<ApiResponse<
     }, token);
     
     const result = await response.json();
-    console.log('[Events] student group events:', JSON.stringify(result, null, 2));
+    if (__DEV__) console.log('[Events] student group events:', JSON.stringify(result, null, 2));
     
     if (!response.ok) {
       throw new Error(result.message || `HTTP error! status: ${response.status}`);
@@ -548,7 +548,7 @@ export const updateOrganizationProfile = async (
     const result = await response.json();
     
     if (!response.ok) {
-      console.error('📥 Update error body:', JSON.stringify(result, null, 2));
+      if (__DEV__) console.error('📥 Update error body:', JSON.stringify(result, null, 2));
       throw new Error(result.message || `HTTP error! status: ${response.status}`);
     }
     
@@ -570,8 +570,6 @@ export const inviteUsersToOrganization = async (
 ): Promise<any> => {
   try {
     const payload = { users };
-    console.log('📤 Invite payload:', JSON.stringify(payload, null, 2));
-    console.log('📍 URL:', `${API_CONFIG.BASE_URL}/organizations/invite-users-to-organization/${organizationId}/${sentByUserId}`);
 
     const response = await fetchWithAuth(`/organizations/invite-users-to-organization/${organizationId}/${sentByUserId}`, {
       method: 'POST',
@@ -579,8 +577,7 @@ export const inviteUsersToOrganization = async (
     }, token);
 
     const result = await response.json();
-    console.log('📥 Invite response status:', response.status);
-    console.log('📥 Invite response body:', JSON.stringify(result, null, 2));
+    if (__DEV__) console.log('📥 Invite response status:', response.status, JSON.stringify(result, null, 2));
 
     if (!response.ok) {
       throw new Error(result.message || `HTTP error! status: ${response.status}`);
@@ -591,6 +588,197 @@ export const inviteUsersToOrganization = async (
     console.error('Error inviting users to organization:', error);
     throw error;
   }
+};
+
+/**
+ * Organization member roster. No single backend route returns a member list
+ * with names/emails, so this composes /fetch-specific-organization/{id}
+ * (roster: userId/role/joinedAt) with /user-details/{userId} (name/email)
+ * for each member.
+ */
+export const getOrgMembers = async (organizationId: string, token: string): Promise<any> => {
+  const orgResponse = await fetchWithAuth(`/organizations/fetch-specific-organization/${organizationId}`, { method: 'GET' }, token);
+  const orgResult = await orgResponse.json();
+  if (!orgResponse.ok) throw new Error(orgResult.message || 'Failed to fetch organization');
+
+  const roster = (orgResult.data?.members || []).filter((m: any) => m.isActive);
+
+  const members = await Promise.all(
+    roster.map(async (member: any) => {
+      try {
+        const detailResponse = await fetchWithAuth(`/organizations/user-details/${member.userId}`, { method: 'GET' }, token);
+        const detailResult = await detailResponse.json();
+        if (!detailResponse.ok || detailResult.success === false) return null;
+        return { ...member, user: detailResult.data };
+      } catch {
+        return null;
+      }
+    })
+  );
+
+  return { success: true, data: members.filter(Boolean) };
+};
+
+export const getOrgMemberDetail = async (userId: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/organizations/user-details/${userId}`, { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to fetch member detail');
+  return result;
+};
+
+/**
+ * GET /organizations/overview-stats/{organizationId}
+ */
+export const getOrgOverviewStats = async (organizationId: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/organizations/overview-stats/${organizationId}`, { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to fetch organization overview stats');
+  return result;
+};
+
+/**
+ * GET /organizations/user-breakdown/{organizationId}
+ */
+export const getOrgUserBreakdown = async (organizationId: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/organizations/user-breakdown/${organizationId}`, { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to fetch organization user breakdown');
+  return result;
+};
+
+/**
+ * GET /organizations/activities/{organizationId}
+ */
+export const getOrgActivities = async (organizationId: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/organizations/activities/${organizationId}`, { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to fetch organization activities');
+  return result;
+};
+
+/**
+ * DELETE /organizations/members/{organizationId}/{userId}
+ */
+export const removeMember = async (organizationId: string, userId: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/organizations/members/${organizationId}/${userId}`, { method: 'DELETE' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to remove member');
+  return result;
+};
+
+/**
+ * PUT /organizations/members/{organizationId}/{userId}/suspend
+ */
+export const suspendMember = async (organizationId: string, userId: string, suspend: boolean, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/organizations/members/${organizationId}/${userId}/suspend`, {
+    method: 'PUT',
+    body: JSON.stringify({ suspend }),
+  }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to update member status');
+  return result;
+};
+
+/**
+ * POST /organizations/announcements/{organizationId}
+ */
+export const createOrgAnnouncement = async (
+  organizationId: string,
+  data: { title: string; message: string; audience: 'all' | 'students' | 'instructors' | 'specific'; targetUserIds?: string[] },
+  token: string
+): Promise<any> => {
+  const response = await fetchWithAuth(`/organizations/announcements/${organizationId}`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to create announcement');
+  return result;
+};
+
+/**
+ * GET /organizations/announcements/{organizationId}
+ */
+export const getOrgAnnouncements = async (organizationId: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/organizations/announcements/${organizationId}`, { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to fetch announcements');
+  return result;
+};
+
+/**
+ * POST /organizations/events/{organizationId}
+ */
+export const createOrgEvent = async (
+  organizationId: string,
+  data: { name: string; description: string; date: string; time: string; location?: string; capacity?: number; type: string },
+  token: string
+): Promise<any> => {
+  const response = await fetchWithAuth(`/organizations/events/${organizationId}`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to create event');
+  return result;
+};
+
+/**
+ * GET /organizations/events/{organizationId}
+ */
+export const getOrgEvents = async (organizationId: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/organizations/events/${organizationId}`, { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to fetch events');
+  return result;
+};
+
+/**
+ * PUT /organizations/events/{organizationId}/{eventId}
+ */
+export const updateOrgEvent = async (
+  organizationId: string,
+  eventId: string,
+  data: { name?: string; description?: string; date?: string; time?: string; location?: string; capacity?: number; status?: string },
+  token: string
+): Promise<any> => {
+  const response = await fetchWithAuth(`/organizations/events/${organizationId}/${eventId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to update event');
+  return result;
+};
+
+/**
+ * DELETE /organizations/events/{organizationId}/{eventId}
+ */
+export const deleteOrgEvent = async (organizationId: string, eventId: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/organizations/events/${organizationId}/${eventId}`, { method: 'DELETE' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to delete event');
+  return result;
+};
+
+/**
+ * GET /organizations/invited-users/{organizationId}
+ */
+export const getInvitedUsers = async (organizationId: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/organizations/invited-users/${organizationId}`, { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to fetch invited users');
+  return result;
+};
+
+/**
+ * POST /organizations/resend-invitation/{invitationId}
+ */
+export const resendInvitation = async (invitationId: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/organizations/resend-invitation/${invitationId}`, { method: 'POST' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to resend invitation');
+  return result;
 };
 
 // ─── Enrollment APIs ─────────────────────────────────────────────────────────
@@ -807,7 +995,7 @@ export const startGrowthJourney = async (token: string): Promise<ApiResponse<any
     }, token);
 
     const result = await response.json();
-    console.log('[Growth] start-journey response:', JSON.stringify(result, null, 2));
+    if (__DEV__) console.log('[Growth] start-journey response:', JSON.stringify(result, null, 2));
 
     // Check if the response indicates the journey is already started
     if (result.message === "You have already started your journey!") {
@@ -842,7 +1030,7 @@ export const getGrowthByProgressId = async (progressId: string, token: string): 
     }, token);
 
     const result = await response.json();
-    console.log('[Growth] fetch-growth-user response:', JSON.stringify(result, null, 2));
+    if (__DEV__) console.log('[Growth] fetch-growth-user response:', JSON.stringify(result, null, 2));
 
     if (!response.ok) {
       throw new Error(result.message || `HTTP error! status: ${response.status}`);
@@ -866,7 +1054,7 @@ export const getAchievements = async (token: string): Promise<ApiResponse<any>> 
     }, token);
 
     const result = await response.json();
-    console.log('[Growth] fetch-achivement response:', JSON.stringify(result, null, 2));
+    if (__DEV__) console.log('[Growth] fetch-achivement response:', JSON.stringify(result, null, 2));
 
     if (!response.ok) {
       throw new Error(result.message || `HTTP error! status: ${response.status}`);
@@ -1550,7 +1738,6 @@ export const refreshAccessToken = async (refreshToken: string): Promise<any> => 
     });
 
     const result = await response.json();
-    console.log('[Auth] Refresh token response:', JSON.stringify(result, null, 2));
 
     // ✅ Check for success in different formats
     if (result?.success === false) {
@@ -1614,5 +1801,153 @@ export const completeProfile = async (
   }, token);
   const result = await response.json();
   if (!response.ok) throw new Error(result.message || 'Failed to complete profile');
+  return result;
+};
+
+// ─── Admin APIs ───────────────────────────────────────────────────────────────
+
+/**
+ * Platform admin dashboard stats + recent activity
+ * GET /user/admin-dashboard-stats
+ */
+export const getAdminDashboardStats = async (token: string): Promise<any> => {
+  const response = await fetchWithAuth('/user/admin-dashboard-stats', { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to fetch admin dashboard stats');
+  return result;
+};
+
+/**
+ * GET /user/fetch-users-student
+ */
+export const getAdminStudents = async (token: string): Promise<any> => {
+  const response = await fetchWithAuth('/user/fetch-users-student', { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to fetch students');
+  return result;
+};
+
+/**
+ * GET /user/fetch-users-tutors
+ */
+export const getAdminTutors = async (token: string): Promise<any> => {
+  const response = await fetchWithAuth('/user/fetch-users-tutors', { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to fetch tutors');
+  return result;
+};
+
+// ─── Super Admin APIs ─────────────────────────────────────────────────────────
+// All routes below require the signed-in admin's adminRole to be "super_admin"
+// (see UserContext.isSuperAdmin) — the backend enforces this independently.
+
+export const getSuperAdminUsers = async (token: string): Promise<any> => {
+  const response = await fetchWithAuth('/super-admin/users', { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to fetch users');
+  return result;
+};
+
+export const getSuperAdminUserDetail = async (userId: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/super-admin/users/${userId}`, { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to fetch user detail');
+  return result;
+};
+
+export const suspendSuperAdminUser = async (userId: string, suspend: boolean, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/super-admin/users/${userId}/suspend`, {
+    method: 'PUT',
+    body: JSON.stringify({ suspend }),
+  }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to update user status');
+  return result;
+};
+
+export const getSuperAdminCourses = async (token: string): Promise<any> => {
+  const response = await fetchWithAuth('/super-admin/courses', { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to fetch courses');
+  return result;
+};
+
+export const deleteSuperAdminCourse = async (courseId: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/super-admin/courses/${courseId}`, { method: 'DELETE' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to delete course');
+  return result;
+};
+
+export const sendSuperAdminAnnouncement = async (
+  data: { title: string; message: string; audience?: 'all' | 'students' | 'tutors' | 'org_admins' },
+  token: string
+): Promise<any> => {
+  const response = await fetchWithAuth('/super-admin/announcements', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to send announcement');
+  return result;
+};
+
+// ─── Tutor Overview APIs ──────────────────────────────────────────────────────
+
+/**
+ * GET /course/tutor-overview
+ */
+export const getTutorOverview = async (token: string): Promise<any> => {
+  const response = await fetchWithAuth('/course/tutor-overview', { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to fetch tutor overview');
+  return result;
+};
+
+/**
+ * GET /course/fetch-activities/{courseId}
+ */
+export const getCourseActivities = async (courseId: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/course/fetch-activities/${courseId}`, { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to fetch course activities');
+  return result;
+};
+
+// ─── Settings APIs ────────────────────────────────────────────────────────────
+
+/**
+ * GET /user/settings
+ */
+export const getSettings = async (token: string): Promise<any> => {
+  const response = await fetchWithAuth('/user/settings', { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to fetch settings');
+  return result;
+};
+
+/**
+ * PUT /notifications/change-notification-settings/{settingsId}
+ */
+export const updateNotificationSettings = async (
+  settingsId: string,
+  data: {
+    enable_push_notification: boolean;
+    course_updates: boolean;
+    event: boolean;
+    achievement: boolean;
+    daily_reminders: boolean;
+    group_activity: boolean;
+    email_notification: boolean;
+    darkMode: boolean;
+  },
+  token: string
+): Promise<any> => {
+  const response = await fetchWithAuth(`/notifications/change-notification-settings/${settingsId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }, token);
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to update notification settings');
   return result;
 };

@@ -6,7 +6,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert, ActivityIndicator } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView, VideoViewRef } from 'expo-video';
 import { Menu, MenuOption, MenuOptions, MenuProvider, MenuTrigger } from 'react-native-popup-menu';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -336,9 +337,9 @@ export default function CourseOverview() {
             '🎓 Congratulations!',
             'You\'ve completed all lessons in this course! Your certificate is ready.',
             [
-              { 
-                text: 'View Certificate', 
-                onPress: () => router.push('/(tabs)/profile/certificates' as any) 
+              {
+                text: 'View Certificate',
+                onPress: () => router.push('/(tabs)/home/growth?tab=certificates' as any)
               },
               { text: 'Continue', style: 'cancel' }
             ]
@@ -625,7 +626,7 @@ export default function CourseOverview() {
           {/* Hero image — instructor */}
           {isOwner && imageUri && (
             <View style={s.imageContainer}>
-              <Image source={{ uri: imageUri }} style={s.heroImage} resizeMode="cover" />
+              <Image source={{ uri: imageUri }} style={s.heroImage} contentFit="cover" />
             </View>
           )}
 

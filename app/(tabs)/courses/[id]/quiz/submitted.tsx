@@ -6,13 +6,14 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function QuizSubmitted() {
   const params = useLocalSearchParams();
-  const { 
-    id: courseId, 
+  const {
+    id: courseId,
     quizId,
     score,
     passed,
     correctCount,
-    totalQuestions
+    totalQuestions,
+    answers
   } = params;
 
   return (
@@ -66,12 +67,13 @@ export default function QuizSubmitted() {
           style={styles.reviewButton}
           onPress={() => router.replace({
             pathname: `/(tabs)/courses/${courseId}/quiz/review`,
-            params: { 
+            params: {
               quizId,
               score,
               passed,
               correctCount,
-              totalQuestions
+              totalQuestions,
+              answers
             }
           } as any)}
         >

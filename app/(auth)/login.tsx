@@ -6,7 +6,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUser } from '@/contexts/UserContext';
 import { API_CONFIG } from '@/constants/config';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Login() {
   const { setUser } = useUser();
@@ -27,9 +26,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      console.log('=== LOGIN REQUEST ===');
-      console.log('URL:', `${API_CONFIG.BASE_URL}/user/login`);
-      console.log('Email:', email);
+      if (__DEV__) console.log('[Login] Requesting', `${API_CONFIG.BASE_URL}/user/login`);
 
       const response = await fetch(`${API_CONFIG.BASE_URL}/user/login`, {
         method: 'POST',
@@ -39,10 +36,7 @@ export default function Login() {
 
       const result = await response.json();
 
-      console.log('=== LOGIN RESPONSE ===');
-      console.log('Status:', response.status);
-      console.log('Response Body:', JSON.stringify(result, null, 2));
-      console.log('======================');
+      if (__DEV__) console.log('[Login] Response status:', response.status);
 
       if (response.ok) {
         // ✅ Extract both tokens
@@ -50,7 +44,7 @@ export default function Login() {
         const userRefreshToken = result.refreshToken || result.data?.refreshToken || null;
 
         if (!userToken) {
-          console.error('❌ No token in response:', result);
+          console.error('[Login] No token in response');
           Alert.alert('Error', 'Invalid response from server');
           setLoading(false);
           return;
@@ -61,7 +55,6 @@ export default function Login() {
           const orgData = result.data.organization;
 
           const tokenPayload = JSON.parse(atob(userToken.split('.')[1]));
-          console.log('🔑 Token payload:', JSON.stringify(tokenPayload, null, 2));
 
           const normalizedUserData = {
             id: tokenPayload.id,
@@ -70,20 +63,17 @@ export default function Login() {
             email_address: orgData.organization_email,
             role: 'instructor' as const,
             originalRole: orgData.organization_role,
+            // Definitive org-owner marker: this branch only runs when the
+            // backend returned an organization payload. isOrganizationAdmin
+            // relies on this rather than string-matching a role field.
+            accountType: 'ORGANIZATION' as const,
             organizationId: tokenPayload.organizationId || orgData.id,
             user_pic: null,
           };
 
-          console.log('🏢 Org login detected');
-          console.log('📦 Normalized org data:', normalizedUserData);
-
-          // ✅ Save both tokens and email/password for silent re-login
           await setUser(normalizedUserData, userToken, userRefreshToken);
-          await AsyncStorage.setItem('userEmail', email.trim());
-          await AsyncStorage.setItem('userPassword', password);
 
-          // 🔍 Debug token structure
-          await debugTokens(userToken, userRefreshToken, 'organization');
+          if (__DEV__) await debugTokens(userToken, userRefreshToken, 'organization');
 
           setTimeout(() => {
             router.replace('/(tabs)/home');
@@ -96,7 +86,9 @@ export default function Login() {
           let appRole: 'student' | 'instructor' | 'admin' = 'student';
           if (userData.role === 'instructor') {
             appRole = 'instructor';
-          } else if (userData.role === 'admin') {
+          } else if (userData.role === 'goye_admin') {
+            // Backend stores platform admins with role "goye_admin" (see
+            // UserController.Login/GoogleAuth) — not "admin".
             appRole = 'admin';
           }
 
@@ -107,6 +99,10 @@ export default function Login() {
             email_address: userData.email || userData.email_address || '',
             role: appRole,
             originalRole: userData.role,
+            adminRole: userData.adminRole,
+            // Invited members promoted to org_admin arrive on this path, so
+            // isOrganizationAdmin still falls back to originalRole here.
+            accountType: 'USER' as const,
             organizationId: userData.organizationId || '',
             phone_number: userData.phone_number || '',
             country: userData.country || '',
@@ -115,16 +111,9 @@ export default function Login() {
             user_pic: userData.user_pic || null,
           };
 
-          console.log('👤 User login detected');
-          console.log('📦 Normalized user data:', normalizedUserData);
-
-          // ✅ Save both tokens and email/password for silent re-login
           await setUser(normalizedUserData, userToken, userRefreshToken);
-          await AsyncStorage.setItem('userEmail', email.trim());
-          await AsyncStorage.setItem('userPassword', password);
 
-          // 🔍 Debug token structure
-          await debugTokens(userToken, userRefreshToken, userData.role);
+          if (__DEV__) await debugTokens(userToken, userRefreshToken, userData.role);
 
           setTimeout(() => {
             router.replace('/(tabs)/home');
