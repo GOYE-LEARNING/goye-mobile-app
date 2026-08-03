@@ -65,8 +65,15 @@ export function useGoogleSignIn() {
       const needsProfileCompletion = response.status?.requiresProfileCompletion === true;
 
       if (!needsProfileCompletion) {
-        // Existing complete user → setUser, index.tsx handles redirect
-        await setUser(response.user, response.accessToken);
+        // Existing complete user → setUser, index.tsx handles redirect.
+        // response.refreshToken was previously never saved (only accessToken
+        // was passed here, unlike the regular-login flow in login.tsx which
+        // passes both) — a Google-signed-in session had no way to renew its
+        // access token, so it worked until the first expiry (~15min) and
+        // then silently failed every authenticated call and bounced back to
+        // login. Mirrors the same missing-write bug fixed on web this
+        // session, just for refreshToken instead of user_id.
+        await setUser(response.user, response.accessToken, response.refreshToken);
         return;
       }
 
