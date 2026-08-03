@@ -24,6 +24,7 @@ import { router } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
 import { ChatMessage, TutorCandidate, useShekiAI } from '@/hooks/useShekiAI';
+import ShekiAIOrb from '@/components/ShekiAIOrb';
 
 const ACCENT = '#FFA500';
 const ACCENT_GRADIENT: [string, string] = ['#FBB041', '#FFA500'];
@@ -214,9 +215,9 @@ export default function AIAssistantScreen() {
       <View style={{ marginBottom: 10 }}>
         <View style={[msgStyles.row, isUser ? msgStyles.rowUser : msgStyles.rowAssistant]}>
           {!isUser && (
-            <LinearGradient colors={ACCENT_GRADIENT} style={msgStyles.orb}>
-              <Ionicons name="sparkles" size={13} color="#fff" />
-            </LinearGradient>
+            <View style={msgStyles.orb}>
+              <ShekiAIOrb size={24} />
+            </View>
           )}
           <View
             style={[
@@ -252,7 +253,7 @@ export default function AIAssistantScreen() {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <View style={styles.headerLeft}>
-          <LinearGradient colors={ACCENT_GRADIENT} style={styles.headerOrb} />
+          <ShekiAIOrb size={28} active={status === 'thinking'} />
           <Text style={[styles.headerTitle, { color: colors.text }]}>ShekiAI</Text>
         </View>
         <Pressable onPress={() => router.back()} hitSlop={12}>
@@ -267,7 +268,8 @@ export default function AIAssistantScreen() {
       >
         {showGreeting ? (
           <View style={styles.greeting}>
-            <Text style={[styles.greetingTitle, { color: colors.text }]}>Hello, {tutorName}!</Text>
+            <ShekiAIOrb size={110} active={isStarting} />
+            <Text style={[styles.greetingTitle, { color: colors.text, marginTop: 20 }]}>Hello, {tutorName}!</Text>
             <Text style={[styles.greetingSubtitle, { color: colors.textMuted }]}>
               {isStudent ? "Looking for a mentor? Let's find the right person." : 'How can I help you today?'}
             </Text>

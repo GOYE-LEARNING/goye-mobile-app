@@ -6,8 +6,7 @@
 import { Pressable, StyleSheet } from 'react-native';
 import { router, usePathname } from 'expo-router';
 import { useUser } from '@/contexts/UserContext';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import ShekiAIOrb from './ShekiAIOrb';
 
 export function ShekiAIFab() {
   const { isAuthenticated } = useUser();
@@ -23,13 +22,7 @@ export function ShekiAIFab() {
       accessibilityLabel="Open ShekiAI assistant"
       style={styles.wrapper}
     >
-      <LinearGradient
-        colors={['#FBB041', '#FFA500']}
-        start={{ x: 0.35, y: 0.3 }}
-        style={styles.button}
-      >
-        <Ionicons name="sparkles" size={24} color="#fff" />
-      </LinearGradient>
+      <ShekiAIOrb size={56} />
     </Pressable>
   );
 }
@@ -41,13 +34,6 @@ const styles = StyleSheet.create({
     bottom: 100,
     zIndex: 50,
     elevation: 8,
-  },
-  button: {
-    height: 56,
-    width: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
