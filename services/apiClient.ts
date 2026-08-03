@@ -135,19 +135,23 @@ export const fetchWithAuth = async (
   retryCount = 0
 ): Promise<Response> => {
   const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-  
+
   // If no token provided, try to get it from storage
   let authToken = token;
   if (!authToken) {
     authToken = await getToken();
   }
   const deviceId = decodeDeviceId(authToken);
+  // A FormData body (multipart file upload) needs fetch's own auto-generated
+  // Content-Type with boundary — forcing 'application/json' on top of it (as
+  // every other call here needs) silently breaks the upload server-side.
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
 
   // Make the request
   let response = await fetch(url, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...options.headers,
       ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
       ...(deviceId ? { 'x-device-id': deviceId } : {}),
@@ -166,7 +170,7 @@ export const fetchWithAuth = async (
           const retryResponse = await fetch(url, {
             ...options,
             headers: {
-              'Content-Type': 'application/json',
+              ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
               ...options.headers,
               'Authorization': `Bearer ${newToken}`,
               ...(retryDeviceId ? { 'x-device-id': retryDeviceId } : {}),
@@ -192,7 +196,7 @@ export const fetchWithAuth = async (
         response = await fetch(url, {
           ...options,
           headers: {
-            'Content-Type': 'application/json',
+            ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
             ...options.headers,
             'Authorization': `Bearer ${newToken}`,
             ...(newDeviceId ? { 'x-device-id': newDeviceId } : {}),
