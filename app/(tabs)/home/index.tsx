@@ -8,7 +8,7 @@ export default function Home() {
 
   // Redirect admin to admin dashboard
   if (isAdmin) {
-    return <Redirect href="/(admin)/home/index" />;
+    return <Redirect href="/(admin)/home" />;
   }
 
   if (isInstructor) {

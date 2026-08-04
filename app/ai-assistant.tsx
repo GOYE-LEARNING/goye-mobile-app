@@ -23,7 +23,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
-import { ChatMessage, TutorCandidate, useShekiAI } from '@/hooks/useShekiAI';
+import { ChatMessage, CourseCandidate, GroupCandidate, TutorCandidate, useShekiAI } from '@/hooks/useShekiAI';
 import ShekiAIOrb from '@/components/ShekiAIOrb';
 
 const ACCENT = '#FFA500';
@@ -106,6 +106,76 @@ function TutorCandidateCards({
             </View>
           )}
         </View>
+      ))}
+    </View>
+  );
+}
+
+function CourseCandidateCards({
+  candidates,
+  colors,
+  onOpen,
+}: {
+  candidates: CourseCandidate[];
+  colors: any;
+  onOpen: (courseId: string) => void;
+}) {
+  return (
+    <View style={{ gap: 8, marginTop: 4 }}>
+      {candidates.map((course) => (
+        <Pressable
+          key={course.id}
+          onPress={() => onOpen(course.id)}
+          style={[cardStyles.card, cardStyles.tutorRow, { backgroundColor: colors.card, borderColor: colors.border }]}
+        >
+          <LinearGradient colors={ACCENT_GRADIENT} style={cardStyles.avatar}>
+            <Ionicons name="school-outline" size={16} color="#fff" />
+          </LinearGradient>
+          <View style={{ flex: 1 }}>
+            <Text style={[cardStyles.name, { color: colors.text }]} numberOfLines={1}>{course.title}</Text>
+            {!!course.level && (
+              <Text style={[cardStyles.role, { color: colors.textMuted }]} numberOfLines={1}>{course.level}</Text>
+            )}
+            {!!course.description && (
+              <Text style={[cardStyles.bio, { color: colors.textSecondary }]} numberOfLines={2}>{course.description}</Text>
+            )}
+          </View>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+function GroupCandidateCards({
+  candidates,
+  colors,
+  onOpen,
+}: {
+  candidates: GroupCandidate[];
+  colors: any;
+  onOpen: (groupId: string) => void;
+}) {
+  return (
+    <View style={{ gap: 8, marginTop: 4 }}>
+      {candidates.map((group) => (
+        <Pressable
+          key={group.id}
+          onPress={() => onOpen(group.id)}
+          style={[cardStyles.card, cardStyles.tutorRow, { backgroundColor: colors.card, borderColor: colors.border }]}
+        >
+          <LinearGradient colors={ACCENT_GRADIENT} style={cardStyles.avatar}>
+            <Ionicons name="people-outline" size={16} color="#fff" />
+          </LinearGradient>
+          <View style={{ flex: 1 }}>
+            <Text style={[cardStyles.name, { color: colors.text }]} numberOfLines={1}>{group.title}</Text>
+            <Text style={[cardStyles.role, { color: colors.textMuted }]} numberOfLines={1}>
+              {group.memberCount} {group.memberCount === 1 ? 'member' : 'members'}
+            </Text>
+            {!!group.description && (
+              <Text style={[cardStyles.bio, { color: colors.textSecondary }]} numberOfLines={2}>{group.description}</Text>
+            )}
+          </View>
+        </Pressable>
       ))}
     </View>
   );
@@ -196,6 +266,10 @@ export default function AIAssistantScreen() {
     router.push({ pathname: '/(tabs)/courses/[id]/overview', params: { id: courseId } });
   };
 
+  const handleOpenGroup = (groupId: string) => {
+    router.push({ pathname: '/(tabs)/community/[groupId]', params: { groupId } });
+  };
+
   const handleFinalize = async () => {
     setIsFinalizing(true);
     try {
@@ -242,6 +316,16 @@ export default function AIAssistantScreen() {
               onPick={handlePickTutor}
               onOpenCourse={handleOpenCourse}
             />
+          </View>
+        )}
+        {!isUser && m.courseCandidates && (
+          <View style={{ marginLeft: 34 }}>
+            <CourseCandidateCards candidates={m.courseCandidates} colors={colors} onOpen={handleOpenCourse} />
+          </View>
+        )}
+        {!isUser && m.groupCandidates && (
+          <View style={{ marginLeft: 34 }}>
+            <GroupCandidateCards candidates={m.groupCandidates} colors={colors} onOpen={handleOpenGroup} />
           </View>
         )}
       </View>

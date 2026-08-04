@@ -8,19 +8,33 @@
 // on every single login — meaning every login orphaned the previous
 // session row instead of ever revoking it, and "this device" was never
 // actually stable across app restarts.
+// The backend keys each login's UserSession row uniquely on deviceId — two
+// devices ever landing on the same value means the second login revokes and
+// overwrites the first device's session row outright, logging it out. This
+// MUST come from a real CSPRNG: Math.random() in RN's JS engine (Hermes/JSC)
+// is not guaranteed well-seeded per install, and two app instances launched
+// close together (e.g. during testing) can plausibly draw correlated
+// sequences from it — confirmed as the cause of one login logging out an
+// unrelated device. expo-crypto's getRandomBytesAsync uses the platform's
+// real secure RNG instead.
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Crypto from 'expo-crypto';
 
-const DEVICE_ID_KEY = 'stableDeviceId';
+// _v2: devices that already generated an ID under the old Math.random()
+// scheme need a fresh, properly-random one — reading the old key forward
+// would keep whatever collision risk it already has baked in indefinitely.
+const DEVICE_ID_KEY = 'stableDeviceId_v2';
 
-function randomId(): string {
-  return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+async function randomId(): Promise<string> {
+  const bytes = await Crypto.getRandomBytesAsync(16);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 export async function getOrCreateDeviceId(): Promise<string> {
   const existing = await AsyncStorage.getItem(DEVICE_ID_KEY);
   if (existing) return existing;
 
-  const id = randomId();
+  const id = await randomId();
   await AsyncStorage.setItem(DEVICE_ID_KEY, id);
   return id;
 }

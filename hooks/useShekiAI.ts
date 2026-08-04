@@ -26,9 +26,12 @@ export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   // Only set on the assistant reply from the turn that actually ran a fresh
-  // tutor search — lets the panel show real, clickable candidates right
-  // where they were found instead of leaving them as plain prose.
+  // search_tutors/search_courses/search_groups — lets the panel show real,
+  // clickable candidates right where they were found instead of leaving
+  // them as plain prose.
   tutorCandidates?: TutorCandidate[];
+  courseCandidates?: CourseCandidate[];
+  groupCandidates?: GroupCandidate[];
 }
 
 export interface TutorCandidate {
@@ -37,6 +40,20 @@ export interface TutorCandidate {
   bio: string | null;
   church_role: string | null;
   courses: { id: string; title: string }[];
+}
+
+export interface CourseCandidate {
+  id: string;
+  title: string;
+  description: string | null;
+  level: string | null;
+}
+
+export interface GroupCandidate {
+  id: string;
+  title: string;
+  description: string | null;
+  memberCount: number;
 }
 
 export type AssistantStatus = 'idle' | 'thinking' | 'awaiting_approval' | 'matched' | 'error';
@@ -70,16 +87,30 @@ export function useShekiAI(mode: AssistantMode = 'tutor') {
 
   // See web's useShekiAI.ts for why this de-dupes: every turn's result
   // carries the full persisted state, so without this we'd re-attach the
-  // same stale cards to every unrelated reply after the actual search.
-  const lastCandidateIds = useRef<string>('');
-  const candidatesForTurn = useCallback((state: any): TutorCandidate[] | undefined => {
-    const candidates: TutorCandidate[] | undefined = state?.candidates;
-    if (!candidates?.length) return undefined;
-    const ids = candidates.map((c) => c.id).sort().join(',');
-    if (ids === lastCandidateIds.current) return undefined;
-    lastCandidateIds.current = ids;
-    return candidates;
-  }, []);
+  // same stale cards to every unrelated reply after the actual search. One
+  // tracker per candidate kind, since a single turn can run more than one
+  // search (e.g. both search_courses and search_groups).
+  function useCandidateTracker<T extends { id: string }>(stateKey: 'candidates' | 'courseCandidates' | 'groupCandidates') {
+    const lastIds = useRef<string>('');
+    const tracker = useCallback(
+      (state: any): T[] | undefined => {
+        const candidates: T[] | undefined = state?.[stateKey];
+        if (!candidates?.length) return undefined;
+        const ids = candidates.map((c) => c.id).sort().join(',');
+        if (ids === lastIds.current) return undefined;
+        lastIds.current = ids;
+        return candidates;
+      },
+      [stateKey],
+    );
+    const reset = useCallback(() => {
+      lastIds.current = '';
+    }, []);
+    return [tracker, reset] as const;
+  }
+  const [candidatesForTurn, resetTutorCandidates] = useCandidateTracker<TutorCandidate>('candidates');
+  const [courseCandidatesForTurn, resetCourseCandidates] = useCandidateTracker<CourseCandidate>('courseCandidates');
+  const [groupCandidatesForTurn, resetGroupCandidates] = useCandidateTracker<GroupCandidate>('groupCandidates');
 
   const start = useCallback(
     async (initialMessage?: string) => {
@@ -92,13 +123,15 @@ export function useShekiAI(mode: AssistantMode = 'tutor') {
         if (!isStudent) setCourseTitle(result.draft?.course_title || null);
         if (result.matchedTutor) setMatchedTutor(result.matchedTutor);
         const tutorCandidates = isStudent ? candidatesForTurn(result.state) : undefined;
+        const courseCandidates = isStudent ? courseCandidatesForTurn(result.state) : undefined;
+        const groupCandidates = isStudent ? groupCandidatesForTurn(result.state) : undefined;
         setMessages(
           initialMessage
             ? [
                 { id: `u-${Date.now()}`, role: 'user', content: initialMessage },
-                { id: `a-${Date.now()}`, role: 'assistant', content: result.assistantReply, tutorCandidates },
+                { id: `a-${Date.now()}`, role: 'assistant', content: result.assistantReply, tutorCandidates, courseCandidates, groupCandidates },
               ]
-            : [{ id: `a-${Date.now()}`, role: 'assistant', content: result.assistantReply, tutorCandidates }],
+            : [{ id: `a-${Date.now()}`, role: 'assistant', content: result.assistantReply, tutorCandidates, courseCandidates, groupCandidates }],
         );
         setStatus(statusFor(result.status));
         return result;
@@ -109,7 +142,7 @@ export function useShekiAI(mode: AssistantMode = 'tutor') {
         setIsStarting(false);
       }
     },
-    [isStudent, candidatesForTurn],
+    [isStudent, candidatesForTurn, courseCandidatesForTurn, groupCandidatesForTurn],
   );
 
   const sendMessage = useCallback(
@@ -124,14 +157,16 @@ export function useShekiAI(mode: AssistantMode = 'tutor') {
         if (!isStudent) setCourseTitle(result.draft?.course_title || null);
         if (result.matchedTutor) setMatchedTutor(result.matchedTutor);
         const tutorCandidates = isStudent ? candidatesForTurn(result.state) : undefined;
-        setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: 'assistant', content: result.assistantReply, tutorCandidates }]);
+        const courseCandidates = isStudent ? courseCandidatesForTurn(result.state) : undefined;
+        const groupCandidates = isStudent ? groupCandidatesForTurn(result.state) : undefined;
+        setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: 'assistant', content: result.assistantReply, tutorCandidates, courseCandidates, groupCandidates }]);
         setStatus(statusFor(result.status));
       } catch (e: any) {
         setError(getFriendlyErrorMessage(e, 'sending that message'));
         setStatus('error');
       }
     },
-    [sessionId, start, isStudent, candidatesForTurn],
+    [sessionId, start, isStudent, candidatesForTurn, courseCandidatesForTurn, groupCandidatesForTurn],
   );
 
   const sendDocument = useCallback(
@@ -146,14 +181,16 @@ export function useShekiAI(mode: AssistantMode = 'tutor') {
         if (!isStudent) setCourseTitle(result.draft?.course_title || null);
         if (result.matchedTutor) setMatchedTutor(result.matchedTutor);
         const tutorCandidates = isStudent ? candidatesForTurn(result.state) : undefined;
-        setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: 'assistant', content: result.assistantReply, tutorCandidates }]);
+        const courseCandidates = isStudent ? courseCandidatesForTurn(result.state) : undefined;
+        const groupCandidates = isStudent ? groupCandidatesForTurn(result.state) : undefined;
+        setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: 'assistant', content: result.assistantReply, tutorCandidates, courseCandidates, groupCandidates }]);
         setStatus(statusFor(result.status));
       } catch (e: any) {
         setError(getFriendlyErrorMessage(e, 'sharing that document'));
         setStatus('error');
       }
     },
-    [sessionId, isStudent, candidatesForTurn],
+    [sessionId, isStudent, candidatesForTurn, courseCandidatesForTurn, groupCandidatesForTurn],
   );
 
   const finalize = useCallback(async () => {
@@ -171,8 +208,10 @@ export function useShekiAI(mode: AssistantMode = 'tutor') {
     setCourseTitle(null);
     setMatchedTutor(null);
     setStatus('idle');
-    lastCandidateIds.current = '';
-  }, [sessionId, isStudent]);
+    resetTutorCandidates();
+    resetCourseCandidates();
+    resetGroupCandidates();
+  }, [sessionId, isStudent, resetTutorCandidates, resetCourseCandidates, resetGroupCandidates]);
 
   return {
     tutorName,
