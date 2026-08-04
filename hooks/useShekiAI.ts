@@ -6,6 +6,7 @@
 // local "thinking" flag while the request is in flight is enough.
 import { useCallback, useRef, useState } from 'react';
 import { useUser } from '@/contexts/UserContext';
+import { getFriendlyErrorMessage } from '@/utils/errorMessages';
 import {
   abandonCourseDraft,
   finalizeCourseDraft,
@@ -102,7 +103,7 @@ export function useShekiAI(mode: AssistantMode = 'tutor') {
         setStatus(statusFor(result.status));
         return result;
       } catch (e: any) {
-        setError(e.message);
+        setError(getFriendlyErrorMessage(e, 'starting that conversation'));
         setStatus('error');
       } finally {
         setIsStarting(false);
@@ -126,7 +127,7 @@ export function useShekiAI(mode: AssistantMode = 'tutor') {
         setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: 'assistant', content: result.assistantReply, tutorCandidates }]);
         setStatus(statusFor(result.status));
       } catch (e: any) {
-        setError(e.message);
+        setError(getFriendlyErrorMessage(e, 'sending that message'));
         setStatus('error');
       }
     },
@@ -148,7 +149,7 @@ export function useShekiAI(mode: AssistantMode = 'tutor') {
         setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: 'assistant', content: result.assistantReply, tutorCandidates }]);
         setStatus(statusFor(result.status));
       } catch (e: any) {
-        setError(e.message);
+        setError(getFriendlyErrorMessage(e, 'sharing that document'));
         setStatus('error');
       }
     },
