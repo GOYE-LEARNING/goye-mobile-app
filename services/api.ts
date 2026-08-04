@@ -1919,6 +1919,47 @@ export const sendSuperAdminAnnouncement = async (
   return result;
 };
 
+export const getSuperAdminOverview = async (token: string): Promise<any> => {
+  const response = await fetchWithAuth('/super-admin/overview', { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to fetch overview');
+  return result;
+};
+
+export const getSuperAdminActivity = async (token: string): Promise<any> => {
+  const response = await fetchWithAuth('/super-admin/activity', { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to fetch activity');
+  return result;
+};
+
+export const getSuperAdminEvents = async (token: string): Promise<any> => {
+  const response = await fetchWithAuth('/super-admin/events', { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to fetch events');
+  return result;
+};
+
+export const deleteSuperAdminEvent = async (eventId: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/super-admin/events/${eventId}`, { method: 'DELETE' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to delete event');
+  return result;
+};
+
+export const sendSuperAdminEmail = async (
+  data: { subject: string; message: string; audience?: 'all' | 'students' | 'tutors' | 'org_admins' },
+  token: string
+): Promise<any> => {
+  const response = await fetchWithAuth('/super-admin/email', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to send email');
+  return result;
+};
+
 // ─── Tutor Overview APIs ──────────────────────────────────────────────────────
 
 /**

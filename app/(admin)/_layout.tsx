@@ -1,9 +1,14 @@
 import { Tabs, Redirect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@/contexts/UserContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function AdminLayout() {
   const { isAdmin, isSuperAdmin } = useUser();
+  // These were hardcoded light-mode colours, so the whole admin tab bar
+  // stayed white-on-white in dark mode while every other tab bar in the app
+  // followed the theme. Matches (tabs)/_layout.tsx now.
+  const { colors, isDark } = useTheme();
 
   // Protect admin routes - only admins can access
   if (!isAdmin) {
@@ -14,15 +19,12 @@ export default function AdminLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#3F1F22',
-        tabBarInactiveTintColor: 'grey',
+        tabBarActiveTintColor: colors.brand,
+        tabBarInactiveTintColor: isDark ? '#666666' : 'grey',
         tabBarStyle: {
-          backgroundColor: '#fff',
+          backgroundColor: colors.card,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
-          borderTopColor: '#f0f0f0',
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
         },
         tabBarLabelStyle: {
           fontSize: 12,
@@ -77,6 +79,14 @@ export default function AdminLayout() {
         }
       />
 
+      {/* Reached from the dashboard's Platform section rather than the tab
+          bar — web can afford 7 sidenav entries, but 8 bottom tabs would be
+          unusable. Declared here (href: null) so Expo Router doesn't
+          auto-add them as tabs showing raw route names. */}
+      <Tabs.Screen name="activity" options={{ href: null }} />
+      <Tabs.Screen name="events" options={{ href: null }} />
+      <Tabs.Screen name="announcements" options={{ href: null }} />
+
       <Tabs.Screen
         name="profile"
         options={{
@@ -87,13 +97,6 @@ export default function AdminLayout() {
         }}
       />
 
-      {/* Hide the index route from tabs */}
-      <Tabs.Screen
-        name="index"
-        options={{
-          href: null, // This hides it from the tab bar
-        }}
-      />
     </Tabs>
   );
 }

@@ -253,13 +253,50 @@ export default function AdminDashboard() {
           {isSuperAdmin && (
             <TouchableOpacity
               style={styles.actionCard}
-              onPress={() => setShowAnnouncementModal(true)}
+              onPress={() => router.push('/(admin)/announcements')}
             >
               <Ionicons name="megaphone" size={24} color="#3F1F22" />
               <Text style={styles.actionText}>Announcement</Text>
             </TouchableOpacity>
           )}
         </View>
+
+        {/* Platform-wide screens, mirroring web's super-admin sidenav. These
+            aren't in the tab bar (8 bottom tabs would be unusable), so this
+            is how they're reached. */}
+        {isSuperAdmin && (
+          <>
+            <Text style={styles.sectionTitle}>Platform</Text>
+            <View style={styles.quickActionsGrid}>
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() => router.push('/(admin)/organizations')}
+              >
+                <Ionicons name="business" size={24} color="#3F1F22" />
+                <Text style={styles.actionText}>Organizations</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() => router.push('/(admin)/activity')}
+              >
+                <Ionicons name="pulse" size={24} color="#3F1F22" />
+                <Text style={styles.actionText}>Activity</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.quickActionsGrid}>
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() => router.push('/(admin)/events')}
+              >
+                <Ionicons name="calendar" size={24} color="#3F1F22" />
+                <Text style={styles.actionText}>All Events</Text>
+              </TouchableOpacity>
+              <View style={styles.actionCardSpacer} />
+            </View>
+          </>
+        )}
 
         {/* Activities */}
         <Text style={styles.sectionTitle}>Activities</Text>
@@ -452,6 +489,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     gap: 8,
+  },
+  // Keeps a lone card in a 2-up row at half width instead of stretching it
+  // across the whole row.
+  actionCardSpacer: {
+    flex: 1,
   },
   actionText: {
     fontSize: 12,
