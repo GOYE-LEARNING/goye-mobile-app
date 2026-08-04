@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUser } from '@/contexts/UserContext';
 import { API_CONFIG } from '@/constants/config';
+import { getOrCreateDeviceId } from '@/utils/deviceId';
 
 export default function Login() {
   const { setUser } = useUser();
@@ -28,10 +29,11 @@ export default function Login() {
     try {
       if (__DEV__) console.log('[Login] Requesting', `${API_CONFIG.BASE_URL}/user/login`);
 
+      const deviceId = await getOrCreateDeviceId();
       const response = await fetch(`${API_CONFIG.BASE_URL}/user/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password }),
+        body: JSON.stringify({ email: email.trim(), password, deviceId, deviceType: 'mobile' }),
       });
 
       const result = await response.json();

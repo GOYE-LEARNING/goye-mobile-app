@@ -389,7 +389,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  headerOrb: { height: 28, width: 28, borderRadius: 14 },
   headerTitle: { fontSize: 16, fontWeight: '600' },
   greeting: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   greetingTitle: { fontSize: 20, fontWeight: '600' },
