@@ -1875,6 +1875,23 @@ export const suspendSuperAdminUser = async (userId: string, suspend: boolean, to
   return result;
 };
 
+export const getSuperAdminOrganizations = async (token: string): Promise<any> => {
+  const response = await fetchWithAuth('/super-admin/organizations', { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to fetch organizations');
+  return result;
+};
+
+export const suspendSuperAdminOrganization = async (organizationId: string, suspend: boolean, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/super-admin/organizations/${organizationId}/suspend`, {
+    method: 'PUT',
+    body: JSON.stringify({ suspend }),
+  }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to update organization status');
+  return result;
+};
+
 export const getSuperAdminCourses = async (token: string): Promise<any> => {
   const response = await fetchWithAuth('/super-admin/courses', { method: 'GET' }, token);
   const result = await response.json();

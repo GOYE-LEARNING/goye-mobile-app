@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@/contexts/UserContext';
 
 export default function AdminLayout() {
-  const { isAdmin, user } = useUser();
+  const { isAdmin, isSuperAdmin } = useUser();
 
   // Protect admin routes - only admins can access
   if (!isAdmin) {
@@ -58,6 +58,23 @@ export default function AdminLayout() {
             <Ionicons name="people" size={size} color={color} />
           ),
         }}
+      />
+
+      {/* Platform-wide org management is super-admin only (content_admin/
+          user_admin stay on the single-scope courses/users experience) —
+          mirrors web's separate dashboard/super-admin route tree. */}
+      <Tabs.Screen
+        name="organizations"
+        options={
+          isSuperAdmin
+            ? {
+                title: 'Orgs',
+                tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+                  <Ionicons name="business" size={size} color={color} />
+                ),
+              }
+            : { href: null }
+        }
       />
 
       <Tabs.Screen
