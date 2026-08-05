@@ -125,6 +125,18 @@ export default function OrganizationOverview() {
             <Text style={s.linkText}>Invited Users</Text>
           </TouchableOpacity>
         </View>
+        {/* Mirrors web's org-admin quick actions ("Review Courses" and the
+            activity feed) — the two org-scoped screens mobile was missing. */}
+        <View style={s.linksGrid}>
+          <TouchableOpacity style={s.linkCard} onPress={() => router.push('/(tabs)/organization/courses' as any)}>
+            <Ionicons name="book" size={24} color={colors.brand} />
+            <Text style={s.linkText}>Review Courses</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={s.linkCard} onPress={() => router.push('/(tabs)/organization/activity' as any)}>
+            <Ionicons name="pulse" size={24} color={colors.brand} />
+            <Text style={s.linkText}>Activity</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>

@@ -20,6 +20,8 @@ export default function OrganizationLayout() {
       <Stack.Screen name="events" />
       <Stack.Screen name="announcements" />
       <Stack.Screen name="invited" />
+      <Stack.Screen name="courses" />
+      <Stack.Screen name="activity" />
     </Stack>
   );
 }

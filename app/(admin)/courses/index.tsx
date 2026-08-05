@@ -14,9 +14,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@/contexts/UserContext';
 import { getCourses, deleteSuperAdminCourse } from '@/services/api';
 import { getImageUri } from '@/utils/helpers';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function AdminCourses() {
   const { token, isSuperAdmin } = useUser();
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,7 +73,7 @@ export default function AdminCourses() {
         <Image source={{ uri: getImageUri(item.course_image)! }} style={styles.courseImage} />
       ) : (
         <View style={styles.courseImagePlaceholder}>
-          <Ionicons name="book" size={24} color="#999" />
+          <Ionicons name="book" size={24} color={colors.textMuted} />
         </View>
       )}
       <View style={styles.courseInfo}>
@@ -100,7 +103,7 @@ export default function AdminCourses() {
       </View>
 
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#666" />
+        <Ionicons name="search" size={20} color={colors.textSecondary} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search courses..."
@@ -110,7 +113,7 @@ export default function AdminCourses() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#3F1F22" style={styles.loading} />
+        <ActivityIndicator size="large" color={colors.brand} style={styles.loading} />
       ) : (
         <FlatList
           data={filteredCourses}
@@ -124,10 +127,10 @@ export default function AdminCourses() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: c.background,
   },
   header: {
     paddingHorizontal: 20,
@@ -137,12 +140,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
+    color: c.text,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: c.backgroundMuted,
     marginHorizontal: 20,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -153,7 +156,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#000',
+    color: c.text,
   },
   listContainer: {
     paddingHorizontal: 20,
@@ -163,7 +166,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: 'center',
-    color: '#999',
+    color: c.textMuted,
     fontSize: 14,
     marginTop: 40,
   },
@@ -172,7 +175,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: c.border,
     gap: 12,
   },
   courseImage: {
@@ -184,7 +187,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 10,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: c.backgroundMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -194,12 +197,12 @@ const styles = StyleSheet.create({
   courseTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#000',
+    color: c.text,
     marginBottom: 2,
   },
   courseLevel: {
     fontSize: 13,
-    color: '#666',
+    color: c.textSecondary,
   },
   deleteButton: {
     padding: 8,

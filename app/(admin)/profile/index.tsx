@@ -15,9 +15,12 @@ import { router, useFocusEffect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useUser } from '@/contexts/UserContext';
 import { getUserProfile, updateUser, uploadProfilePicture } from '@/services/api';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function AdminProfile() {
   const { token, user, isSuperAdmin, logout } = useUser();
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -112,7 +115,7 @@ export default function AdminProfile() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3F1F22" />
+        <ActivityIndicator size="large" color={colors.brand} />
       </View>
     );
   }
@@ -125,7 +128,7 @@ export default function AdminProfile() {
             <Image source={{ uri: profilePic }} style={styles.avatar} />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <Ionicons name="person" size={36} color="#666" />
+              <Ionicons name="person" size={36} color={colors.textSecondary} />
             </View>
           )}
           {uploadingPic ? (
@@ -170,22 +173,22 @@ export default function AdminProfile() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: c.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: c.background,
   },
   header: {
     alignItems: 'center',
     paddingTop: 70,
     paddingBottom: 24,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: c.backgroundMuted,
   },
   avatar: {
     width: 96,
@@ -196,7 +199,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: c.borderMid,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -218,18 +221,18 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#3F1F22',
+    backgroundColor: c.brand,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#F5F5F5',
+    borderColor: c.background,
   },
   roleBadgeText: {
     marginTop: 12,
     fontSize: 13,
     fontWeight: '600',
-    color: '#3F1F22',
-    backgroundColor: '#FFF5F5',
+    color: c.brand,
+    backgroundColor: c.brandLighter,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 14,
@@ -240,25 +243,25 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#333',
+    color: c.text,
     marginBottom: 6,
     marginTop: 16,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: c.borderMid,
     borderRadius: 10,
     padding: 12,
     fontSize: 15,
-    color: '#000',
+    color: c.text,
   },
   inputDisabled: {
-    backgroundColor: '#F5F5F5',
-    color: '#999',
+    backgroundColor: c.backgroundMuted,
+    color: c.textMuted,
   },
   saveButton: {
     marginTop: 28,
-    backgroundColor: '#3F1F22',
+    backgroundColor: c.brand,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

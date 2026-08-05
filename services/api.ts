@@ -647,6 +647,16 @@ export const getOrgUserBreakdown = async (organizationId: string, token: string)
 };
 
 /**
+ * GET /organizations/courses-with-stats/{organizationId}
+ */
+export const getOrgCoursesWithStats = async (organizationId: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth(`/organizations/courses-with-stats/${organizationId}`, { method: 'GET' }, token);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || 'Failed to fetch organization courses');
+  return result;
+};
+
+/**
  * GET /organizations/activities/{organizationId}
  */
 export const getOrgActivities = async (organizationId: string, token: string): Promise<any> => {

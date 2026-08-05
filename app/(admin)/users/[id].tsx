@@ -12,6 +12,7 @@ import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useUser } from '@/contexts/UserContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import {
   getAdminStudents,
   getAdminTutors,
@@ -63,6 +64,8 @@ const formatDate = (dateString?: string) => {
 export default function UserDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { token, isSuperAdmin } = useUser();
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
 
   const [activeTab, setActiveTab] = useState<'Courses' | 'Organizations'>('Courses');
   const [user, setUser] = useState<UserDetail | null>(null);
@@ -123,7 +126,7 @@ export default function UserDetailsScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3F1F22" />
+        <ActivityIndicator size="large" color={colors.brand} />
       </View>
     );
   }
@@ -142,7 +145,7 @@ export default function UserDetailsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#000" />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
 
@@ -153,7 +156,7 @@ export default function UserDetailsScreen() {
               <Image source={{ uri: user.profilePic }} style={styles.avatar} />
             ) : (
               <View style={styles.avatarPlaceholder}>
-                <Ionicons name="person" size={40} color="#666" />
+                <Ionicons name="person" size={40} color={colors.textSecondary} />
               </View>
             )}
           </View>
@@ -314,25 +317,25 @@ export default function UserDetailsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: c.backgroundMuted,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: c.background,
   },
   header: {
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 20,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: c.backgroundMuted,
   },
   userCard: {
-    backgroundColor: '#fff',
+    backgroundColor: c.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -350,19 +353,19 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: c.borderMid,
     alignItems: 'center',
     justifyContent: 'center',
   },
   userName: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#000',
+    color: c.text,
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
-    color: '#666',
+    color: c.textSecondary,
     marginBottom: 12,
   },
   levelBadge: {
@@ -385,23 +388,23 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: c.border,
   },
   infoItem: {
     flex: 1,
   },
   divider: {
     width: 1,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: c.border,
   },
   infoLabel: {
     fontSize: 12,
-    color: '#999',
+    color: c.textMuted,
     marginBottom: 4,
   },
   infoValue: {
     fontSize: 14,
-    color: '#000',
+    color: c.text,
     fontWeight: '500',
   },
   statusText: {
@@ -428,14 +431,14 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomColor: '#3F1F22',
+    borderBottomColor: c.brand,
   },
   tabText: {
     fontSize: 16,
-    color: '#999',
+    color: c.textMuted,
   },
   activeTabText: {
-    color: '#3F1F22',
+    color: c.brand,
     fontWeight: '600',
   },
   content: {
@@ -446,7 +449,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: c.border,
   },
   courseInfo: {
     marginBottom: 12,
@@ -454,12 +457,12 @@ const styles = StyleSheet.create({
   courseName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: c.text,
     marginBottom: 4,
   },
   courseLevel: {
     fontSize: 14,
-    color: '#666',
+    color: c.textSecondary,
     marginBottom: 8,
   },
   statusBadge: {
@@ -487,7 +490,7 @@ const styles = StyleSheet.create({
   },
   completionText: {
     fontSize: 12,
-    color: '#666',
+    color: c.textSecondary,
   },
   groupItem: {
     flexDirection: 'row',
@@ -496,7 +499,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: c.border,
   },
   groupInfo: {
     flex: 1,
@@ -504,16 +507,16 @@ const styles = StyleSheet.create({
   groupName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: c.text,
     marginBottom: 4,
   },
   groupJoined: {
     fontSize: 14,
-    color: '#666',
+    color: c.textSecondary,
   },
   groupRole: {
     fontSize: 14,
-    color: '#666',
+    color: c.textSecondary,
   },
   actions: {
     flexDirection: 'row',
@@ -523,7 +526,7 @@ const styles = StyleSheet.create({
   },
   suspendButton: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: c.background,
     borderWidth: 1,
     borderColor: '#F44336',
     paddingVertical: 16,
@@ -540,7 +543,7 @@ const styles = StyleSheet.create({
   },
   restoreButton: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: c.background,
     borderWidth: 1,
     borderColor: '#2196F3',
     paddingVertical: 16,
@@ -557,7 +560,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: '#999',
+    color: c.textMuted,
     fontStyle: 'italic',
     textAlign: 'center',
     marginVertical: 12,

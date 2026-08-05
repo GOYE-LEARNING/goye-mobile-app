@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useUser } from '@/contexts/UserContext';
 import { getAdminStudents, getAdminTutors, getSuperAdminUsers } from '@/services/api';
+import { useTheme } from '@/contexts/ThemeContext';
 
 type UserRole = 'All' | 'Student' | 'Instructor';
 
@@ -27,6 +28,8 @@ interface AdminUser {
 
 export default function UsersScreen() {
   const { token, isSuperAdmin } = useUser();
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const [selectedFilter, setSelectedFilter] = useState<UserRole>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -142,7 +145,7 @@ export default function UsersScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Users</Text>
         <View style={{ width: 24 }} />
@@ -150,7 +153,7 @@ export default function UsersScreen() {
 
       {/* Search */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#666" />
+        <Ionicons name="search" size={20} color={colors.textSecondary} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search user..."
@@ -184,7 +187,7 @@ export default function UsersScreen() {
 
       {/* Users List */}
       {loading ? (
-        <ActivityIndicator size="large" color="#3F1F22" style={styles.loading} />
+        <ActivityIndicator size="large" color={colors.brand} style={styles.loading} />
       ) : (
         <FlatList
           data={filteredUsers}
@@ -198,10 +201,10 @@ export default function UsersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: c.background,
   },
   header: {
     flexDirection: 'row',
@@ -214,12 +217,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
+    color: c.text,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: c.backgroundMuted,
     marginHorizontal: 20,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -229,7 +232,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#000',
+    color: c.text,
   },
   filterContainer: {
     flexDirection: 'row',
@@ -242,14 +245,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: c.backgroundMuted,
   },
   filterButtonActive: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: c.brand,
   },
   filterText: {
     fontSize: 14,
-    color: '#666',
+    color: c.textSecondary,
   },
   filterTextActive: {
     color: '#fff',
@@ -263,7 +266,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: 'center',
-    color: '#999',
+    color: c.textMuted,
     fontSize: 14,
     marginTop: 40,
   },
@@ -272,7 +275,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: c.border,
     gap: 12,
   },
   avatar: {
@@ -284,14 +287,14 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: c.borderMid,
     alignItems: 'center',
     justifyContent: 'center',
   },
   initials: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: c.textSecondary,
   },
   userInfo: {
     flex: 1,
@@ -299,12 +302,12 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#000',
+    color: c.text,
     marginBottom: 2,
   },
   userEmail: {
     fontSize: 14,
-    color: '#666',
+    color: c.textSecondary,
   },
   badge: {
     paddingHorizontal: 12,

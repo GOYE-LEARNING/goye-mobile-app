@@ -17,6 +17,7 @@ import { useUser } from '@/contexts/UserContext';
 import { getAdminDashboardStats, sendSuperAdminAnnouncement } from '@/services/api';
 import { NotificationBadge } from '@/components/NotificationBadge';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface AdminStats {
   totalUsers: number;
@@ -64,6 +65,8 @@ const activityIcon = (type: string) => {
 
 export default function AdminDashboard() {
   const { user, token, isSuperAdmin } = useUser();
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const unreadCount = useUnreadNotificationCount();
 
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -117,7 +120,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3F1F22" />
+        <ActivityIndicator size="large" color={colors.brand} />
       </View>
     );
   }
@@ -165,13 +168,13 @@ export default function AdminDashboard() {
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{stats?.activeUsers ?? 0}</Text>
             <Text style={styles.statLabel}>Active Users</Text>
-            <Ionicons name="trending-up" size={20} color="#666" style={styles.statIcon} />
+            <Ionicons name="trending-up" size={20} color={colors.textSecondary} style={styles.statIcon} />
           </View>
 
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{stats?.newUsersToday ?? 0}</Text>
             <Text style={styles.statLabel}>New Today</Text>
-            <Ionicons name="people" size={20} color="#666" style={styles.statIcon} />
+            <Ionicons name="people" size={20} color={colors.textSecondary} style={styles.statIcon} />
           </View>
         </View>
 
@@ -179,13 +182,13 @@ export default function AdminDashboard() {
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{stats?.avgCompletionRate ?? 0}%</Text>
             <Text style={styles.statLabel}>Avg. Completion</Text>
-            <Ionicons name="stats-chart" size={20} color="#666" style={styles.statIcon} />
+            <Ionicons name="stats-chart" size={20} color={colors.textSecondary} style={styles.statIcon} />
           </View>
 
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{stats?.engagementRate ?? 0}%</Text>
             <Text style={styles.statLabel}>Engagement</Text>
-            <Ionicons name="bar-chart" size={20} color="#666" style={styles.statIcon} />
+            <Ionicons name="bar-chart" size={20} color={colors.textSecondary} style={styles.statIcon} />
           </View>
         </View>
 
@@ -228,7 +231,7 @@ export default function AdminDashboard() {
             style={styles.actionCard}
             onPress={() => router.push('/(admin)/users')}
           >
-            <Ionicons name="people" size={24} color="#3F1F22" />
+            <Ionicons name="people" size={24} color={colors.brand} />
             <Text style={styles.actionText}>Manage Users</Text>
           </TouchableOpacity>
 
@@ -236,7 +239,7 @@ export default function AdminDashboard() {
             style={styles.actionCard}
             onPress={() => router.push('/(admin)/courses')}
           >
-            <Ionicons name="book" size={24} color="#3F1F22" />
+            <Ionicons name="book" size={24} color={colors.brand} />
             <Text style={styles.actionText}>Review Courses</Text>
           </TouchableOpacity>
         </View>
@@ -246,7 +249,7 @@ export default function AdminDashboard() {
             style={styles.actionCard}
             onPress={() => router.push('/(tabs)/community')}
           >
-            <Ionicons name="people-circle" size={24} color="#3F1F22" />
+            <Ionicons name="people-circle" size={24} color={colors.brand} />
             <Text style={styles.actionText}>Manage Groups</Text>
           </TouchableOpacity>
 
@@ -255,7 +258,7 @@ export default function AdminDashboard() {
               style={styles.actionCard}
               onPress={() => router.push('/(admin)/announcements')}
             >
-              <Ionicons name="megaphone" size={24} color="#3F1F22" />
+              <Ionicons name="megaphone" size={24} color={colors.brand} />
               <Text style={styles.actionText}>Announcement</Text>
             </TouchableOpacity>
           )}
@@ -272,7 +275,7 @@ export default function AdminDashboard() {
                 style={styles.actionCard}
                 onPress={() => router.push('/(admin)/organizations')}
               >
-                <Ionicons name="business" size={24} color="#3F1F22" />
+                <Ionicons name="business" size={24} color={colors.brand} />
                 <Text style={styles.actionText}>Organizations</Text>
               </TouchableOpacity>
 
@@ -280,7 +283,7 @@ export default function AdminDashboard() {
                 style={styles.actionCard}
                 onPress={() => router.push('/(admin)/activity')}
               >
-                <Ionicons name="pulse" size={24} color="#3F1F22" />
+                <Ionicons name="pulse" size={24} color={colors.brand} />
                 <Text style={styles.actionText}>Activity</Text>
               </TouchableOpacity>
             </View>
@@ -290,7 +293,7 @@ export default function AdminDashboard() {
                 style={styles.actionCard}
                 onPress={() => router.push('/(admin)/events')}
               >
-                <Ionicons name="calendar" size={24} color="#3F1F22" />
+                <Ionicons name="calendar" size={24} color={colors.brand} />
                 <Text style={styles.actionText}>All Events</Text>
               </TouchableOpacity>
               <View style={styles.actionCardSpacer} />
@@ -305,7 +308,7 @@ export default function AdminDashboard() {
         ) : (
           activities.map((activity) => (
             <View key={`${activity.type}-${activity.id}`} style={styles.activityItem}>
-              <Ionicons name={activityIcon(activity.type) as any} size={24} color="#3F1F22" />
+              <Ionicons name={activityIcon(activity.type) as any} size={24} color={colors.brand} />
               <View style={styles.activityContent}>
                 <Text style={styles.activityText}>{activity.detail}</Text>
                 <Text style={styles.activityTime}>{getTimeAgo(activity.createdAt)}</Text>
@@ -366,16 +369,16 @@ export default function AdminDashboard() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#3F1F22',
+    backgroundColor: c.brand,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: c.background,
   },
   header: {
     flexDirection: 'row',
@@ -396,7 +399,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#fff',
+    backgroundColor: c.background,
   },
   greeting: {
     color: '#fff',
@@ -409,7 +412,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   dashboardCard: {
-    backgroundColor: '#fff',
+    backgroundColor: c.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -421,12 +424,12 @@ const styles = StyleSheet.create({
   dashboardTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#000',
+    color: c.text,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: c.text,
     marginBottom: 12,
     marginTop: 20,
   },
@@ -437,7 +440,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: c.backgroundMuted,
     padding: 16,
     borderRadius: 12,
     position: 'relative',
@@ -445,12 +448,12 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#000',
+    color: c.text,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
+    color: c.textSecondary,
   },
   statIcon: {
     position: 'absolute',
@@ -469,12 +472,12 @@ const styles = StyleSheet.create({
   breakdownValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#000',
+    color: c.text,
     marginBottom: 4,
   },
   breakdownLabel: {
     fontSize: 12,
-    color: '#666',
+    color: c.textSecondary,
     textAlign: 'center',
   },
   quickActionsGrid: {
@@ -484,7 +487,7 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: c.backgroundMuted,
     padding: 20,
     borderRadius: 12,
     alignItems: 'center',
@@ -497,7 +500,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 12,
-    color: '#3F1F22',
+    color: c.brand,
     fontWeight: '500',
     textAlign: 'center',
   },
@@ -505,7 +508,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     padding: 16,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: c.backgroundMuted,
     borderRadius: 12,
     marginBottom: 12,
   },
@@ -514,16 +517,16 @@ const styles = StyleSheet.create({
   },
   activityText: {
     fontSize: 14,
-    color: '#000',
+    color: c.text,
     marginBottom: 4,
   },
   activityTime: {
     fontSize: 12,
-    color: '#666',
+    color: c.textSecondary,
   },
   emptyText: {
     fontSize: 14,
-    color: '#999',
+    color: c.textMuted,
     fontStyle: 'italic',
     marginBottom: 12,
   },
@@ -535,7 +538,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: c.background,
     borderRadius: 16,
     padding: 20,
     width: '100%',
@@ -543,17 +546,17 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#000',
+    color: c.text,
     marginBottom: 16,
   },
   modalInput: {
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: c.borderMid,
     borderRadius: 10,
     padding: 12,
     fontSize: 14,
     marginBottom: 12,
-    color: '#000',
+    color: c.text,
   },
   modalTextArea: {
     minHeight: 80,
@@ -569,10 +572,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: c.backgroundMuted,
   },
   modalCancelText: {
-    color: '#3F1F22',
+    color: c.brand,
     fontWeight: '600',
   },
   modalSendButton: {
@@ -580,7 +583,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
-    backgroundColor: '#3F1F22',
+    backgroundColor: c.brand,
   },
   modalSendText: {
     color: '#fff',

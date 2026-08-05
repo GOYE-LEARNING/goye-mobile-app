@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useUser } from '@/contexts/UserContext';
 import { getSuperAdminOrganizations, suspendSuperAdminOrganization } from '@/services/api';
+import { useTheme } from '@/contexts/ThemeContext';
 
 type StatusFilter = 'all' | 'active' | 'suspended';
 
@@ -32,6 +33,8 @@ interface Organization {
 
 export default function OrganizationsScreen() {
   const { token } = useUser();
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -97,7 +100,7 @@ export default function OrganizationsScreen() {
   const renderOrg = ({ item }: { item: Organization }) => (
     <View style={styles.orgCard}>
       <View style={styles.orgIcon}>
-        <Ionicons name="business" size={20} color="#3F1F22" />
+        <Ionicons name="business" size={20} color={colors.brand} />
       </View>
 
       <View style={styles.orgInfo}>
@@ -137,14 +140,14 @@ export default function OrganizationsScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Organizations</Text>
         <Text style={styles.headerCount}>{organizations.length} total</Text>
       </View>
 
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#666" />
+        <Ionicons name="search" size={20} color={colors.textSecondary} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search by name or email..."
@@ -168,7 +171,7 @@ export default function OrganizationsScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#3F1F22" style={styles.loading} />
+        <ActivityIndicator size="large" color={colors.brand} style={styles.loading} />
       ) : (
         <FlatList
           data={filtered}
@@ -177,7 +180,7 @@ export default function OrganizationsScreen() {
           contentContainerStyle={styles.listContainer}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Ionicons name="business-outline" size={28} color="#999" />
+              <Ionicons name="business-outline" size={28} color={colors.textMuted} />
               <Text style={styles.emptyText}>No organizations found</Text>
             </View>
           }
@@ -187,8 +190,8 @@ export default function OrganizationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+const makeStyles = (c: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -197,49 +200,49 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 20,
   },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#000' },
-  headerCount: { fontSize: 12, color: '#666' },
+  headerTitle: { fontSize: 18, fontWeight: '600', color: c.text },
+  headerCount: { fontSize: 12, color: c.textSecondary },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: c.backgroundMuted,
     marginHorizontal: 20,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
     gap: 8,
   },
-  searchInput: { flex: 1, fontSize: 16, color: '#000' },
+  searchInput: { flex: 1, fontSize: 16, color: c.text },
   filterContainer: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginTop: 20, marginBottom: 16 },
-  filterButton: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F5F5F5' },
-  filterButtonActive: { backgroundColor: '#3F1F22' },
-  filterText: { fontSize: 13, color: '#666' },
+  filterButton: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: c.backgroundMuted },
+  filterButtonActive: { backgroundColor: c.brand },
+  filterText: { fontSize: 13, color: c.textSecondary },
   filterTextActive: { color: '#fff', fontWeight: '500' },
   listContainer: { paddingHorizontal: 20, paddingBottom: 20 },
   loading: { marginTop: 40 },
   emptyState: { alignItems: 'center', gap: 8, marginTop: 60 },
-  emptyText: { color: '#999', fontSize: 14 },
+  emptyText: { color: c.textMuted, fontSize: 14 },
   orgCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: c.border,
     gap: 12,
   },
   orgIcon: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#EBE5E7',
+    backgroundColor: c.brandLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   orgInfo: { flex: 1 },
-  orgName: { fontSize: 15, fontWeight: '600', color: '#000', marginBottom: 2 },
-  orgEmail: { fontSize: 13, color: '#666', marginBottom: 4 },
+  orgName: { fontSize: 15, fontWeight: '600', color: c.text, marginBottom: 2 },
+  orgEmail: { fontSize: 13, color: c.textSecondary, marginBottom: 4 },
   metaRow: { flexDirection: 'row' },
-  metaText: { fontSize: 12, color: '#999', textTransform: 'capitalize' },
+  metaText: { fontSize: 12, color: c.textMuted, textTransform: 'capitalize' },
   actionsCol: { alignItems: 'flex-end', gap: 8 },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   activeBadge: { backgroundColor: '#E8F5E9' },
