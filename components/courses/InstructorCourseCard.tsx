@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getImageUri } from '@/utils/helpers';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 interface Course {
   id: string;
@@ -25,6 +26,7 @@ interface Course {
 
 export default function InstructorCourseCard({ course }: { course: Course }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const imageUri = getImageUri(course.course_image);
   const s = makeStyles(colors);
 
@@ -58,23 +60,23 @@ export default function InstructorCourseCard({ course }: { course: Course }) {
 
           <View style={s.courseMeta}>
             <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
-            <Text style={s.metaText}>Created: {new Date(course.createdAt).toLocaleDateString()}</Text>
+            <Text style={s.metaText}>{t('courses.createdDate', { date: new Date(course.createdAt).toLocaleDateString() })}</Text>
           </View>
 
           <View style={s.instructorStats}>
             <View style={s.statItem}>
               <Ionicons name="people-outline" size={14} color={colors.textSecondary} />
-              <Text style={s.metaText}>{course.total_enrollments || 0} enrolled</Text>
+              <Text style={s.metaText}>{t('courses.enrolledCount', { count: course.total_enrollments || 0 })}</Text>
             </View>
             <View style={s.statItem}>
               <Ionicons name="checkmark-circle-outline" size={14} color={colors.success} />
-              <Text style={s.metaText}>{course.completionRate || 0}% completion</Text>
+              <Text style={s.metaText}>{t('courses.completionRate', { percent: course.completionRate || 0 })}</Text>
             </View>
           </View>
 
           <View style={s.instructorInfo}>
             <Ionicons name="person-outline" size={12} color={colors.textSecondary} />
-            <Text style={s.instructorText}>By {course.createdBy}</Text>
+            <Text style={s.instructorText}>{t('courses.createdBy', { name: course.createdBy })}</Text>
           </View>
         </View>
       </View>
@@ -83,7 +85,7 @@ export default function InstructorCourseCard({ course }: { course: Course }) {
         style={s.actionButton}
         onPress={() => router.push(`/(tabs)/courses/${course.id}/overview`)}
       >
-        <Text style={s.actionButtonText}>View Course</Text>
+        <Text style={s.actionButtonText}>{t('courses.viewCourse')}</Text>
       </TouchableOpacity>
     </TouchableOpacity>
   );

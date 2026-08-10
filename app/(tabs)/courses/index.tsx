@@ -10,11 +10,13 @@ import StudentCourseCard from '@/components/courses/StudentCourseCard';
 import InstructorCourseCard from '@/components/courses/InstructorCourseCard';
 import { getEnrolledCourses } from '@/services/api';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 
 export default function Courses() {
   const { user, token, isInstructor } = useUser();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [courses, setCourses] = useState<any[]>([]);
@@ -35,7 +37,7 @@ export default function Courses() {
         }
       }
     } catch (err) {
-      setError('Unable to load courses. Please try again.');
+      setError(t('courses.unableToLoadCourses'));
     } finally {
       setLoading(false);
     }
@@ -163,7 +165,7 @@ const fetchAllCoursesForStudent = async (filterType: string) => {
       <SafeAreaView style={s.container} edges={['top']}>
         <View style={s.loadingContainer}>
           <ActivityIndicator size="large" color={colors.brand} />
-          <Text style={s.loadingText}>Loading courses...</Text>
+          <Text style={s.loadingText}>{t('courses.loadingCourses')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -176,7 +178,7 @@ const fetchAllCoursesForStudent = async (filterType: string) => {
           <Ionicons name="alert-circle-outline" size={64} color={colors.textMuted} />
           <Text style={s.errorText}>{error}</Text>
           <TouchableOpacity style={s.retryButton} onPress={() => fetchCourses(activeFilter)}>
-            <Text style={s.retryButtonText}>Retry</Text>
+            <Text style={s.retryButtonText}>{t('courses.retry')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -186,12 +188,20 @@ const fetchAllCoursesForStudent = async (filterType: string) => {
   const instructorFilters = ['all', 'published', 'draft'];
   const studentFilters    = ['all', 'enrolled', 'saved', 'done'];
   const filters = isInstructor ? instructorFilters : studentFilters;
+  const filterLabels: Record<string, string> = {
+    all: t('courses.filterAll'),
+    enrolled: t('courses.filterEnrolled'),
+    saved: t('courses.filterSaved'),
+    done: t('courses.filterDone'),
+    published: t('courses.filterPublished'),
+    draft: t('courses.filterDraft'),
+  };
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
       {/* Header */}
       <View style={s.headerRow}>
-        <Text style={s.pageTitle}>{isInstructor ? 'My Courses' : 'Courses'}</Text>
+        <Text style={s.pageTitle}>{isInstructor ? t('courses.pageTitleInstructor') : t('courses.pageTitleStudent')}</Text>
         {isInstructor && (
           <TouchableOpacity style={s.addButton} onPress={() => router.push('/(tabs)/courses/create')}>
             <Ionicons name="add-circle" size={32} color={colors.brand} />
@@ -204,7 +214,7 @@ const fetchAllCoursesForStudent = async (filterType: string) => {
         <Ionicons name="search-outline" size={20} color={colors.textMuted} />
         <TextInput
           style={s.searchInput}
-          placeholder={isInstructor ? 'Search my courses...' : 'Search courses...'}
+          placeholder={isInstructor ? t('courses.searchPlaceholderInstructor') : t('courses.searchPlaceholderStudent')}
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholderTextColor={colors.textMuted}
@@ -225,7 +235,7 @@ const fetchAllCoursesForStudent = async (filterType: string) => {
             onPress={() => setActiveFilter(f)}
           >
             <Text style={[s.filterText, activeFilter === f && s.filterTextActive]}>
-              {f.charAt(0).toUpperCase() + f.slice(1)}
+              {filterLabels[f]}
             </Text>
           </TouchableOpacity>
         ))}
@@ -234,8 +244,8 @@ const fetchAllCoursesForStudent = async (filterType: string) => {
       {/* Results count */}
       <View style={s.resultsHeader}>
         <Text style={s.resultsText}>
-          {filteredCourses.length} {filteredCourses.length === 1 ? 'course' : 'courses'} found
-          {activeFilter !== 'all' && ` in ${activeFilter}`}
+          {t('courses.resultsFound', { count: filteredCourses.length })}
+          {activeFilter !== 'all' && ` ${t('courses.inFilter', { filter: filterLabels[activeFilter].toLowerCase() })}`}
         </Text>
       </View>
 
@@ -259,16 +269,16 @@ const fetchAllCoursesForStudent = async (filterType: string) => {
               color={colors.borderMid}
             />
             <Text style={s.emptyText}>
-              {searchQuery ? 'No courses found'
-                : activeFilter === 'enrolled' ? 'No enrolled courses'
-                : activeFilter === 'saved'    ? 'No saved courses'
-                : activeFilter === 'done'     ? 'No completed courses'
-                : 'No courses found'}
+              {searchQuery ? t('courses.noCoursesFound')
+                : activeFilter === 'enrolled' ? t('courses.noEnrolledCourses')
+                : activeFilter === 'saved'    ? t('courses.noSavedCourses')
+                : activeFilter === 'done'     ? t('courses.noCompletedCourses')
+                : t('courses.noCoursesFound')}
             </Text>
             <Text style={s.emptySubtext}>
-              {searchQuery ? 'Try adjusting your search'
-                : activeFilter === 'enrolled' ? 'Enroll in courses to see them here'
-                : 'Check back later for new courses'}
+              {searchQuery ? t('courses.tryAdjustingSearch')
+                : activeFilter === 'enrolled' ? t('courses.enrollToSeeHere')
+                : t('courses.checkBackLater')}
             </Text>
           </View>
         }

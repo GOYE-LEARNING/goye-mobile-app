@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getImageUri } from '@/utils/helpers';
+import { useTranslation } from 'react-i18next';
 
 interface GroupCardProps {
   id: number;
@@ -23,18 +24,19 @@ export default function GroupCard({
   leader, isMember, isModerator = false, thumbnail,
 }: GroupCardProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const formatLastActive = (dateString: string) => {
-    if (!dateString) return 'recently';
+    if (!dateString) return t('community.recently');
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return 'recently';
+      if (isNaN(date.getTime())) return t('community.recently');
       const diffDays = Math.ceil(Math.abs(Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDays === 1) return 'today';
-      if (diffDays <= 7) return `${diffDays} days ago`;
-      if (diffDays <= 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
-      return `${Math.ceil(diffDays / 30)} months ago`;
-    } catch { return 'recently'; }
+      if (diffDays === 1) return t('community.today');
+      if (diffDays <= 7) return t('community.daysAgo', { count: diffDays });
+      if (diffDays <= 30) return t('community.weeksAgo', { count: Math.ceil(diffDays / 7) });
+      return t('community.monthsAgo', { count: Math.ceil(diffDays / 30) });
+    } catch { return t('community.recently'); }
   };
 
   const avatarUri = leader.avatar ? getImageUri(leader.avatar) : null;
@@ -46,16 +48,16 @@ export default function GroupCard({
         <Text style={s.groupName}>{name}</Text>
         {isModerator ? (
           <View style={s.moderatorBadge}>
-            <Text style={s.moderatorBadgeText}>Moderator</Text>
+            <Text style={s.moderatorBadgeText}>{t('community.moderator')}</Text>
           </View>
         ) : isMember ? (
           <View style={s.memberBadge}>
-            <Text style={s.memberBadgeText}>Member</Text>
+            <Text style={s.memberBadgeText}>{t('community.member')}</Text>
           </View>
         ) : (
           <TouchableOpacity style={s.joinButton}>
             <Ionicons name="add" size={16} color={colors.brand} />
-            <Text style={s.joinButtonText}>Join</Text>
+            <Text style={s.joinButtonText}>{t('community.join')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -65,11 +67,11 @@ export default function GroupCard({
       <View style={s.groupMeta}>
         <View style={s.metaItem}>
           <Ionicons name="people-outline" size={14} color={colors.textSecondary} />
-          <Text style={s.metaText}>{memberCount} members</Text>
+          <Text style={s.metaText}>{t('community.membersCount', { count: memberCount })}</Text>
         </View>
         <View style={s.metaItem}>
           <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
-          <Text style={s.metaText}>Active {formatLastActive(lastActive)}</Text>
+          <Text style={s.metaText}>{t('community.activeRecently', { when: formatLastActive(lastActive) })}</Text>
         </View>
       </View>
 

@@ -25,6 +25,7 @@ import { Video, ResizeMode } from 'expo-av';
 import { getImageUri } from '@/utils/helpers';
 import Toast from 'react-native-toast-message';
 import { CustomAlert } from '@/components/CustomAlert';
+import { useTranslation } from 'react-i18next';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -33,15 +34,18 @@ interface MediaItem { uri: string; type: 'image' | 'video'; filename: string; mi
 
 type CategoryTab = 'ALL' | DiscussionCategory;
 
-const CATEGORY_TABS: { id: CategoryTab; label: string; icon: string }[] = [
-  { id: 'ALL', label: 'All', icon: 'albums-outline' },
-  { id: DiscussionCategory.PRAYER, label: 'Prayer', icon: 'heart-outline' },
-  { id: DiscussionCategory.DISCUSSION, label: 'Discussion', icon: 'chatbubbles-outline' },
-  { id: DiscussionCategory.DEVOTION, label: 'Devotion', icon: 'book-outline' },
-  { id: DiscussionCategory.BLESSING, label: 'Blessing', icon: 'gift-outline' },
-  { id: DiscussionCategory.TESTIMONY, label: 'Testimony', icon: 'megaphone-outline' },
-  { id: DiscussionCategory.QUESTION, label: 'Question', icon: 'help-circle-outline' },
-];
+function useCategoryTabs(): { id: CategoryTab; label: string; icon: string }[] {
+  const { t } = useTranslation();
+  return [
+    { id: 'ALL', label: t('community.categoryAll'), icon: 'albums-outline' },
+    { id: DiscussionCategory.PRAYER, label: t('community.categoryPrayer'), icon: 'heart-outline' },
+    { id: DiscussionCategory.DISCUSSION, label: t('community.categoryDiscussion'), icon: 'chatbubbles-outline' },
+    { id: DiscussionCategory.DEVOTION, label: t('community.categoryDevotion'), icon: 'book-outline' },
+    { id: DiscussionCategory.BLESSING, label: t('community.categoryBlessing'), icon: 'gift-outline' },
+    { id: DiscussionCategory.TESTIMONY, label: t('community.categoryTestimony'), icon: 'megaphone-outline' },
+    { id: DiscussionCategory.QUESTION, label: t('community.categoryQuestion'), icon: 'help-circle-outline' },
+  ];
+}
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
@@ -56,6 +60,7 @@ export default function Community() {
 function InviteMembersScreen() {
   const { user, token } = useUser();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [emailInput, setEmailInput] = useState('');
   const [roleInput, setRoleInput] = useState('Member');
   const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
@@ -80,8 +85,8 @@ function InviteMembersScreen() {
       setAlert({
         visible: true,
         type: 'error',
-        title: 'Invalid Email',
-        message: 'Please enter a valid email address.',
+        title: t('community.invalidEmailTitle'),
+        message: t('community.invalidEmailMessage'),
         onPrimary: () => setAlert(null)
       });
       return;
@@ -90,8 +95,8 @@ function InviteMembersScreen() {
       setAlert({
         visible: true,
         type: 'info',
-        title: 'Duplicate',
-        message: 'This email is already in the invite list.',
+        title: t('community.duplicateTitle'),
+        message: t('community.duplicateMessage'),
         onPrimary: () => setAlert(null)
       });
       return;
@@ -107,8 +112,8 @@ function InviteMembersScreen() {
       setAlert({
         visible: true,
         type: 'info',
-        title: 'No Invites',
-        message: 'Add at least one email address to invite.',
+        title: t('community.noInvitesTitle'),
+        message: t('community.noInvitesMessage'),
         onPrimary: () => setAlert(null)
       });
       return;
@@ -119,8 +124,8 @@ function InviteMembersScreen() {
       setAlert({
         visible: true,
         type: 'error',
-        title: 'Error',
-        message: 'Unable to determine organization. Please log in again.',
+        title: t('community.errorTitle'),
+        message: t('community.orgLookupError'),
         onPrimary: () => setAlert(null)
       });
       return;
@@ -131,8 +136,8 @@ function InviteMembersScreen() {
       setAlert({
         visible: true,
         type: 'success',
-        title: 'Invites Sent! 🎉',
-        message: `${pendingInvites.length} invite${pendingInvites.length > 1 ? 's' : ''} sent successfully.`,
+        title: t('community.invitesSentTitle'),
+        message: t('community.invitesSentMessage', { count: pendingInvites.length }),
         onPrimary: () => {
           setAlert(null);
           setPendingInvites([]);
@@ -142,8 +147,8 @@ function InviteMembersScreen() {
       setAlert({
         visible: true,
         type: 'error',
-        title: 'Error',
-        message: err.message || 'Failed to send invites. Please try again.',
+        title: t('community.errorTitle'),
+        message: err.message || t('community.invitesFailedFallback'),
         onPrimary: () => setAlert(null)
       });
     } finally {
@@ -156,16 +161,16 @@ function InviteMembersScreen() {
   return (
     <SafeAreaView style={s.container} edges={['top']}>
       <View style={s.headerRow}>
-        <Text style={s.pageTitle}>Members</Text>
+        <Text style={s.pageTitle}>{t('community.membersTitle')}</Text>
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.inviteScroll}>
         <View style={s.card}>
-          <Text style={s.cardTitle}>Invite members</Text>
-          <Text style={s.cardSubtitle}>Add new members by entering their email addresses.</Text>
+          <Text style={s.cardTitle}>{t('community.inviteMembersTitle')}</Text>
+          <Text style={s.cardSubtitle}>{t('community.inviteMembersSubtitle')}</Text>
           <View style={s.inputRow}>
             <TextInput
               style={s.emailInput}
-              placeholder="Email Address"
+              placeholder={t('community.emailPlaceholder')}
               placeholderTextColor={colors.textMuted}
               value={emailInput}
               onChangeText={setEmailInput}
@@ -177,21 +182,21 @@ function InviteMembersScreen() {
             />
             <View style={s.rolePickerWrapper}>
               <Picker selectedValue={roleInput} onValueChange={setRoleInput} style={s.rolePicker} dropdownIconColor={colors.brand}>
-                <Picker.Item label="Member" value="Member" />
-                <Picker.Item label="Admin" value="Admin" />
+                <Picker.Item label={t('community.roleMember')} value="Member" />
+                <Picker.Item label={t('community.roleAdmin')} value="Admin" />
               </Picker>
             </View>
           </View>
           <TouchableOpacity style={s.inviteButton} onPress={handleAddToList}>
             <Ionicons name="add" size={18} color="#fff" />
-            <Text style={s.inviteButtonText}>Add to List</Text>
+            <Text style={s.inviteButtonText}>{t('community.addToList')}</Text>
           </TouchableOpacity>
         </View>
 
         {pendingInvites.length > 0 && (
           <View style={s.card}>
             <View style={s.pendingHeader}>
-              <Text style={s.cardTitle}>Pending Invites</Text>
+              <Text style={s.cardTitle}>{t('community.pendingInvitesTitle')}</Text>
               <View style={s.badge}><Text style={s.badgeText}>{pendingInvites.length}</Text></View>
             </View>
             {pendingInvites.map((invite) => (
@@ -212,7 +217,7 @@ function InviteMembersScreen() {
               {sending ? <ActivityIndicator color="#fff" /> : (
                 <>
                   <Ionicons name="paper-plane-outline" size={18} color="#fff" />
-                  <Text style={s.sendButtonText}>Invite {pendingInvites.length} {pendingInvites.length === 1 ? 'Person' : 'People'}</Text>
+                  <Text style={s.sendButtonText}>{t('community.invitePeople', { count: pendingInvites.length })}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -222,19 +227,19 @@ function InviteMembersScreen() {
         {pendingInvites.length === 0 && (
           <View style={s.emptyState}>
             <View style={s.emptyIcon}><Ionicons name="people-outline" size={40} color="#C4A882" /></View>
-            <Text style={s.emptyTitle}>No invites queued</Text>
-            <Text style={s.emptySubtitle}>Enter an email above and tap "Add to List" to queue bulk invites before sending.</Text>
+            <Text style={s.emptyTitle}>{t('community.noInvitesQueuedTitle')}</Text>
+            <Text style={s.emptySubtitle}>{t('community.noInvitesQueuedSubtitle')}</Text>
           </View>
         )}
       </ScrollView>
-      
+
       {alert && (
         <CustomAlert
           visible={alert.visible}
           type={alert.type}
           title={alert.title}
           message={alert.message}
-          primaryLabel="OK"
+          primaryLabel={t('courses.ok')}
           onPrimary={alert.onPrimary}
           secondaryLabel={alert.secondaryLabel}
           onSecondary={alert.onSecondary}
@@ -251,6 +256,7 @@ type CommunityTab = 'feed' | 'groups';
 function RegularCommunityScreen() {
   const { user, token, isInstructor } = useUser();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<CommunityTab>('feed');
   const [unreadCount, setUnreadCount] = useState(0);
   const s = makeStyles(colors);
@@ -270,7 +276,7 @@ function RegularCommunityScreen() {
   return (
     <SafeAreaView style={s.container} edges={['top']}>
       <View style={s.headerRow}>
-        <Text style={s.pageTitle}>Community</Text>
+        <Text style={s.pageTitle}>{t('community.pageTitle')}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <TouchableOpacity
             style={s.iconButton}
@@ -289,7 +295,7 @@ function RegularCommunityScreen() {
               onPress={() => router.push('/(tabs)/community/create-group' as any)}
             >
               <Ionicons name="add" size={20} color={colors.brand} />
-              <Text style={s.newGroupText}>New</Text>
+              <Text style={s.newGroupText}>{t('community.newGroup')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -301,14 +307,14 @@ function RegularCommunityScreen() {
           onPress={() => setActiveTab('feed')}
         >
           <Ionicons name="newspaper-outline" size={16} color={activeTab === 'feed' ? colors.brand : colors.textMuted} />
-          <Text style={[s.tabSwitchText, activeTab === 'feed' && s.tabSwitchTextActive]}>Feed</Text>
+          <Text style={[s.tabSwitchText, activeTab === 'feed' && s.tabSwitchTextActive]}>{t('community.tabFeed')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[s.tabSwitchBtn, activeTab === 'groups' && s.tabSwitchBtnActive]}
           onPress={() => setActiveTab('groups')}
         >
           <Ionicons name="people-outline" size={16} color={activeTab === 'groups' ? colors.brand : colors.textMuted} />
-          <Text style={[s.tabSwitchText, activeTab === 'groups' && s.tabSwitchTextActive]}>Groups</Text>
+          <Text style={[s.tabSwitchText, activeTab === 'groups' && s.tabSwitchTextActive]}>{t('community.tabGroups')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -326,6 +332,8 @@ function RegularCommunityScreen() {
 function DiscussionFeed() {
   const { user, token } = useUser();
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const CATEGORY_TABS = useCategoryTabs();
   const [discussions, setDiscussions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -399,8 +407,8 @@ function DiscussionFeed() {
       console.error('fetchDiscussions error:', err);
       Toast.show({
         type: 'error',
-        text1: 'Error',
-        text2: 'Failed to load discussions',
+        text1: t('community.errorTitle'),
+        text2: t('community.failedToLoadDiscussions'),
       });
       setLoading(false);
     }
@@ -474,8 +482,8 @@ function DiscussionFeed() {
       setAlert({
         visible: true,
         type: 'error',
-        title: 'Error',
-        message: 'Failed to update like',
+        title: t('community.errorTitle'),
+        message: t('community.failedToUpdateLike'),
         onPrimary: () => setAlert(null)
       });
     }
@@ -485,10 +493,10 @@ function DiscussionFeed() {
     setAlert({
       visible: true,
       type: 'warning',
-      title: 'Delete Post',
-      message: 'Are you sure you want to delete this post? This action cannot be undone.',
-      primaryLabel: 'Delete',
-      secondaryLabel: 'Cancel',
+      title: t('community.deletePostTitle'),
+      message: t('community.deletePostMessage'),
+      primaryLabel: t('community.delete'),
+      secondaryLabel: t('community.cancel'),
       onPrimary: async () => {
         setAlert(null);
         try {
@@ -496,15 +504,15 @@ function DiscussionFeed() {
           setDiscussions(prev => prev.filter(d => d.id !== id));
           Toast.show({
             type: 'success',
-            text1: 'Deleted',
-            text2: 'Post deleted successfully',
+            text1: t('community.deletedTitle'),
+            text2: t('community.deletedMessage'),
           });
-        } catch (err: any) { 
+        } catch (err: any) {
           setAlert({
             visible: true,
             type: 'error',
-            title: 'Error',
-            message: err.message || 'Failed to delete',
+            title: t('community.errorTitle'),
+            message: err.message || t('community.failedToDelete'),
             onPrimary: () => setAlert(null)
           });
         }
@@ -560,7 +568,7 @@ function DiscussionFeed() {
             onPress={() => setSort(opt)}
           >
             <Text style={[s.sortPillText, sort === opt && s.sortPillTextActive]}>
-              {opt === 'latest' ? '🕐 Latest' : '🔥 Popular'}
+              {opt === 'latest' ? t('community.sortLatest') : t('community.sortPopular')}
             </Text>
           </TouchableOpacity>
         ))}
@@ -569,7 +577,7 @@ function DiscussionFeed() {
       {loading ? (
         <View style={s.centerContainer}>
           <ActivityIndicator size="large" color={colors.brand} />
-          <Text style={s.loadingText}>Loading discussions...</Text>
+          <Text style={s.loadingText}>{t('community.loadingDiscussions')}</Text>
         </View>
       ) : (
         <FlatList
@@ -581,9 +589,9 @@ function DiscussionFeed() {
             <View style={s.centerContainer}>
               <Ionicons name="chatbubbles-outline" size={48} color={colors.borderMid} />
               <Text style={s.emptyText}>
-                {selectedCategory === 'ALL' 
-                  ? 'No posts yet. Be the first!' 
-                  : `No ${selectedCategory.toLowerCase()} posts yet. Be the first to post!`}
+                {selectedCategory === 'ALL'
+                  ? t('community.noPostsYet')
+                  : t('community.noCategoryPostsYet', { category: selectedCategory.toLowerCase() })}
               </Text>
             </View>
           }
@@ -627,7 +635,7 @@ function DiscussionFeed() {
           type={alert.type}
           title={alert.title}
           message={alert.message}
-          primaryLabel={alert.primaryLabel || 'OK'}
+          primaryLabel={alert.primaryLabel || t('courses.ok')}
           secondaryLabel={alert.secondaryLabel}
           onPrimary={alert.onPrimary}
           onSecondary={alert.onSecondary}
@@ -640,13 +648,14 @@ function DiscussionFeed() {
 // ─── Discussion Card ──────────────────────────────────────────────────────────
 
 function DiscussionCard({ discussion, currentUserId, onLike, onDelete, onPress, colors }: any) {
+  const { t } = useTranslation();
   const s = makeStyles(colors);
   const isOwner = discussion.userId === currentUserId || discussion.user?.id === currentUserId || discussion.authorId === currentUserId;
-  
+
   const author = discussion.user || discussion.author;
   const authorName = author
     ? `${author.first_name || ''} ${author.last_name || ''}`.trim()
-    : 'Community Member';
+    : t('community.communityMember');
   const avatarUri = author?.user_pic || author?.avatar ? getImageUri(author.user_pic || author.avatar) : null;
   const likeCount = discussion._count?.likes ?? discussion.likesCount ?? 0;
   const replyCount = discussion._count?.replies ?? discussion.repliesCount ?? 0;
@@ -762,16 +771,16 @@ function DiscussionCard({ discussion, currentUserId, onLike, onDelete, onPress, 
         <TouchableOpacity style={s.cardAction} onPress={onLike}>
           <Ionicons name={discussion._liked ? 'heart' : 'heart-outline'} size={20} color={discussion._liked ? '#E53E3E' : colors.textMuted} />
           <Text style={[s.cardActionText, discussion._liked && { color: '#E53E3E' }]}>
-            {likeCount > 0 ? (likeCount >= 1000 ? `${(likeCount / 1000).toFixed(0)}k` : likeCount) : 'Like'}
+            {likeCount > 0 ? (likeCount >= 1000 ? `${(likeCount / 1000).toFixed(0)}k` : likeCount) : t('community.like')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity style={s.cardAction} onPress={onPress}>
           <Ionicons name="chatbubble-outline" size={20} color={colors.textMuted} />
-          <Text style={s.cardActionText}>{replyCount > 0 ? replyCount : 'Reply'}</Text>
+          <Text style={s.cardActionText}>{replyCount > 0 ? replyCount : t('community.reply')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={s.cardAction}>
           <Ionicons name="share-social-outline" size={20} color={colors.textMuted} />
-          <Text style={s.cardActionText}>Share</Text>
+          <Text style={s.cardActionText}>{t('community.share')}</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -781,6 +790,7 @@ function DiscussionCard({ discussion, currentUserId, onLike, onDelete, onPress, 
 // ─── Post Composer Modal ──────────────────────────────────────────────────────
 
 function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: any) {
+  const { t } = useTranslation();
   const [content, setContent] = useState('');
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [posting, setPosting] = useState(false);
@@ -806,15 +816,15 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
 
   const pickMedia = async (type: 'image' | 'video') => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) { 
+    if (!perm.granted) {
       setAlert({
         visible: true,
         type: 'error',
-        title: 'Permission needed',
-        message: 'Please allow access to your media library.',
+        title: t('community.permissionNeededTitle'),
+        message: t('community.permissionNeededMessage'),
         onPrimary: () => setAlert(null)
       });
-      return; 
+      return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -846,8 +856,8 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
       setAlert({
         visible: true,
         type: 'info',
-        title: 'Empty post',
-        message: 'Please write something or add media.',
+        title: t('community.emptyPostTitle'),
+        message: t('community.emptyPostMessage'),
         onPrimary: () => setAlert(null)
       });
       return;
@@ -888,8 +898,8 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
       setAlert({
         visible: true,
         type: 'error',
-        title: 'Error',
-        message: err.message || 'Failed to post. Please try again.',
+        title: t('community.errorTitle'),
+        message: err.message || t('community.postFailedFallback'),
         onPrimary: () => setAlert(null)
       });
     } finally {
@@ -901,12 +911,12 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
   const avatarUri = user?.user_pic ? getImageUri(user.user_pic) : null;
 
   const categoryOptions = [
-    { label: '💬 Discussion', value: DiscussionCategory.DISCUSSION },
-    { label: '🙏 Prayer', value: DiscussionCategory.PRAYER },
-    { label: '📖 Devotion', value: DiscussionCategory.DEVOTION },
-    { label: '✨ Blessing', value: DiscussionCategory.BLESSING },
-    { label: '🗣️ Testimony', value: DiscussionCategory.TESTIMONY },
-    { label: '❓ Question', value: DiscussionCategory.QUESTION },
+    { label: `💬 ${t('community.categoryDiscussion')}`, value: DiscussionCategory.DISCUSSION },
+    { label: `🙏 ${t('community.categoryPrayer')}`, value: DiscussionCategory.PRAYER },
+    { label: `📖 ${t('community.categoryDevotion')}`, value: DiscussionCategory.DEVOTION },
+    { label: `✨ ${t('community.categoryBlessing')}`, value: DiscussionCategory.BLESSING },
+    { label: `🗣️ ${t('community.categoryTestimony')}`, value: DiscussionCategory.TESTIMONY },
+    { label: `❓ ${t('community.categoryQuestion')}`, value: DiscussionCategory.QUESTION },
   ];
 
   return (
@@ -916,7 +926,7 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
           <TouchableOpacity onPress={handleClose} style={s.composerCloseBtn}>
             <Ionicons name="close" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[s.composerTitle, { color: colors.text }]}>New Post</Text>
+          <Text style={[s.composerTitle, { color: colors.text }]}>{t('community.newPost')}</Text>
           <TouchableOpacity
             style={[s.composerPostBtn, (posting || (!content.trim() && mediaItems.length === 0)) && s.composerPostBtnDisabled]}
             onPress={handlePost}
@@ -925,7 +935,7 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
             {posting ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={s.composerPostBtnText}>Post</Text>
+              <Text style={s.composerPostBtnText}>{t('community.post')}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -943,14 +953,14 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
               <Text style={[s.cardAuthorName, { color: colors.text }]}>{authorName}</Text>
               <View style={[s.composerPublicBadge, { backgroundColor: colors.backgroundMuted }]}>
                 <Ionicons name="globe-outline" size={12} color={colors.textSecondary} />
-                <Text style={[s.composerPublicText, { color: colors.textSecondary }]}>Public</Text>
+                <Text style={[s.composerPublicText, { color: colors.textSecondary }]}>{t('community.public')}</Text>
               </View>
             </View>
           </View>
 
           {/* Category Selector */}
           <View style={s.categorySelector}>
-            <Text style={[s.categoryLabel, { color: colors.textSecondary }]}>Category</Text>
+            <Text style={[s.categoryLabel, { color: colors.textSecondary }]}>{t('community.category')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.categoryOptionsContainer}>
               {categoryOptions.map((option) => (
                 <TouchableOpacity
@@ -974,7 +984,7 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
 
           <TextInput
             style={[s.composerInput, { color: colors.text }]}
-            placeholder="Say anything… Have fun!"
+            placeholder={t('community.postPlaceholder')}
             placeholderTextColor={colors.textMuted}
             value={content}
             onChangeText={setContent}
@@ -1007,15 +1017,15 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
         <View style={[s.composerToolbar, { borderTopColor: colors.border, backgroundColor: colors.background }]}>
           <TouchableOpacity style={s.composerToolBtn} onPress={() => pickMedia('image')}>
             <Ionicons name="image-outline" size={24} color={colors.brand} />
-            <Text style={[s.composerToolText, { color: colors.brand }]}>Photo</Text>
+            <Text style={[s.composerToolText, { color: colors.brand }]}>{t('community.photo')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={s.composerToolBtn} onPress={() => pickMedia('video')}>
             <Ionicons name="videocam-outline" size={24} color={colors.brand} />
-            <Text style={[s.composerToolText, { color: colors.brand }]}>Video</Text>
+            <Text style={[s.composerToolText, { color: colors.brand }]}>{t('community.video')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={s.composerToolBtn}>
             <Ionicons name="happy-outline" size={24} color={colors.textMuted} />
-            <Text style={[s.composerToolText, { color: colors.textMuted }]}>Feeling</Text>
+            <Text style={[s.composerToolText, { color: colors.textMuted }]}>{t('community.feeling')}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -1026,7 +1036,7 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
           type={alert.type}
           title={alert.title}
           message={alert.message}
-          primaryLabel="OK"
+          primaryLabel={t('courses.ok')}
           onPrimary={alert.onPrimary}
         />
       )}
@@ -1040,6 +1050,7 @@ function GroupsFeed() {
   const [searchQuery, setSearchQuery] = useState('');
   const { user, token, isInstructor } = useUser();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [groups, setGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -1056,7 +1067,7 @@ function GroupsFeed() {
       const groupsData = result.data || result || [];
       setGroups(Array.isArray(groupsData) ? groupsData : []);
     } catch (err) {
-      setError('Failed to load groups');
+      setError(t('community.failedToLoadGroups'));
     } finally {
       setLoading(false);
     }
@@ -1077,7 +1088,7 @@ function GroupsFeed() {
         <Ionicons name="search-outline" size={20} color={colors.textMuted} />
         <TextInput
           style={s.searchInput}
-          placeholder="Search groups..."
+          placeholder={t('community.searchGroupsPlaceholder')}
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholderTextColor={colors.textMuted}
@@ -1087,23 +1098,23 @@ function GroupsFeed() {
       {loading ? (
         <View style={s.centerContainer}>
           <ActivityIndicator size="large" color={colors.brand} />
-          <Text style={s.loadingText}>Loading groups...</Text>
+          <Text style={s.loadingText}>{t('community.loadingGroups')}</Text>
         </View>
       ) : error ? (
         <View style={s.centerContainer}>
           <Ionicons name="alert-circle-outline" size={48} color={colors.textMuted} />
           <Text style={s.errorText}>{error}</Text>
           <TouchableOpacity style={s.retryButton} onPress={fetchGroups}>
-            <Text style={s.retryButtonText}>Retry</Text>
+            <Text style={s.retryButtonText}>{t('community.retry')}</Text>
           </TouchableOpacity>
         </View>
       ) : filteredGroups.length === 0 ? (
         <View style={s.centerContainer}>
           <Ionicons name="people-outline" size={48} color={colors.borderMid} />
-          <Text style={s.emptyText}>{searchQuery ? 'No groups found' : 'No groups available'}</Text>
+          <Text style={s.emptyText}>{searchQuery ? t('community.noGroupsFound') : t('community.noGroupsAvailable')}</Text>
           {isInstructor && !searchQuery && (
             <TouchableOpacity style={s.createFirstButton} onPress={() => router.push('/(tabs)/community/create-group' as any)}>
-              <Text style={s.createFirstButtonText}>Create First Group</Text>
+              <Text style={s.createFirstButtonText}>{t('community.createFirstGroup')}</Text>
             </TouchableOpacity>
           )}
         </View>

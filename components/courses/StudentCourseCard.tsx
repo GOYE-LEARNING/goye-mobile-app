@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getImageUri } from '@/utils/helpers';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 interface Course {
   id: string;
@@ -29,6 +30,7 @@ interface StudentCourseCardProps {
 
 export default function StudentCourseCard({ course }: StudentCourseCardProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -39,12 +41,21 @@ export default function StudentCourseCard({ course }: StudentCourseCardProps) {
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'Enrolled':  return t('courses.statusEnrolled');
+      case 'Available': return t('courses.statusAvailable');
+      case 'Done':      return t('courses.statusDone');
+      default:          return status;
+    }
+  };
+
   const getButtonText = (status: string) => {
     switch (status) {
-      case 'Enrolled':  return 'Continue Course';
-      case 'Available': return 'Start Course';
-      case 'Done':      return 'Review Course';
-      default:          return 'View Course';
+      case 'Enrolled':  return t('courses.continueCourse');
+      case 'Available': return t('courses.startCourse');
+      case 'Done':      return t('courses.reviewCourse');
+      default:          return t('courses.viewCourse');
     }
   };
 
@@ -86,7 +97,7 @@ export default function StudentCourseCard({ course }: StudentCourseCardProps) {
           <View style={s.courseTitleRow}>
             <Text style={s.courseTitle} numberOfLines={2}>{course.course_title}</Text>
             <Text style={[s.statusBadge, { color: getStatusColor(course.status) }]}>
-              {course.status}
+              {getStatusLabel(course.status)}
             </Text>
           </View>
 
@@ -107,12 +118,12 @@ export default function StudentCourseCard({ course }: StudentCourseCardProps) {
           <View style={s.studentStats}>
             <View style={s.statItem}>
               <Ionicons name="people-outline" size={14} color={colors.textSecondary} />
-              <Text style={s.metaText}>{enrollmentCount} enrolled</Text>
+              <Text style={s.metaText}>{t('courses.enrolledCount', { count: enrollmentCount })}</Text>
             </View>
             {course.status === 'Done' && (
               <View style={s.statItem}>
                 <Ionicons name="checkmark-circle-outline" size={14} color={colors.success} />
-                <Text style={s.metaText}>Completed</Text>
+                <Text style={s.metaText}>{t('courses.completed')}</Text>
               </View>
             )}
           </View>

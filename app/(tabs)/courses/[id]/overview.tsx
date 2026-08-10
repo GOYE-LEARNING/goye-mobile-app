@@ -20,11 +20,13 @@ import {
   generateCertificate
 } from '@/services/api';
 import { getImageUri, getVideoUri } from '@/utils/helpers';
+import { useTranslation } from 'react-i18next';
 
 export default function CourseOverview() {
   const params = useLocalSearchParams();
   const { user, token, isInstructor } = useUser();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -274,9 +276,9 @@ export default function CourseOverview() {
         
         // Show success message
         Alert.alert(
-          'Lesson Complete! 🎉',
-          'Great job! You\'ve completed this lesson.',
-          [{ text: 'OK' }]
+          t('courses.lessonCompleteTitle'),
+          t('courses.lessonCompleteMessage'),
+          [{ text: t('courses.ok') }]
         );
         
         // Check if all lessons are completed - this will trigger certificate generation
@@ -334,32 +336,32 @@ export default function CourseOverview() {
         if (certResult?.success !== false) {
           // Show success message with certificate
           Alert.alert(
-            '🎓 Congratulations!',
-            'You\'ve completed all lessons in this course! Your certificate is ready.',
+            t('courses.certificateReadyTitle'),
+            t('courses.certificateReadyMessage'),
             [
               {
-                text: 'View Certificate',
+                text: t('courses.viewCertificate'),
                 onPress: () => router.push('/(tabs)/home/growth?tab=certificates' as any)
               },
-              { text: 'Continue', style: 'cancel' }
+              { text: t('courses.continueLabel'), style: 'cancel' }
             ]
           );
         } else {
           // Show generic completion message if certificate generation failed
           Alert.alert(
-            'Course Complete! 🎉',
-            'You\'ve completed all lessons in this course!',
-            [{ text: 'OK' }]
+            t('courses.courseCompleteTitle'),
+            t('courses.courseCompleteMessage'),
+            [{ text: t('courses.ok') }]
           );
         }
       } catch (error: any) {
         console.error('[Certificate] Generation error:', error);
-        
+
         // Still show completion message even if certificate generation fails
         Alert.alert(
-          'Course Complete! 🎉',
-          'You\'ve completed all lessons in this course! The certificate will be available shortly.',
-          [{ text: 'OK' }]
+          t('courses.courseCompleteTitle'),
+          t('courses.courseCompleteMessagePendingCert'),
+          [{ text: t('courses.ok') }]
         );
       }
     }
@@ -423,10 +425,10 @@ export default function CourseOverview() {
         setCourse(result.data);
         if (result.data?.module?.[0]?.id) setExpandedModules([result.data.module[0].id]);
       } else {
-        setError(result.message || 'Failed to load course');
+        setError(result.message || t('courses.unableToLoadCourse'));
       }
     } catch (err) {
-      setError('Unable to load course. Please try again.');
+      setError(t('courses.unableToLoadCourse'));
     } finally {
       setLoading(false);
     }
@@ -440,10 +442,10 @@ export default function CourseOverview() {
   const handleEdit = () => router.push(`/(tabs)/courses/${params.id}/edit` as any);
 
   const handleDelete = () => {
-    Alert.alert('Delete Course', 'Are you sure you want to delete this course? This action cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('courses.deleteCourseTitle'), t('courses.deleteCourseMessage'), [
+      { text: t('courses.cancel'), style: 'cancel' },
       {
-        text: 'Delete', style: 'destructive',
+        text: t('courses.delete'), style: 'destructive',
         onPress: async () => {
           try {
             const response = await fetch(
@@ -452,14 +454,14 @@ export default function CourseOverview() {
             );
             const result = await response.json();
             if (response.ok) {
-              Alert.alert('Success', result.message || 'Course deleted successfully', [
-                { text: 'OK', onPress: () => router.back() }
+              Alert.alert(t('courses.success'), result.message || t('courses.courseDeletedSuccess'), [
+                { text: t('courses.ok'), onPress: () => router.back() }
               ]);
             } else {
-              Alert.alert('Error', result.message || `Failed to delete course (Status: ${response.status})`);
+              Alert.alert(t('courses.error'), result.message || t('courses.failedToDeleteCourse'));
             }
           } catch {
-            Alert.alert('Error', 'Failed to delete course.');
+            Alert.alert(t('courses.error'), t('courses.failedToDeleteCourse'));
           }
         },
       },
@@ -475,7 +477,7 @@ export default function CourseOverview() {
       <SafeAreaView style={s.container} edges={['top']}>
         <View style={s.loadingContainer}>
           <ActivityIndicator size="large" color={colors.brand} />
-          <Text style={s.loadingText}>Loading course...</Text>
+          <Text style={s.loadingText}>{t('courses.loadingCourse')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -486,12 +488,12 @@ export default function CourseOverview() {
       <SafeAreaView style={s.container} edges={['top']}>
         <View style={s.errorContainer}>
           <Ionicons name="alert-circle-outline" size={64} color={colors.textMuted} />
-          <Text style={s.errorText}>{error || 'Course not found'}</Text>
+          <Text style={s.errorText}>{error || t('courses.courseNotFound')}</Text>
           <TouchableOpacity style={s.retryButton} onPress={fetchCourseData}>
-            <Text style={s.retryButtonText}>Retry</Text>
+            <Text style={s.retryButtonText}>{t('courses.retry')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={s.backButton} onPress={() => router.back()}>
-            <Text style={s.backButtonText}>Go Back</Text>
+            <Text style={s.backButtonText}>{t('courses.goBack')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -514,7 +516,7 @@ export default function CourseOverview() {
           </TouchableOpacity>
           <View style={s.headerTitleContainer}>
             <Text style={s.headerTitle} numberOfLines={1}>
-              {isOwner ? 'Course Details' : course.course_title}
+              {isOwner ? t('courses.courseDetails') : course.course_title}
             </Text>
           </View>
           {isOwner ? (
@@ -539,13 +541,13 @@ export default function CourseOverview() {
                 <MenuOption onSelect={handleEdit}>
                   <View style={s.menuItem}>
                     <Ionicons name="pencil-outline" size={20} color={colors.text} />
-                    <Text style={s.menuText}>Edit</Text>
+                    <Text style={s.menuText}>{t('courses.edit')}</Text>
                   </View>
                 </MenuOption>
                 <MenuOption onSelect={handleDelete}>
                   <View style={s.menuItem}>
                     <Ionicons name="trash-outline" size={20} color="#EF4444" />
-                    <Text style={[s.menuText, { color: '#EF4444' }]}>Delete</Text>
+                    <Text style={[s.menuText, { color: '#EF4444' }]}>{t('courses.delete')}</Text>
                   </View>
                 </MenuOption>
               </MenuOptions>
@@ -566,9 +568,9 @@ export default function CourseOverview() {
                   <Text style={s.metaTagText}>{course.course_level}</Text>
                 </View>
                 <View style={[s.metaDivider, { backgroundColor: colors.borderMid }]} />
-                <Text style={s.metaInfoText}>{totalDuration} min</Text>
+                <Text style={s.metaInfoText}>{t('courses.minutes', { count: totalDuration })}</Text>
                 <View style={[s.metaDivider, { backgroundColor: colors.borderMid }]} />
-                <Text style={s.metaInfoText}>{totalLessons} lessons</Text>
+                <Text style={s.metaInfoText}>{t('courses.lessonsCount', { count: totalLessons })}</Text>
               </View>
             </View>
           )}
@@ -591,7 +593,7 @@ export default function CourseOverview() {
                 <View style={[s.noVideoPlaceholder, { backgroundColor: colors.backgroundMuted }]}>
                   <Ionicons name="videocam-off-outline" size={48} color={colors.textMuted} />
                   <Text style={s.noVideoText}>
-                    {currentLesson ? 'No video for this lesson' : 'Select a lesson to watch'}
+                    {currentLesson ? t('courses.noVideoForLesson') : t('courses.selectLessonToWatch')}
                   </Text>
                 </View>
               )}
@@ -633,16 +635,16 @@ export default function CourseOverview() {
           {/* Tabs */}
           <View style={s.tabs}>
             <TouchableOpacity style={[s.tab, s.tabActive]}>
-              <Text style={[s.tabText, s.tabTextActive]}>Overview</Text>
+              <Text style={[s.tabText, s.tabTextActive]}>{t('courses.tabOverview')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={s.tab} onPress={() => router.push(`/(tabs)/courses/${params.id}/quizzes` as any)}>
-              <Text style={s.tabText}>Quizzes</Text>
+              <Text style={s.tabText}>{t('courses.tabQuizzes')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={s.tab} onPress={() => router.push(`/(tabs)/courses/${params.id}/materials` as any)}>
-              <Text style={s.tabText}>Materials</Text>
+              <Text style={s.tabText}>{t('courses.tabMaterials')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={s.tab} onPress={() => router.push(`/(tabs)/courses/${params.id}/forums` as any)}>
-              <Text style={s.tabText}>Forums</Text>
+              <Text style={s.tabText}>{t('courses.tabForums')}</Text>
             </TouchableOpacity>
           </View>
 
