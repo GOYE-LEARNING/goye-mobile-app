@@ -21,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
 import { ChatMessage, CourseCandidate, GroupCandidate, TutorCandidate, useShekiAI } from '@/hooks/useShekiAI';
@@ -29,18 +30,24 @@ import ShekiAIOrb from '@/components/ShekiAIOrb';
 const ACCENT = '#FFA500';
 const ACCENT_GRADIENT: [string, string] = ['#FBB041', '#FFA500'];
 
+// labelKey only — the prompt text is what actually gets sent to the AI as
+// the user's message, and stays in English regardless of app language. The
+// model reasons more reliably in English; only the button the user sees
+// needs to be translated. Chat replies from the AI itself are a separate,
+// much bigger problem (the model would need to be told to reply in the
+// user's language) and aren't covered by this.
 const TUTOR_QUICK_ACTIONS = [
-  { label: 'Create a course', prompt: "I'd like to create a new course. Can you help me plan it out?" },
-  { label: 'Give me ideas', prompt: "I'm not sure what to teach yet — can you suggest some course ideas?" },
-  { label: 'Add a quiz', prompt: "Let's add a quiz to test what students have learned." },
-  { label: 'Review my draft', prompt: "Can you show me what we've built so far?" },
+  { labelKey: 'aiAssistant.quickActions.createCourse', prompt: "I'd like to create a new course. Can you help me plan it out?" },
+  { labelKey: 'aiAssistant.quickActions.giveIdeas', prompt: "I'm not sure what to teach yet — can you suggest some course ideas?" },
+  { labelKey: 'aiAssistant.quickActions.addQuiz', prompt: "Let's add a quiz to test what students have learned." },
+  { labelKey: 'aiAssistant.quickActions.reviewDraft', prompt: "Can you show me what we've built so far?" },
 ];
 
 const STUDENT_QUICK_ACTIONS = [
-  { label: 'Find me a mentor', prompt: "I'd like to find a mentor who can guide me." },
-  { label: 'Help me grow spiritually', prompt: 'I want to grow spiritually — can you connect me with someone who can help?' },
-  { label: "I'm struggling with something", prompt: "I'm struggling with something and could use someone to talk to and learn from." },
-  { label: 'Learn a new skill', prompt: 'I want to learn a new skill — who on GOYE could teach me?' },
+  { labelKey: 'aiAssistant.quickActions.findMentor', prompt: "I'd like to find a mentor who can guide me." },
+  { labelKey: 'aiAssistant.quickActions.growSpiritually', prompt: 'I want to grow spiritually — can you connect me with someone who can help?' },
+  { labelKey: 'aiAssistant.quickActions.strugglingHelp', prompt: "I'm struggling with something and could use someone to talk to and learn from." },
+  { labelKey: 'aiAssistant.quickActions.learnSkill', prompt: 'I want to learn a new skill — who on GOYE could teach me?' },
 ];
 
 // Reveals assistant text a chunk at a time rather than dumping it all at
@@ -183,6 +190,7 @@ function GroupCandidateCards({
 
 export default function AIAssistantScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { isInstructor } = useUser();
   const mode = isInstructor ? 'tutor' : 'student';
   const isStudent = mode === 'student';
@@ -262,12 +270,18 @@ export default function AIAssistantScreen() {
     sendMessage(`I'd like to connect with ${tutor.name}.`);
   };
 
+  // replace, not push: this screen is itself a modal on the root Stack.
+  // Pushing the destination on top of it left the modal underneath in the
+  // back-stack (Home -> AI modal -> Course), so pressing back tried to
+  // re-enter the modal instead of returning to Home and broke navigation.
+  // Replacing swaps the modal out for the destination directly, so back
+  // goes to wherever the user actually was before opening the assistant.
   const handleOpenCourse = (courseId: string) => {
-    router.push({ pathname: '/(tabs)/courses/[id]/overview', params: { id: courseId } });
+    router.replace({ pathname: '/(tabs)/courses/[id]/overview', params: { id: courseId } });
   };
 
   const handleOpenGroup = (groupId: string) => {
-    router.push({ pathname: '/(tabs)/community/[groupId]', params: { groupId } });
+    router.replace({ pathname: '/(tabs)/community/[groupId]', params: { groupId } });
   };
 
   const handleFinalize = async () => {
@@ -353,19 +367,19 @@ export default function AIAssistantScreen() {
         {showGreeting ? (
           <View style={styles.greeting}>
             <ShekiAIOrb size={110} active={isStarting} />
-            <Text style={[styles.greetingTitle, { color: colors.text, marginTop: 20 }]}>Hello, {tutorName}!</Text>
+            <Text style={[styles.greetingTitle, { color: colors.text, marginTop: 20 }]}>{t('aiAssistant.greeting', { name: tutorName })}</Text>
             <Text style={[styles.greetingSubtitle, { color: colors.textMuted }]}>
-              {isStudent ? "Looking for a mentor? Let's find the right person." : 'How can I help you today?'}
+              {isStudent ? t('aiAssistant.studentSubtitle') : t('aiAssistant.tutorSubtitle')}
             </Text>
             <View style={styles.quickActions}>
               {QUICK_ACTIONS.map((action) => (
                 <Pressable
-                  key={action.label}
+                  key={action.labelKey}
                   onPress={() => handleQuickAction(action.prompt)}
                   disabled={isStarting}
                   style={[styles.quickAction, { backgroundColor: colors.card, borderColor: colors.border }]}
                 >
-                  <Text style={[styles.quickActionText, { color: colors.text }]}>{action.label}</Text>
+                  <Text style={[styles.quickActionText, { color: colors.text }]}>{t(action.labelKey)}</Text>
                 </Pressable>
               ))}
             </View>
@@ -385,7 +399,7 @@ export default function AIAssistantScreen() {
                   <View style={styles.thinkingRow}>
                     <ActivityIndicator size="small" color={ACCENT} />
                     <Text style={{ color: colors.textMuted, marginLeft: 8 }}>
-                      {isUploadingDoc ? 'Reading your document…' : 'Thinking…'}
+                      {isUploadingDoc ? t('aiAssistant.readingDocument') : t('aiAssistant.thinking')}
                     </Text>
                   </View>
                 )}
@@ -393,30 +407,30 @@ export default function AIAssistantScreen() {
                 {!isStudent && status === 'awaiting_approval' && !finalizedCourseId && (
                   <View style={[styles.banner, { backgroundColor: `${ACCENT}1A`, borderColor: `${ACCENT}66` }]}>
                     <Text style={[styles.bannerText, { color: colors.text }]}>
-                      Your draft is ready — want me to create the course?
+                      {t('aiAssistant.draftReady')}
                     </Text>
                     <Pressable onPress={handleFinalize} disabled={isFinalizing} style={styles.bannerBtn}>
-                      <Text style={styles.bannerBtnText}>{isFinalizing ? 'Creating…' : 'Create it'}</Text>
+                      <Text style={styles.bannerBtnText}>{isFinalizing ? t('aiAssistant.creating') : t('aiAssistant.createIt')}</Text>
                     </Pressable>
                   </View>
                 )}
                 {finalizedCourseId && (
                   <View style={[styles.banner, { backgroundColor: 'rgba(34,197,94,0.12)', borderColor: 'rgba(34,197,94,0.4)' }]}>
                     <Text style={[styles.bannerText, { color: colors.text }]}>
-                      🎉 Course created! Add lesson videos and materials from your course dashboard.
+                      {t('aiAssistant.courseCreated')}
                     </Text>
                   </View>
                 )}
                 {isStudent && matchedTutor && (
                   <View style={[styles.banner, { backgroundColor: 'rgba(34,197,94,0.12)', borderColor: 'rgba(34,197,94,0.4)' }]}>
                     <Text style={[styles.bannerText, { color: colors.text }]}>
-                      🎉 {matchedTutor.name} has been notified — your chat is ready.
+                      {t('aiAssistant.matchedNotified', { name: matchedTutor.name })}
                     </Text>
                     <Pressable
                       onPress={() => router.push({ pathname: '/(tabs)/community/chat/[userId]', params: { userId: matchedTutor.id } })}
                       style={styles.bannerBtn}
                     >
-                      <Text style={styles.bannerBtnText}>Open chat</Text>
+                      <Text style={styles.bannerBtnText}>{t('aiAssistant.openChat')}</Text>
                     </Pressable>
                   </View>
                 )}
@@ -442,7 +456,7 @@ export default function AIAssistantScreen() {
             </Pressable>
             <TextInput
               style={[styles.input, { color: colors.text, backgroundColor: colors.backgroundMuted }]}
-              placeholder={pendingFile ? 'Say something about this file (optional)…' : 'Ask me anything…'}
+              placeholder={pendingFile ? t('aiAssistant.documentCaption') : t('aiAssistant.askAnything')}
               placeholderTextColor={colors.textMuted}
               value={input}
               onChangeText={setInput}

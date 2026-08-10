@@ -1970,6 +1970,30 @@ export const sendSuperAdminEmail = async (
   return result;
 };
 
+// ─── Feedback APIs ────────────────────────────────────────────────────────────
+
+export const submitFeedback = async (
+  data: { message: string; type: 'COURSE' | 'GROUP' | 'OTHER' },
+  token: string
+): Promise<any> => {
+  const response = await fetchWithAuth('/feedback/feedback', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }, token);
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to send feedback');
+  return result;
+};
+
+export const getAllFeedback = async (token: string): Promise<any> => {
+  const response = await fetchWithAuth('/feedback/fetch-feedbacks', {
+    method: 'GET',
+  }, token);
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to fetch feedback');
+  return result;
+};
+
 // ─── Tutor Overview APIs ──────────────────────────────────────────────────────
 
 /**

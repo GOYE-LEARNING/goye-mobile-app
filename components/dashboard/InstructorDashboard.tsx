@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getTutorOverview, getCourseActivities } from '@/services/api';
 import { NotificationBadge } from '@/components/NotificationBadge';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
+import { useTranslation } from 'react-i18next';
 
 interface TopCourse {
   id: string;
@@ -27,23 +28,24 @@ interface CourseActivity {
   createdAt: string;
 }
 
-const getTimeAgo = (dateString: string) => {
+const getTimeAgo = (dateString: string, t: (key: string, opts?: any) => string) => {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
 
-  if (diffHours < 1) return 'Just now';
-  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffHours < 1) return t('home.instructorDashboard.timeJustNow');
+  if (diffHours < 24) return t('home.instructorDashboard.timeHoursAgo', { count: diffHours });
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return `${Math.floor(diffDays / 7)}w ago`;
+  if (diffDays < 7) return t('home.instructorDashboard.timeDaysAgo', { count: diffDays });
+  return t('home.instructorDashboard.timeWeeksAgo', { count: Math.floor(diffDays / 7) });
 };
 
 export default function InstructorDashboard() {
   const { user, token } = useUser();
   const { colors } = useTheme();
   const unreadCount = useUnreadNotificationCount();
+  const { t } = useTranslation();
 
   const [topCourse, setTopCourse] = useState<TopCourse | null>(null);
   const [totalPublishedCourses, setTotalPublishedCourses] = useState(0);
@@ -96,7 +98,7 @@ export default function InstructorDashboard() {
             style={s.avatar}
           />
           <View>
-            <Text style={s.greeting}>Good evening</Text>
+            <Text style={s.greeting}>{t('home.instructorDashboard.greeting')}</Text>
             <Text style={s.userName}>{user?.first_name}</Text>
           </View>
         </View>
@@ -111,17 +113,17 @@ export default function InstructorDashboard() {
 
       <ScrollView style={s.content} showsVerticalScrollIndicator={false}>
         {/* Dashboard Title */}
-        <Text style={s.dashboardTitle}>Dashboard</Text>
+        <Text style={s.dashboardTitle}>{t('home.instructorDashboard.dashboardTitle')}</Text>
 
         {/* Overview Section */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>Overview</Text>
+          <Text style={s.sectionTitle}>{t('home.instructorDashboard.overview')}</Text>
 
           {topCourse ? (
             <View style={s.topCourseCard}>
               <View style={s.topCourseBadge}>
                 <Ionicons name="trophy" size={16} color="#F59E0B" />
-                <Text style={s.topCourseBadgeText}>Top Performing Course</Text>
+                <Text style={s.topCourseBadgeText}>{t('home.instructorDashboard.topPerformingCourse')}</Text>
               </View>
               <Text style={s.topCourseTitle}>{topCourse.course_title}</Text>
               <Text style={s.topCourseDescription} numberOfLines={2}>
@@ -131,15 +133,15 @@ export default function InstructorDashboard() {
               <View style={s.topCourseStats}>
                 <View style={s.topCourseStat}>
                   <Text style={s.topCourseStatNumber}>{topCourse.totalStudents}</Text>
-                  <Text style={s.topCourseStatLabel}>Total Students</Text>
+                  <Text style={s.topCourseStatLabel}>{t('home.instructorDashboard.totalStudents')}</Text>
                 </View>
                 <View style={s.topCourseStat}>
                   <Text style={s.topCourseStatNumber}>{totalPublishedCourses}</Text>
-                  <Text style={s.topCourseStatLabel}>Published Courses</Text>
+                  <Text style={s.topCourseStatLabel}>{t('home.instructorDashboard.publishedCourses')}</Text>
                 </View>
                 <View style={s.topCourseStat}>
                   <Text style={s.topCourseStatNumber}>{avgCompletionPercentage}%</Text>
-                  <Text style={s.topCourseStatLabel}>Avg. Completion</Text>
+                  <Text style={s.topCourseStatLabel}>{t('home.instructorDashboard.avgCompletion')}</Text>
                 </View>
               </View>
 
@@ -147,18 +149,18 @@ export default function InstructorDashboard() {
                 style={s.viewCourseButton}
                 onPress={() => router.push(`/(tabs)/courses/details?id=${topCourse.id}` as any)}
               >
-                <Text style={s.viewCourseButtonText}>View Course</Text>
+                <Text style={s.viewCourseButtonText}>{t('home.instructorDashboard.viewCourse')}</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <View style={s.emptyCourseCard}>
               <Ionicons name="book-outline" size={32} color={colors.textMuted} />
-              <Text style={s.emptyCourseText}>No courses yet</Text>
+              <Text style={s.emptyCourseText}>{t('home.instructorDashboard.noCoursesYet')}</Text>
               <TouchableOpacity
                 style={s.viewCourseButton}
                 onPress={() => router.push('/(tabs)/courses/create')}
               >
-                <Text style={s.viewCourseButtonText}>Create your first course</Text>
+                <Text style={s.viewCourseButtonText}>{t('home.instructorDashboard.createFirstCourse')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -166,7 +168,7 @@ export default function InstructorDashboard() {
 
         {/* Quick Actions */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>Quick Actions</Text>
+          <Text style={s.sectionTitle}>{t('home.instructorDashboard.quickActions')}</Text>
 
           <View style={s.quickActionsRow}>
             <TouchableOpacity
@@ -174,7 +176,7 @@ export default function InstructorDashboard() {
               onPress={() => router.push('/(tabs)/courses/create')}
             >
               <Ionicons name="add-circle-outline" size={32} color={colors.brand} />
-              <Text style={s.quickActionText}>Create a Course</Text>
+              <Text style={s.quickActionText}>{t('home.instructorDashboard.createACourse')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -182,17 +184,17 @@ export default function InstructorDashboard() {
               onPress={() => router.push('/(tabs)/home/students')}
             >
               <Ionicons name="people-outline" size={32} color={colors.brand} />
-              <Text style={s.quickActionText}>My Students</Text>
+              <Text style={s.quickActionText}>{t('home.instructorDashboard.myStudents')}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Activities */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>Activities</Text>
+          <Text style={s.sectionTitle}>{t('home.instructorDashboard.activities')}</Text>
 
           {activities.length === 0 ? (
-            <Text style={s.emptyText}>No recent activity</Text>
+            <Text style={s.emptyText}>{t('home.instructorDashboard.noRecentActivity')}</Text>
           ) : (
             activities.map((activity) => (
               <View key={activity.id} style={s.activityItem}>
@@ -203,7 +205,7 @@ export default function InstructorDashboard() {
                   <Text style={s.activityText}>{activity.message}</Text>
                   <View style={s.activityTimeRow}>
                     <Ionicons name="time-outline" size={14} color={colors.textMuted} />
-                    <Text style={s.activityTime}>{getTimeAgo(activity.createdAt)}</Text>
+                    <Text style={s.activityTime}>{getTimeAgo(activity.createdAt, t)}</Text>
                   </View>
                 </View>
               </View>

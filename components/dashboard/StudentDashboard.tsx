@@ -13,6 +13,7 @@ import EventCard from '@/components/community/EventCard';
 import { useTheme, lightColors } from '@/contexts/ThemeContext';
 import { NotificationBadge } from '@/components/NotificationBadge';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
+import { useTranslation } from 'react-i18next';
 
 const { height } = Dimensions.get('window');
 
@@ -21,6 +22,7 @@ export default function Dashboard() {
   const { user, token } = useUser();
   const { colors } = useTheme();
   const unreadCount = useUnreadNotificationCount();
+  const { t } = useTranslation();
 
   const [journeyStarted, setJourneyStarted] = useState(false);
   const [journeyLoading, setJourneyLoading] = useState(false);
@@ -116,7 +118,7 @@ const fetchEnrolledCourse = async () => {
     if (progressId) {
       router.push(`/(tabs)/home/growth?progressId=${progressId}` as any);
     } else {
-      Alert.alert('Error', 'Unable to load growth data');
+      Alert.alert(t('common.error'), t('home.studentDashboard.alertUnableToLoadGrowth'));
     }
   };
 
@@ -129,7 +131,7 @@ const fetchEnrolledCourse = async () => {
         setProgressId(newProgressId);
         setJourneyStarted(true);
         await fetchGrowthData(newProgressId);
-        Alert.alert('Success', 'Your spiritual growth journey has begun!');
+        Alert.alert(t('common.success'), t('home.studentDashboard.alertJourneyStartedMessage'));
       }
     } catch (err: any) {
       console.error('[Dashboard] Start journey error:', err);
@@ -138,12 +140,12 @@ const fetchEnrolledCourse = async () => {
           setProgressId(err.data.id);
           setJourneyStarted(true);
           await fetchGrowthData(err.data.id);
-          Alert.alert('Journey Already Started', 'Your spiritual growth journey has already begun!');
+          Alert.alert(t('home.studentDashboard.alertJourneyAlreadyStartedTitle'), t('home.studentDashboard.alertJourneyAlreadyStartedMessage'));
         } else {
           await checkJourneyStatus();
         }
       } else {
-        Alert.alert('Error', err?.message ?? 'Could not start journey. Please try again.');
+        Alert.alert(t('common.error'), err?.message ?? t('home.studentDashboard.alertStartJourneyErrorFallback'));
       }
     } finally {
       setJourneyLoading(false);
@@ -157,7 +159,7 @@ const fetchEnrolledCourse = async () => {
   const levelProgress = achievements?.levelProgress || {};
   const badges = achievements?.badges || [];
 
-  const levelName = levelProgress?.name || userData?.currentLevel?.replace(/_/g, ' ') || 'Seeker';
+  const levelName = levelProgress?.name || userData?.currentLevel?.replace(/_/g, ' ') || t('home.studentDashboard.defaultLevelSeeker');
   const currentLevelNumber = levelProgress?.level || userData?.levelNumber || 1;
   const totalPoints = userData?.totalXP || stats?.totalPoints || 0;
   const totalBadges = stats?.totalBadges || badges.length;
@@ -186,7 +188,7 @@ const fetchEnrolledCourse = async () => {
             </View>
           )}
           <View>
-            <Text style={s.greetingSmall}>Good evening</Text>
+            <Text style={s.greetingSmall}>{t('home.studentDashboard.greeting')}</Text>
             <Text style={s.userName}>{user?.first_name}</Text>
           </View>
         </View>
@@ -202,16 +204,16 @@ const fetchEnrolledCourse = async () => {
       <View style={s.modalContainer}>
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={s.headerRow}>
-            <Text style={s.title}>Dashboard</Text>
+            <Text style={s.title}>{t('home.studentDashboard.dashboardTitle')}</Text>
           </View>
 
           {/* Course Card */}
-         
+
 <View style={s.card}>
   <View style={s.sectionHeader}>
-    <Text style={s.sectionTitle}>My Courses</Text>
+    <Text style={s.sectionTitle}>{t('home.studentDashboard.myCourses')}</Text>
     <TouchableOpacity onPress={() => router.push('/(tabs)/courses')}>
-      <Text style={s.viewAll}>View All</Text>
+      <Text style={s.viewAll}>{t('home.studentDashboard.viewAll')}</Text>
     </TouchableOpacity>
   </View>
   <View style={s.cardContent}>
@@ -225,9 +227,9 @@ const fetchEnrolledCourse = async () => {
           {enrolledCourse.course?.course_description}
         </Text>
         <View style={s.progressHeader}>
-          <Text style={s.progressLabel}>Your progress</Text>
+          <Text style={s.progressLabel}>{t('home.studentDashboard.yourProgress')}</Text>
           <Text style={s.progressLabel}>
-            {enrolledCourse.course_progress?.percentage ?? 0}% to complete
+            {t('home.studentDashboard.percentToComplete', { percent: enrolledCourse.course_progress?.percentage ?? 0 })}
           </Text>
         </View>
         <View style={s.progressTrack}>
@@ -237,14 +239,14 @@ const fetchEnrolledCourse = async () => {
   style={s.continueButton}
   onPress={() => router.push(`/(tabs)/courses/details?id=${enrolledCourse.course?.id}` as any)}
 >
-  <Text style={s.continueButtonText}>Continue Course</Text>
+  <Text style={s.continueButtonText}>{t('home.studentDashboard.continueCourse')}</Text>
 </TouchableOpacity>
       </>
     ) : (
       <View style={{ alignItems: 'center', paddingVertical: 20 }}>
-        <Text style={s.courseDescription}>You haven't enrolled in any courses yet</Text>
+        <Text style={s.courseDescription}>{t('home.studentDashboard.noCourseEnrolled')}</Text>
         <TouchableOpacity style={s.continueButton} onPress={() => router.push('/(tabs)/courses')}>
-          <Text style={s.continueButtonText}>Browse Courses</Text>
+          <Text style={s.continueButtonText}>{t('home.studentDashboard.browseCourses')}</Text>
         </TouchableOpacity>
       </View>
     )}
@@ -254,7 +256,7 @@ const fetchEnrolledCourse = async () => {
           {/* Spiritual Growth Milestone */}
           <View style={s.card}>
             <View style={s.sectionHeader}>
-              <Text style={s.sectionTitle}>Spiritual Growth Milestone</Text>
+              <Text style={s.sectionTitle}>{t('home.studentDashboard.spiritualGrowthMilestone')}</Text>
             </View>
 
             {!journeyStarted && (
@@ -262,9 +264,9 @@ const fetchEnrolledCourse = async () => {
                 <View style={s.journeyIconWrapper}>
                   <Ionicons name="leaf-outline" size={48} color={colors.brand} />
                 </View>
-                <Text style={s.journeyHeading}>Begin Your Growth Journey</Text>
+                <Text style={s.journeyHeading}>{t('home.studentDashboard.beginGrowthJourney')}</Text>
                 <Text style={s.journeySubtext}>
-                  Track your spiritual milestones, earn achievements, and level up as you grow in faith.
+                  {t('home.studentDashboard.growthJourneyDescription')}
                 </Text>
                 <TouchableOpacity
                   style={[s.startJourneyButton, journeyLoading && s.buttonDisabled]}
@@ -276,7 +278,7 @@ const fetchEnrolledCourse = async () => {
                   ) : (
                     <>
                       <Ionicons name="rocket-outline" size={18} color="#fff" style={{ marginRight: 8 }} />
-                      <Text style={s.startJourneyButtonText}>Start Your Journey</Text>
+                      <Text style={s.startJourneyButtonText}>{t('home.studentDashboard.startYourJourney')}</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -289,20 +291,20 @@ const fetchEnrolledCourse = async () => {
                   <View style={s.levelBadge}>
                     <Text style={s.levelText}>{levelName}</Text>
                   </View>
-                  <Text style={s.pointsText}>{totalPoints} XP</Text>
+                  <Text style={s.pointsText}>{t('home.studentDashboard.xpSuffix', { points: totalPoints })}</Text>
                 </View>
                 <View style={s.progressTrack}>
                   <View style={[s.progressFill, { width: `${Math.min(progressPercentage, 100)}%` }]} />
                 </View>
                 <Text style={s.levelProgress}>
-                  {progressToNext} / {nextLevelXP} XP to next level
+                  {t('home.studentDashboard.xpToNextLevel', { progress: progressToNext, max: nextLevelXP })}
                 </Text>
                 <View style={s.statsGrid}>
                   {[
-                    { num: totalAchievements, label: 'Achievements' },
-                    { num: completedCourses, label: 'Certificates' },
-                    { num: totalBadges, label: 'Badges' },
-                    { num: totalPoints, label: 'Total Points' },
+                    { num: totalAchievements, label: t('home.studentDashboard.statAchievements') },
+                    { num: completedCourses, label: t('home.studentDashboard.statCertificates') },
+                    { num: totalBadges, label: t('home.studentDashboard.statBadges') },
+                    { num: totalPoints, label: t('home.studentDashboard.statTotalPoints') },
                   ].map(({ num, label }) => (
                     <View key={label} style={s.statItem}>
                       <Text style={s.statNumber}>{num}</Text>
@@ -313,7 +315,7 @@ const fetchEnrolledCourse = async () => {
 
                 {/* Action Row: View Growth + Leaderboard Banner */}
                 <TouchableOpacity style={s.viewGrowthButton} onPress={handleGrowthPress}>
-                  <Text style={s.viewGrowthButtonText}>View Growth</Text>
+                  <Text style={s.viewGrowthButtonText}>{t('home.studentDashboard.viewGrowth')}</Text>
                 </TouchableOpacity>
 
                 {/* Leaderboard Banner Card */}
@@ -328,8 +330,8 @@ const fetchEnrolledCourse = async () => {
                       <Ionicons name="trophy" size={22} color="#F59E0B" />
                     </View>
                     <View style={s.leaderboardBannerTextBlock}>
-                      <Text style={s.leaderboardBannerTitle}>Leaderboard</Text>
-                      <Text style={s.leaderboardBannerSub}>See how you rank globally</Text>
+                      <Text style={s.leaderboardBannerTitle}>{t('home.studentDashboard.leaderboard')}</Text>
+                      <Text style={s.leaderboardBannerSub}>{t('home.studentDashboard.leaderboardSubtitle')}</Text>
                     </View>
                   </View>
 
@@ -358,8 +360,8 @@ const fetchEnrolledCourse = async () => {
           {/* Upcoming Events */}
           <View style={s.card}>
             <View style={s.sectionHeader}>
-              <Text style={s.sectionTitle}>Upcoming Events</Text>
-              <TouchableOpacity><Text style={s.viewAll}>View All</Text></TouchableOpacity>
+              <Text style={s.sectionTitle}>{t('home.studentDashboard.upcomingEvents')}</Text>
+              <TouchableOpacity><Text style={s.viewAll}>{t('home.studentDashboard.viewAll')}</Text></TouchableOpacity>
             </View>
             <View style={s.eventsContainer}>
               {eventsLoading ? (
@@ -367,8 +369,8 @@ const fetchEnrolledCourse = async () => {
               ) : events.length === 0 ? (
                 <View style={s.noEventsContainer}>
                   <Ionicons name="calendar-outline" size={32} color={colors.borderMid} />
-                  <Text style={s.noEventsText}>No upcoming events</Text>
-                  <Text style={s.noEventsSubText}>Join a community group to see events here</Text>
+                  <Text style={s.noEventsText}>{t('home.studentDashboard.noUpcomingEvents')}</Text>
+                  <Text style={s.noEventsSubText}>{t('home.studentDashboard.joinGroupForEvents')}</Text>
                 </View>
               ) : (
                 events.slice(0, 3).map((event: any) => (

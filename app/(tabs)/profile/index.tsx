@@ -29,7 +29,7 @@ export default function Profile() {
   const { reset } = useSignUp();
   const { signOutGoogle } = useGoogleSignIn();
   const { colors, isDark, toggleTheme } = useTheme();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const currentLanguageLabel = LANGUAGE_NAMES[i18n.language] || 'English';
   const [profileData, setProfileData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -75,12 +75,12 @@ export default function Profile() {
             setError(null);
             Toast.show({
               type: 'info',
-              text1: 'Using cached profile',
-              text2: 'Could not fetch fresh data, showing saved profile',
+              text1: t('profile.usingCachedProfileTitle'),
+              text2: t('profile.usingCachedProfileMessage'),
               position: 'bottom',
             });
           } else {
-            setError('Could not load organization profile');
+            setError(t('profile.couldNotLoadOrgProfile'));
           }
         }
       } else {
@@ -116,12 +116,12 @@ export default function Profile() {
             
             Toast.show({
               type: 'info',
-              text1: 'Using cached profile',
-              text2: 'Could not fetch fresh data, showing saved profile',
+              text1: t('profile.usingCachedProfileTitle'),
+              text2: t('profile.usingCachedProfileMessage'),
               position: 'bottom',
             });
           } else {
-            setError('Could not load profile data');
+            setError(t('profile.couldNotLoadProfile'));
           }
         }
       }
@@ -135,11 +135,11 @@ export default function Profile() {
         return;
       }
       
-      setError('Failed to load profile');
+      setError(t('profile.failedToLoadProfile'));
       Toast.show({
         type: 'error',
-        text1: 'Error',
-        text2: 'Failed to load profile data',
+        text1: t('common.error'),
+        text2: t('profile.failedLoadProfileData'),
         position: 'bottom',
       });
     } finally {
@@ -150,7 +150,7 @@ export default function Profile() {
   const handleUploadProfilePicture = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission required', 'Please allow access to your photo library.');
+      Alert.alert(t('profile.permissionRequiredTitle'), t('profile.permissionRequiredMessage'));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -162,7 +162,7 @@ export default function Profile() {
     });
     if (result.canceled || !result.assets?.[0]) return;
     const asset = result.assets[0];
-    if (!asset.base64) { Alert.alert('Error', 'Could not read image data.'); return; }
+    if (!asset.base64) { Alert.alert(t('common.error'), t('profile.couldNotReadImage')); return; }
 
     setUploadingPic(true);
     try {
@@ -173,21 +173,21 @@ export default function Profile() {
         fileName: asset.fileName ?? `profile_${Date.now()}.${extension}`,
         file: asset.base64,
       });
-      Alert.alert('Success', 'Profile picture updated!');
+      Alert.alert(t('common.success'), t('profile.profilePicUpdated'));
       await fetchProfileData();
     } catch (err: any) {
-      Alert.alert('Error', err?.message ?? 'Failed to upload profile picture.');
+      Alert.alert(t('common.error'), err?.message ?? t('profile.failedUploadPic'));
     } finally {
       setUploadingPic(false);
     }
   };
 
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
-      { 
-        text: 'Logout', 
-        style: 'destructive', 
+    Alert.alert(t('profile.logoutConfirmTitle'), t('profile.logoutConfirmMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('profile.logout'),
+        style: 'destructive',
         onPress: async () => { 
           try {
             await logout(signOutGoogle);
@@ -210,7 +210,7 @@ export default function Profile() {
       <SafeAreaView style={s.container} edges={['top']}>
         <View style={s.centerContainer}>
           <ActivityIndicator size="large" color={colors.brand} />
-          <Text style={s.loadingText}>Loading profile...</Text>
+          <Text style={s.loadingText}>{t('profile.loadingProfile')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -221,12 +221,12 @@ export default function Profile() {
       <SafeAreaView style={s.container} edges={['top']}>
         <View style={s.centerContainer}>
           <Ionicons name="alert-circle-outline" size={48} color={colors.textMuted} />
-          <Text style={s.errorText}>{error || 'Failed to load profile'}</Text>
+          <Text style={s.errorText}>{error || t('profile.failedToLoadProfile')}</Text>
           <TouchableOpacity style={s.retryButton} onPress={fetchProfileData}>
-            <Text style={s.retryButtonText}>Retry</Text>
+            <Text style={s.retryButtonText}>{t('profile.retry')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={s.backButton} onPress={() => router.back()}>
-            <Text style={s.backButtonText}>Go Back</Text>
+            <Text style={s.backButtonText}>{t('profile.goBack')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -243,6 +243,7 @@ export default function Profile() {
     toggleTheme,
     s,
     currentLanguageLabel,
+    t,
   };
 
   if (isOrganizationAdmin) return <OrganizationProfileView {...sharedProps} />;
@@ -259,15 +260,16 @@ type ViewProps = {
   toggleTheme: () => void;
   s: ReturnType<typeof makeStyles>;
   currentLanguageLabel: string;
+  t: (key: string, opts?: any) => string;
 };
 
 // ── Individual Profile ────────────────────────────────────────────────────────
-function IndividualProfileView({ profileData, onLogout, onUploadPicture, uploadingPic, colors, isDark, toggleTheme, s, currentLanguageLabel }: ViewProps) {
+function IndividualProfileView({ profileData, onLogout, onUploadPicture, uploadingPic, colors, isDark, toggleTheme, s, currentLanguageLabel, t }: ViewProps) {
   const avatarUri = profileData.user_pic ? getImageUri(profileData.user_pic) : null;
-  const fullName  = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'User';
-  const email     = profileData.email_address || 'No email';
-  const phone     = profileData.phone_number || 'No phone';
-  const location  = profileData.state || 'No location set';
+  const fullName  = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || t('profile.defaultUserName');
+  const email     = profileData.email_address || t('profile.noEmail');
+  const phone     = profileData.phone_number || t('profile.noPhone');
+  const location  = profileData.state || t('profile.noLocationSet');
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
@@ -291,16 +293,17 @@ function IndividualProfileView({ profileData, onLogout, onUploadPicture, uploadi
         </View>
 
         <View style={s.infoSection}>
-          <InfoRow label="Email" value={email} s={s} />
-          <InfoRow label="Phone Number" value={phone} s={s} />
-          <InfoRow label="Location" value={location} s={s} last />
+          <InfoRow label={t('profile.labelEmail')} value={email} s={s} />
+          <InfoRow label={t('profile.labelPhone')} value={phone} s={s} />
+          <InfoRow label={t('profile.labelLocation')} value={location} s={s} last />
         </View>
 
         <View style={s.menuSection}>
-          <MenuItem icon="person-outline" title="Profile" subtitle="Edit personal information" onPress={() => router.push('/(tabs)/profile/edit-profile' as any)} s={s} colors={colors} />
-          <MenuItem icon="key-outline" title="Password" subtitle="Change your password" onPress={() => router.push('/(tabs)/profile/change-password' as any)} s={s} colors={colors} />
-          <MenuItem icon="notifications-outline" title="Notifications" subtitle="Manage in-app and email notifications" onPress={() => router.push('/(tabs)/profile/notifications' as any)} s={s} colors={colors} />
-          <MenuItem icon="globe-outline" title="Language" subtitle={currentLanguageLabel} onPress={() => router.push('/(auth)/language-select?mode=settings' as any)} s={s} colors={colors} />
+          <MenuItem icon="person-outline" title={t('profile.menuProfileTitle')} subtitle={t('profile.menuProfileSubtitle')} onPress={() => router.push('/(tabs)/profile/edit-profile' as any)} s={s} colors={colors} />
+          <MenuItem icon="key-outline" title={t('profile.menuPasswordTitle')} subtitle={t('profile.menuPasswordSubtitle')} onPress={() => router.push('/(tabs)/profile/change-password' as any)} s={s} colors={colors} />
+          <MenuItem icon="notifications-outline" title={t('profile.menuNotificationsTitle')} subtitle={t('profile.menuNotificationsSubtitle')} onPress={() => router.push('/(tabs)/profile/notifications' as any)} s={s} colors={colors} />
+          <MenuItem icon="globe-outline" title={t('profile.menuLanguageTitle')} subtitle={currentLanguageLabel} onPress={() => router.push('/(auth)/language-select?mode=settings' as any)} s={s} colors={colors} />
+          <MenuItem icon="chatbox-ellipses-outline" title={t('profile.menuFeedbackTitle')} subtitle={t('profile.menuFeedbackSubtitle')} onPress={() => router.push('/(tabs)/profile/feedback' as any)} s={s} colors={colors} />
 
           {/* Dark Mode Toggle */}
           <View style={s.menuItem}>
@@ -309,8 +312,8 @@ function IndividualProfileView({ profileData, onLogout, onUploadPicture, uploadi
                 <Ionicons name={isDark ? 'moon' : 'sunny-outline'} size={20} color={colors.brand} />
               </View>
               <View style={s.menuTextContainer}>
-                <Text style={s.menuItemTitle}>Dark Mode</Text>
-                <Text style={s.menuItemSubtitle}>{isDark ? 'On' : 'Off'}</Text>
+                <Text style={s.menuItemTitle}>{t('profile.darkMode')}</Text>
+                <Text style={s.menuItemSubtitle}>{isDark ? t('profile.on') : t('profile.off')}</Text>
               </View>
             </View>
             <Switch
@@ -322,7 +325,7 @@ function IndividualProfileView({ profileData, onLogout, onUploadPicture, uploadi
           </View>
         </View>
 
-        <LogoutButton onPress={onLogout} s={s} />
+        <LogoutButton onPress={onLogout} s={s} t={t} />
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
@@ -330,14 +333,14 @@ function IndividualProfileView({ profileData, onLogout, onUploadPicture, uploadi
 }
 
 // ── Organization Profile ──────────────────────────────────────────────────────
-function OrganizationProfileView({ profileData, onLogout, onUploadPicture, uploadingPic, colors, isDark, toggleTheme, s, currentLanguageLabel }: ViewProps) {
+function OrganizationProfileView({ profileData, onLogout, onUploadPicture, uploadingPic, colors, isDark, toggleTheme, s, currentLanguageLabel, t }: ViewProps) {
   const logoUri   = profileData.organization_logo ? getImageUri(profileData.organization_logo) : null;
-  const orgName   = profileData.organization_name || 'Organization';
+  const orgName   = profileData.organization_name || t('profile.defaultOrgName');
   const orgType   = profileData.organization_type || '';
-  const email     = profileData.organization_email || 'No email';
-  const phone     = profileData.organization_phone_number || 'No phone';
-  const location  = profileData.organization_state || 'No location set';
-  const adminName = `${profileData.user_first_name || ''} ${profileData.user_last_name || ''}`.trim() || 'Admin';
+  const email     = profileData.organization_email || t('profile.noEmail');
+  const phone     = profileData.organization_phone_number || t('profile.noPhone');
+  const location  = profileData.organization_state || t('profile.noLocationSet');
+  const adminName = `${profileData.user_first_name || ''} ${profileData.user_last_name || ''}`.trim() || t('profile.defaultAdminName');
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
@@ -362,18 +365,19 @@ function OrganizationProfileView({ profileData, onLogout, onUploadPicture, uploa
         </View>
 
         <View style={s.infoSection}>
-          <InfoRow label="Admin" value={adminName} s={s} />
-          <InfoRow label="Email" value={email} s={s} />
-          <InfoRow label="Phone Number" value={phone} s={s} />
-          <InfoRow label="Location" value={location} s={s} last />
+          <InfoRow label={t('profile.labelAdmin')} value={adminName} s={s} />
+          <InfoRow label={t('profile.labelEmail')} value={email} s={s} />
+          <InfoRow label={t('profile.labelPhone')} value={phone} s={s} />
+          <InfoRow label={t('profile.labelLocation')} value={location} s={s} last />
         </View>
 
         <View style={s.menuSection}>
-          <MenuItem icon="grid-outline" title="Manage Organization" subtitle="Members, events, announcements & invites" onPress={() => router.push('/(tabs)/organization' as any)} s={s} colors={colors} />
-          <MenuItem icon="business-outline" title="Organization Profile" subtitle="Edit organization information" onPress={() => router.push('/(tabs)/profile/edit-profile-org' as any)} s={s} colors={colors} />
-          <MenuItem icon="key-outline" title="Password" subtitle="Change your password" onPress={() => router.push('/(tabs)/profile/change-password' as any)} s={s} colors={colors} />
-          <MenuItem icon="notifications-outline" title="Notifications" subtitle="Manage in-app and email notifications" onPress={() => router.push('/(tabs)/profile/notifications' as any)} s={s} colors={colors} />
-          <MenuItem icon="globe-outline" title="Language" subtitle={currentLanguageLabel} onPress={() => router.push('/(auth)/language-select?mode=settings' as any)} s={s} colors={colors} />
+          <MenuItem icon="grid-outline" title={t('profile.menuManageOrgTitle')} subtitle={t('profile.menuManageOrgSubtitle')} onPress={() => router.push('/(tabs)/organization' as any)} s={s} colors={colors} />
+          <MenuItem icon="business-outline" title={t('profile.menuOrgProfileTitle')} subtitle={t('profile.menuOrgProfileSubtitle')} onPress={() => router.push('/(tabs)/profile/edit-profile-org' as any)} s={s} colors={colors} />
+          <MenuItem icon="key-outline" title={t('profile.menuPasswordTitle')} subtitle={t('profile.menuPasswordSubtitle')} onPress={() => router.push('/(tabs)/profile/change-password' as any)} s={s} colors={colors} />
+          <MenuItem icon="notifications-outline" title={t('profile.menuNotificationsTitle')} subtitle={t('profile.menuNotificationsSubtitle')} onPress={() => router.push('/(tabs)/profile/notifications' as any)} s={s} colors={colors} />
+          <MenuItem icon="globe-outline" title={t('profile.menuLanguageTitle')} subtitle={currentLanguageLabel} onPress={() => router.push('/(auth)/language-select?mode=settings' as any)} s={s} colors={colors} />
+          <MenuItem icon="chatbox-ellipses-outline" title={t('profile.menuFeedbackTitle')} subtitle={t('profile.menuFeedbackSubtitle')} onPress={() => router.push('/(tabs)/profile/feedback' as any)} s={s} colors={colors} />
 
           <View style={s.menuItem}>
             <View style={s.menuItemLeft}>
@@ -381,8 +385,8 @@ function OrganizationProfileView({ profileData, onLogout, onUploadPicture, uploa
                 <Ionicons name={isDark ? 'moon' : 'sunny-outline'} size={20} color={colors.brand} />
               </View>
               <View style={s.menuTextContainer}>
-                <Text style={s.menuItemTitle}>Dark Mode</Text>
-                <Text style={s.menuItemSubtitle}>{isDark ? 'On' : 'Off'}</Text>
+                <Text style={s.menuItemTitle}>{t('profile.darkMode')}</Text>
+                <Text style={s.menuItemSubtitle}>{isDark ? t('profile.on') : t('profile.off')}</Text>
               </View>
             </View>
             <Switch
@@ -394,7 +398,7 @@ function OrganizationProfileView({ profileData, onLogout, onUploadPicture, uploa
           </View>
         </View>
 
-        <LogoutButton onPress={onLogout} s={s} />
+        <LogoutButton onPress={onLogout} s={s} t={t} />
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
@@ -431,11 +435,11 @@ function MenuItem({ icon, title, subtitle, onPress, s, colors }: {
   );
 }
 
-function LogoutButton({ onPress, s }: { onPress: () => void; s: ReturnType<typeof makeStyles> }) {
+function LogoutButton({ onPress, s, t }: { onPress: () => void; s: ReturnType<typeof makeStyles>; t: (key: string) => string }) {
   return (
     <TouchableOpacity style={s.logoutButton} onPress={onPress}>
       <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-      <Text style={s.logoutText}>Logout</Text>
+      <Text style={s.logoutText}>{t('profile.logout')}</Text>
     </TouchableOpacity>
   );
 }

@@ -86,6 +86,7 @@ export default function AdminLayout() {
       <Tabs.Screen name="activity" options={{ href: null }} />
       <Tabs.Screen name="events" options={{ href: null }} />
       <Tabs.Screen name="announcements" options={{ href: null }} />
+      <Tabs.Screen name="feedback" options={{ href: null }} />
 
       <Tabs.Screen
         name="profile"

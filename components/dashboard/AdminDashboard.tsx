@@ -296,7 +296,14 @@ export default function AdminDashboard() {
                 <Ionicons name="calendar" size={24} color={colors.brand} />
                 <Text style={styles.actionText}>All Events</Text>
               </TouchableOpacity>
-              <View style={styles.actionCardSpacer} />
+
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() => router.push('/(admin)/feedback' as any)}
+              >
+                <Ionicons name="chatbox-ellipses" size={24} color={colors.brand} />
+                <Text style={styles.actionText}>Feedback</Text>
+              </TouchableOpacity>
             </View>
           </>
         )}

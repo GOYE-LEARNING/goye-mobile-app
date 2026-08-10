@@ -8,6 +8,7 @@ export default function ProfileLayout() {
       <Stack.Screen name="edit-profile" />
       <Stack.Screen name="change-password" />
       <Stack.Screen name="notifications" />
+      <Stack.Screen name="feedback" />
     </Stack>
   );
 }
