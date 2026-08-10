@@ -94,6 +94,20 @@ export default function Login() {
             appRole = 'admin';
           }
 
+          // Super Admin is web-only. AdminProfile.role defaults to
+          // "super_admin" server-side when no profile row exists, so a
+          // platform admin with no adminRole set is a super admin too —
+          // matches UserContext's isSuperAdmin logic. Content/user admins
+          // are unaffected and can still sign in on mobile.
+          if (appRole === 'admin' && (!userData.adminRole || userData.adminRole === 'super_admin')) {
+            Alert.alert(
+              'Web Only',
+              'Super Admin access is only available on the GOYE web dashboard. Please sign in from a web browser.'
+            );
+            setLoading(false);
+            return;
+          }
+
           const normalizedUserData = {
             id: userData.id,
             first_name: userData.first_name || '',

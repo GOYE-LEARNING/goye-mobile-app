@@ -14,6 +14,7 @@ import {
   signOut as firebaseSignOut,
 } from "firebase/auth";
 import { useState } from "react";
+import { Alert } from "react-native";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDrpeUgCXyMwbiB5mxkZeJDevaCi96iQOA",
@@ -63,6 +64,24 @@ export function useGoogleSignIn() {
       const response = await googleAuth(firebaseIdToken);
 
       const needsProfileCompletion = response.status?.requiresProfileCompletion === true;
+
+      // Super Admin is web-only — same rule as the email/password login
+      // flow in login.tsx. Backend returns admin users with role
+      // "goye_admin" (raw, not yet normalized like login.tsx does), under
+      // either response.user or response.data.user depending on path.
+      const googleUser = response.user || response.data?.user;
+      const isSuperAdminAccount =
+        googleUser?.role === 'goye_admin' &&
+        (!googleUser?.adminRole || googleUser.adminRole === 'super_admin');
+
+      if (isSuperAdminAccount) {
+        await signOutGoogle();
+        Alert.alert(
+          'Web Only',
+          'Super Admin access is only available on the GOYE web dashboard. Please sign in from a web browser.'
+        );
+        return;
+      }
 
       if (!needsProfileCompletion) {
         // Existing complete user → setUser, index.tsx handles redirect.

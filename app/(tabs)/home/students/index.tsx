@@ -353,13 +353,26 @@ export default function MyStudents() {
         ) : (
           <View style={s.emptyState}>
             <Ionicons name="people-outline" size={64} color={colors.textMuted} />
-            <Text style={s.emptyText}>No students found</Text>
+            <Text style={s.emptyText}>
+              {students.length === 0 ? 'No students yet' : 'No students found'}
+            </Text>
             <Text style={s.emptySubtext}>
-              {searchQuery 
-                ? 'Try adjusting your search terms' 
-                : 'Students will appear here when they enroll in your courses'
+              {searchQuery
+                ? 'Try adjusting your search terms'
+                : activeFilter !== 'all'
+                ? 'No students match this filter yet'
+                : 'Students will appear here once they enroll in one of your courses'
               }
             </Text>
+            {students.length === 0 && !searchQuery && (
+              <TouchableOpacity
+                style={s.emptyActionButton}
+                onPress={() => router.push('/(tabs)/courses/create' as any)}
+              >
+                <Ionicons name="add-circle-outline" size={18} color="#fff" />
+                <Text style={s.emptyActionButtonText}>Create a Course</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
@@ -612,12 +625,27 @@ function makeStyles(c: typeof lightColors) {
       color: c.textMuted, 
       marginTop: 16 
     },
-    emptySubtext: { 
-      fontSize: 14, 
-      color: c.textLight, 
-      marginTop: 8, 
-      textAlign: 'center', 
-      paddingHorizontal: 40 
+    emptySubtext: {
+      fontSize: 14,
+      color: c.textLight,
+      marginTop: 8,
+      textAlign: 'center',
+      paddingHorizontal: 40
+    },
+    emptyActionButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: c.brand,
+      paddingVertical: 12,
+      paddingHorizontal: 24,
+      borderRadius: 8,
+      marginTop: 20,
+    },
+    emptyActionButtonText: {
+      color: '#fff',
+      fontSize: 15,
+      fontWeight: '600',
     },
   });
 }

@@ -1,17 +1,36 @@
+import { useEffect, useRef } from 'react';
+import { Alert } from 'react-native';
 import { Tabs, Redirect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@/contexts/UserContext';
 import { useTheme } from '@/contexts/ThemeContext';
 
 export default function AdminLayout() {
-  const { isAdmin, isSuperAdmin } = useUser();
+  const { isAdmin, isSuperAdmin, logout } = useUser();
   // These were hardcoded light-mode colours, so the whole admin tab bar
   // stayed white-on-white in dark mode while every other tab bar in the app
   // followed the theme. Matches (tabs)/_layout.tsx now.
   const { colors, isDark } = useTheme();
 
-  // Protect admin routes - only admins can access
-  if (!isAdmin) {
+  // Super Admin is web-only. login.tsx and useGoogleSignIn.ts already block
+  // this at sign-in, but this guard catches any session that predates that
+  // change (still in AsyncStorage from an older app version) or a
+  // content/user admin promoted to super_admin server-side mid-session.
+  const hasWarnedSuperAdmin = useRef(false);
+  useEffect(() => {
+    if (isAdmin && isSuperAdmin && !hasWarnedSuperAdmin.current) {
+      hasWarnedSuperAdmin.current = true;
+      Alert.alert(
+        'Web Only',
+        'Super Admin access is only available on the GOYE web dashboard. Please sign in from a web browser.'
+      );
+      logout();
+    }
+  }, [isAdmin, isSuperAdmin]);
+
+  // Protect admin routes - only admins can access, and super admins are
+  // redirected away (handled by the effect above, which logs them out).
+  if (!isAdmin || isSuperAdmin) {
     return <Redirect href="/(tabs)/home" />;
   }
 
