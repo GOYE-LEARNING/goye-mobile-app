@@ -4,13 +4,13 @@ import { ConfigContext, ExpoConfig } from "expo/config";
 // present but empty, so only pass a config object once a real value exists —
 // otherwise fall back to the plain string form (iOS Google Sign-In just won't
 // work yet, same as before this change; Android/web are unaffected either way).
-const googleSigninPlugin: [string, { iosUrlScheme: string }] | string =
-  process.env.EXPO_PUBLIC_GOOGLE_IOS_URL_SCHEME
-    ? [
-        "@react-native-google-signin/google-signin",
-        { iosUrlScheme: process.env.EXPO_PUBLIC_GOOGLE_IOS_URL_SCHEME },
-      ]
-    : "@react-native-google-signin/google-signin";
+const googleSigninPlugin: [string, { iosUrlScheme: string }] | string = process
+  .env.EXPO_PUBLIC_GOOGLE_IOS_URL_SCHEME
+  ? [
+      "@react-native-google-signin/google-signin",
+      { iosUrlScheme: process.env.EXPO_PUBLIC_GOOGLE_IOS_URL_SCHEME },
+    ]
+  : "@react-native-google-signin/google-signin";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -30,17 +30,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     googleServicesFile: "./GoogleService-Info.plist",
   },
   android: {
-    package: "com.goye.app",
-    "googleServicesFile": "./android/app/google-services.json",
-    adaptiveIcon: {
-      backgroundColor: "#E6F4FE",
-      foregroundImage: "./assets/images/adaptive-icon-foreground.png",
-      backgroundImage: "./assets/images/adaptive-icon-background.png",
-      monochromeImage: "./assets/images/adaptive-icon-monochrome.png",
-    },
-    edgeToEdgeEnabled: true,
-    predictiveBackGestureEnabled: false,
+  package: "com.goye.app",
+  googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
+  adaptiveIcon: {
+    backgroundColor: "#E6F4FE",
+    foregroundImage: "./assets/images/adaptive-icon-foreground.png",
+    backgroundImage: "./assets/images/adaptive-icon-background.png",
+    monochromeImage: "./assets/images/adaptive-icon-monochrome.png",
   },
+  edgeToEdgeEnabled: true,
+  predictiveBackGestureEnabled: false,
+},
   web: {
     output: "static",
     favicon: "./assets/images/favicon.png",
@@ -66,5 +66,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
+  },
+
+  extra: {
+    eas: {
+      projectId: "c505a171-7492-4cf4-80a7-c651288a2cc7",
+    },
   },
 });
