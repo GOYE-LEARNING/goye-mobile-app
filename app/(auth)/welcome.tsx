@@ -6,7 +6,7 @@ export default function Welcome() {
   return (
     <View style={styles.container}>
       
-      <Text style={styles.header}>Welcome to DTS App</Text>
+      <Text style={styles.header}>Welcome to Goye App</Text>
 
      
       <View style={styles.spacer} />

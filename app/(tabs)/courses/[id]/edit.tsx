@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@/contexts/UserContext';
+import { useTheme, lightColors } from '@/contexts/ThemeContext';
 import { getCourse, updateCourse } from '@/services/api';
 import { transformApiToFormData, transformFormToApiData } from '@/utils/courseTransformers';
 
@@ -19,6 +20,7 @@ import SuccessScreen from '@/components/course-creation/SuccessScreen';
 export default function EditCourse() {
   const params = useLocalSearchParams();
   const { token } = useUser();
+  const { colors } = useTheme();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -37,6 +39,8 @@ export default function EditCourse() {
     quizzes: [],
     objectivesId: null,
   });
+
+  const s = makeStyles(colors);
 
   const steps = [
     { title: 'Information', component: CourseInformation },
@@ -96,17 +100,31 @@ export default function EditCourse() {
       // Transform form data to API format
       const apiData = transformFormToApiData(courseData);
       
+      console.log('📤 Submitting course update...');
+      console.log('📦 API Data:', JSON.stringify(apiData, null, 2));
+      
       // Call update API
       const result = await updateCourse(params.id as string, apiData, token);
       
-      if (result.success || result.statusCode === 200) {
+      console.log('📥 Update response:', JSON.stringify(result, null, 2));
+      
+      // ✅ FIX: Check for success properly
+      // The response has a "message" field with "Course updated successfully"
+      if (result?.message && result.message.includes('successfully')) {
+        // ✅ Show success screen directly
+        setShowSuccess(true);
+      } else if (result?.data) {
+        // If we have data, it was successful
         setShowSuccess(true);
       } else {
-        Alert.alert('Error', result.message || 'Failed to update course');
+        // ❌ Show error message
+        const errorMessage = result?.message || 'Failed to update course';
+        Alert.alert('Error', errorMessage);
       }
-    } catch (error) {
-      console.error('Error updating course:', error);
-      Alert.alert('Error', 'Failed to update course. Please try again.');
+    } catch (error: any) {
+      console.error('❌ Error updating course:', error);
+      const errorMessage = error?.message || 'Failed to update course. Please try again.';
+      Alert.alert('Error', errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -119,10 +137,10 @@ export default function EditCourse() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3F1F22" />
-          <Text style={styles.loadingText}>Loading course...</Text>
+      <SafeAreaView style={s.container} edges={['top']}>
+        <View style={s.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.brand} />
+          <Text style={s.loadingText}>Loading course...</Text>
         </View>
       </SafeAreaView>
     );
@@ -135,34 +153,34 @@ export default function EditCourse() {
   const CurrentStepComponent = steps[activeStep].component;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={s.container} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color="#333" />
+      <View style={s.header}>
+        <TouchableOpacity onPress={() => router.back()} style={s.backButton}>
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Course</Text>
-        <View style={styles.placeholder} />
+        <Text style={s.headerTitle}>Edit Course</Text>
+        <View style={s.placeholder} />
       </View>
 
       {/* Progress Steps */}
-      <View style={styles.stepsContainer}>
+      <View style={s.stepsContainer}>
         {steps.map((step, index) => (
-          <View key={index} style={styles.stepItem}>
+          <View key={index} style={s.stepItem}>
             <View style={[
-              styles.stepCircle,
-              index <= activeStep && styles.stepCircleActive
+              s.stepCircle,
+              index <= activeStep && s.stepCircleActive
             ]}>
               <Text style={[
-                styles.stepNumber,
-                index <= activeStep && styles.stepNumberActive
+                s.stepNumber,
+                index <= activeStep && s.stepNumberActive
               ]}>
                 {index + 1}
               </Text>
             </View>
             <Text style={[
-              styles.stepTitle,
-              index === activeStep && styles.stepTitleActive
+              s.stepTitle,
+              index === activeStep && s.stepTitleActive
             ]}>
               {step.title}
             </Text>
@@ -171,35 +189,35 @@ export default function EditCourse() {
       </View>
 
       {/* Content */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={s.content} showsVerticalScrollIndicator={false}>
         <CurrentStepComponent data={courseData} onChange={updateCourseData} />
       </ScrollView>
 
       {/* Navigation Buttons */}
-      <View style={styles.navigationContainer}>
+      <View style={s.navigationContainer}>
         {activeStep > 0 && (
-          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
-            <Text style={styles.backBtnText}>Back</Text>
+          <TouchableOpacity style={s.backBtn} onPress={handleBack}>
+            <Text style={s.backBtnText}>Back</Text>
           </TouchableOpacity>
         )}
         
         {activeStep < steps.length - 1 ? (
           <TouchableOpacity 
-            style={[styles.nextButton, activeStep === 0 && styles.nextButtonFull]} 
+            style={[s.nextButton, activeStep === 0 && s.nextButtonFull]} 
             onPress={handleNext}
           >
-            <Text style={styles.nextButtonText}>Next</Text>
+            <Text style={s.nextButtonText}>Next</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity 
-            style={styles.submitButton} 
+            style={s.submitButton} 
             onPress={handleSubmit}
             disabled={submitting}
           >
             {submitting ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.submitButtonText}>Update Course</Text>
+              <Text style={s.submitButtonText}>Update Course</Text>
             )}
           </TouchableOpacity>
         )}
@@ -208,130 +226,133 @@ export default function EditCourse() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 16,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  placeholder: {
-    width: 24,
-  },
-  stepsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    gap: 12,
-  },
-  stepItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f0f0f0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepCircleActive: {
-    backgroundColor: '#3F1F22',
-  },
-  stepNumber: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#999',
-  },
-  stepNumberActive: {
-    color: '#fff',
-  },
-  stepTitle: {
-    fontSize: 11,
-    color: '#999',
-    textAlign: 'center',
-  },
-  stepTitleActive: {
-    color: '#3F1F22',
-    fontWeight: '600',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  navigationContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  backBtn: {
-    flex: 1,
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#3F1F22',
-  },
-  backBtnText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#3F1F22',
-  },
-  nextButton: {
-    flex: 1,
-    backgroundColor: '#3F1F22',
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  nextButtonFull: {
-    flex: 1,
-  },
-  nextButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  submitButton: {
-    flex: 1,
-    backgroundColor: '#3F1F22',
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  submitButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-});
+function makeStyles(c: typeof lightColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 16,
+    },
+    loadingText: {
+      fontSize: 16,
+      color: c.textSecondary,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    backButton: {
+      padding: 4,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: c.text,
+    },
+    placeholder: {
+      width: 24,
+    },
+    stepsContainer: {
+      flexDirection: 'row',
+      paddingHorizontal: 20,
+      paddingVertical: 20,
+      gap: 12,
+    },
+    stepItem: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 8,
+    },
+    stepCircle: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: c.backgroundMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    stepCircleActive: {
+      backgroundColor: c.brand,
+    },
+    stepNumber: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: c.textMuted,
+    },
+    stepNumberActive: {
+      color: '#fff',
+    },
+    stepTitle: {
+      fontSize: 11,
+      color: c.textMuted,
+      textAlign: 'center',
+    },
+    stepTitleActive: {
+      color: c.brand,
+      fontWeight: '600',
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 20,
+    },
+    navigationContainer: {
+      flexDirection: 'row',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      gap: 12,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+      backgroundColor: c.background,
+    },
+    backBtn: {
+      flex: 1,
+      paddingVertical: 16,
+      alignItems: 'center',
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: c.brand,
+    },
+    backBtnText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: c.brand,
+    },
+    nextButton: {
+      flex: 1,
+      backgroundColor: c.brand,
+      paddingVertical: 16,
+      alignItems: 'center',
+      borderRadius: 8,
+    },
+    nextButtonFull: {
+      flex: 1,
+    },
+    nextButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#fff',
+    },
+    submitButton: {
+      flex: 1,
+      backgroundColor: c.brand,
+      paddingVertical: 16,
+      alignItems: 'center',
+      borderRadius: 8,
+    },
+    submitButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#fff',
+    },
+  });
+}

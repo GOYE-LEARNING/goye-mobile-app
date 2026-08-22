@@ -1,3 +1,4 @@
+// app/(tabs)/home/index.tsx (Student Dashboard)
 import { useSignUp } from '@/contexts/SignUpContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -32,23 +33,21 @@ export default function Dashboard() {
   const [events, setEvents] = useState<any[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [enrolledCourse, setEnrolledCourse] = useState<any>(null);
-const [courseLoading, setCourseLoading] = useState(true);
+  const [courseLoading, setCourseLoading] = useState(true);
 
-
-const fetchEnrolledCourse = async () => {
-  setCourseLoading(true);
-  try {
-    const result = await getEnrolledCourses(token!);
-    if (result.data && Array.isArray(result.data.courses) && result.data.courses.length > 0) {
-      setEnrolledCourse(result.data.courses[0]);
+  const fetchEnrolledCourse = async () => {
+    setCourseLoading(true);
+    try {
+      const result = await getEnrolledCourses(token!);
+      if (result.data && Array.isArray(result.data.courses) && result.data.courses.length > 0) {
+        setEnrolledCourse(result.data.courses[0]);
+      }
+    } catch (err) {
+      console.error('[Dashboard] enrolled course error:', err);
+    } finally {
+      setCourseLoading(false);
     }
-  } catch (err) {
-    console.error('[Dashboard] enrolled course error:', err);
-  } finally {
-    setCourseLoading(false);
-  }
-};
-
+  };
 
   useEffect(() => {
     fetchEvents();
@@ -177,7 +176,7 @@ const fetchEnrolledCourse = async () => {
 
   return (
     <View style={s.wrapper}>
-      {/* Header */}
+      {/* Header - Now with proper notification badge like instructor */}
       <View style={s.header}>
         <View style={s.headerLeft}>
           {profilePic ? (
@@ -193,7 +192,7 @@ const fetchEnrolledCourse = async () => {
           </View>
         </View>
         <TouchableOpacity
-          style={{ position: 'relative' }}
+          style={s.notificationButton}
           onPress={() => router.push('/(tabs)/home/notifications')}
         >
           <Ionicons name="notifications-outline" size={24} color={colors.headerText} />
@@ -208,50 +207,49 @@ const fetchEnrolledCourse = async () => {
           </View>
 
           {/* Course Card */}
-
-<View style={s.card}>
-  <View style={s.sectionHeader}>
-    <Text style={s.sectionTitle}>{t('home.studentDashboard.myCourses')}</Text>
-    <TouchableOpacity onPress={() => router.push('/(tabs)/courses')}>
-      <Text style={s.viewAll}>{t('home.studentDashboard.viewAll')}</Text>
-    </TouchableOpacity>
-  </View>
-  <View style={s.cardContent}>
-    {courseLoading ? (
-      <ActivityIndicator size="small" color={colors.brand} style={{ marginVertical: 20 }} />
-    ) : enrolledCourse ? (
-      <>
-        <Text style={s.courseTitle}>{enrolledCourse.course?.course_title}</Text>
-        <Text style={s.courseSubtitle}>{enrolledCourse.course?.course_short_description}</Text>
-        <Text style={s.courseDescription} numberOfLines={2}>
-          {enrolledCourse.course?.course_description}
-        </Text>
-        <View style={s.progressHeader}>
-          <Text style={s.progressLabel}>{t('home.studentDashboard.yourProgress')}</Text>
-          <Text style={s.progressLabel}>
-            {t('home.studentDashboard.percentToComplete', { percent: enrolledCourse.course_progress?.percentage ?? 0 })}
-          </Text>
-        </View>
-        <View style={s.progressTrack}>
-          <View style={[s.progressFill, { width: `${enrolledCourse.course_progress?.percentage ?? 0}%` }]} />
-        </View>
-      <TouchableOpacity
-  style={s.continueButton}
-  onPress={() => router.push(`/(tabs)/courses/details?id=${enrolledCourse.course?.id}` as any)}
->
-  <Text style={s.continueButtonText}>{t('home.studentDashboard.continueCourse')}</Text>
-</TouchableOpacity>
-      </>
-    ) : (
-      <View style={{ alignItems: 'center', paddingVertical: 20 }}>
-        <Text style={s.courseDescription}>{t('home.studentDashboard.noCourseEnrolled')}</Text>
-        <TouchableOpacity style={s.continueButton} onPress={() => router.push('/(tabs)/courses')}>
-          <Text style={s.continueButtonText}>{t('home.studentDashboard.browseCourses')}</Text>
-        </TouchableOpacity>
-      </View>
-    )}
-  </View>
-</View>
+          <View style={s.card}>
+            <View style={s.sectionHeader}>
+              <Text style={s.sectionTitle}>{t('home.studentDashboard.myCourses')}</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/courses')}>
+                <Text style={s.viewAll}>{t('home.studentDashboard.viewAll')}</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={s.cardContent}>
+              {courseLoading ? (
+                <ActivityIndicator size="small" color={colors.brand} style={{ marginVertical: 20 }} />
+              ) : enrolledCourse ? (
+                <>
+                  <Text style={s.courseTitle}>{enrolledCourse.course?.course_title}</Text>
+                  <Text style={s.courseSubtitle}>{enrolledCourse.course?.course_short_description}</Text>
+                  <Text style={s.courseDescription} numberOfLines={2}>
+                    {enrolledCourse.course?.course_description}
+                  </Text>
+                  <View style={s.progressHeader}>
+                    <Text style={s.progressLabel}>{t('home.studentDashboard.yourProgress')}</Text>
+                    <Text style={s.progressLabel}>
+                      {t('home.studentDashboard.percentToComplete', { percent: enrolledCourse.course_progress?.percentage ?? 0 })}
+                    </Text>
+                  </View>
+                  <View style={s.progressTrack}>
+                    <View style={[s.progressFill, { width: `${enrolledCourse.course_progress?.percentage ?? 0}%` }]} />
+                  </View>
+                  <TouchableOpacity
+                    style={s.continueButton}
+                    onPress={() => router.push(`/(tabs)/courses/details?id=${enrolledCourse.course?.id}` as any)}
+                  >
+                    <Text style={s.continueButtonText}>{t('home.studentDashboard.continueCourse')}</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+                  <Text style={s.courseDescription}>{t('home.studentDashboard.noCourseEnrolled')}</Text>
+                  <TouchableOpacity style={s.continueButton} onPress={() => router.push('/(tabs)/courses')}>
+                    <Text style={s.continueButtonText}>{t('home.studentDashboard.browseCourses')}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </View>
 
           {/* Spiritual Growth Milestone */}
           <View style={s.card}>
@@ -399,55 +397,110 @@ const fetchEnrolledCourse = async () => {
 
 function makeStyles(c: typeof lightColors) {
   return StyleSheet.create({
-    wrapper:               { flex: 1, backgroundColor: c.headerBg },
-    header:                { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 60, paddingBottom: 20 },
-    headerLeft:            { flexDirection: 'row', alignItems: 'center', gap: 12 },
-    avatar:                { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)' },
-    avatarFallback:        { justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.3)' },
-    avatarInitial:         { fontSize: 18, fontWeight: '700', color: '#fff' },
-    greetingSmall:         { fontSize: 12, color: c.headerTextMuted },
-    userName:              { fontSize: 18, color: c.headerText, fontWeight: '600' },
+    wrapper: { flex: 1, backgroundColor: c.headerBg },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingTop: 60,
+      paddingBottom: 20,
+    },
+    headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)' },
+    avatarFallback: { justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.3)' },
+    avatarInitial: { fontSize: 18, fontWeight: '700', color: '#fff' },
+    greetingSmall: { fontSize: 12, color: c.headerTextMuted },
+    userName: { fontSize: 18, color: c.headerText, fontWeight: '600' },
+    notificationButton: {
+      padding: 4,
+      position: 'relative',
+    },
 
-    modalContainer:        { flex: 1, backgroundColor: c.modalBg, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 20 },
-    headerRow:             { paddingHorizontal: 20, marginBottom: 20 },
-    title:                 { fontSize: 24, fontWeight: '700', color: c.text },
+    modalContainer: {
+      flex: 1,
+      backgroundColor: c.modalBg,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingTop: 20,
+    },
+    headerRow: { paddingHorizontal: 20, marginBottom: 20 },
+    title: { fontSize: 24, fontWeight: '700', color: c.text },
 
-    sectionHeader:         { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 5 },
-    sectionTitle:          { fontSize: 16, fontWeight: '600', color: c.text, paddingTop: 10 },
-    viewAll:               { fontSize: 14, color: c.brand, fontWeight: '500' },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      marginBottom: 5,
+    },
+    sectionTitle: { fontSize: 16, fontWeight: '600', color: c.text, paddingTop: 10 },
+    viewAll: { fontSize: 14, color: c.brand, fontWeight: '500' },
 
-    card:                  { backgroundColor: c.card, marginBottom: 20, marginHorizontal: 10, shadowColor: c.shadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 3, overflow: 'hidden' },
-    cardContent:           { backgroundColor: c.cardContent, padding: 20, margin: 10 },
+    card: {
+      backgroundColor: c.card,
+      marginBottom: 20,
+      marginHorizontal: 10,
+      shadowColor: c.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 3,
+      overflow: 'hidden',
+    },
+    cardContent: { backgroundColor: c.cardContent, padding: 20, margin: 10 },
 
-    courseTitle:           { fontSize: 16, fontWeight: '600', color: c.text },
-    courseSubtitle:        { fontSize: 13, fontWeight: '500', color: c.text, marginBottom: 8 },
-    courseDescription:     { fontSize: 12, color: c.textLight, lineHeight: 18, marginBottom: 16 },
-    progressHeader:        { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-    progressLabel:         { fontSize: 13, color: c.textSecondary },
-    progressTrack:         { width: '100%', height: 6, backgroundColor: c.borderMid, marginBottom: 16, overflow: 'hidden' },
-    progressFill:          { height: '100%', backgroundColor: c.success },
-    continueButton:        { backgroundColor: c.brand, paddingVertical: 14, alignItems: 'center' },
-    continueButtonText:    { color: '#fff', fontSize: 15, fontWeight: '600' },
+    courseTitle: { fontSize: 16, fontWeight: '600', color: c.text },
+    courseSubtitle: { fontSize: 13, fontWeight: '500', color: c.text, marginBottom: 8 },
+    courseDescription: { fontSize: 12, color: c.textLight, lineHeight: 18, marginBottom: 16 },
+    progressHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+    progressLabel: { fontSize: 13, color: c.textSecondary },
+    progressTrack: { width: '100%', height: 6, backgroundColor: c.borderMid, marginBottom: 16, overflow: 'hidden' },
+    progressFill: { height: '100%', backgroundColor: c.success },
+    continueButton: { backgroundColor: c.brand, paddingVertical: 14, alignItems: 'center' },
+    continueButtonText: { color: '#fff', fontSize: 15, fontWeight: '600' },
 
     journeyStartContainer: { alignItems: 'center', padding: 30, margin: 10, backgroundColor: c.cardContent },
-    journeyIconWrapper:    { width: 88, height: 88, borderRadius: 44, backgroundColor: c.brandLighter, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-    journeyHeading:        { fontSize: 16, fontWeight: '700', color: c.text, marginBottom: 8, textAlign: 'center' },
-    journeySubtext:        { fontSize: 13, color: c.textLight, textAlign: 'center', lineHeight: 20, marginBottom: 24, paddingHorizontal: 10 },
-    startJourneyButton:    { flexDirection: 'row', alignItems: 'center', backgroundColor: c.brand, paddingVertical: 14, paddingHorizontal: 32, borderRadius: 8 },
-    buttonDisabled:        { opacity: 0.6 },
-    startJourneyButtonText:{ color: '#fff', fontSize: 15, fontWeight: '600' },
+    journeyIconWrapper: {
+      width: 88,
+      height: 88,
+      borderRadius: 44,
+      backgroundColor: c.brandLighter,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 16,
+    },
+    journeyHeading: { fontSize: 16, fontWeight: '700', color: c.text, marginBottom: 8, textAlign: 'center' },
+    journeySubtext: {
+      fontSize: 13,
+      color: c.textLight,
+      textAlign: 'center',
+      lineHeight: 20,
+      marginBottom: 24,
+      paddingHorizontal: 10,
+    },
+    startJourneyButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: c.brand,
+      paddingVertical: 14,
+      paddingHorizontal: 32,
+      borderRadius: 8,
+    },
+    buttonDisabled: { opacity: 0.6 },
+    startJourneyButtonText: { color: '#fff', fontSize: 15, fontWeight: '600' },
 
-    milestoneHeader:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-    levelBadge:            { backgroundColor: c.brandLight, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16 },
-    levelText:             { color: c.brand, fontSize: 13, fontWeight: '700' },
-    pointsText:            { fontSize: 13, color: c.textSecondary },
-    levelProgress:         { fontSize: 11, color: c.textMuted, marginBottom: 16, textAlign: 'center' },
-    statsGrid:             { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
-    statItem:              { alignItems: 'center', flex: 1 },
-    statNumber:            { fontSize: 24, fontWeight: '700', color: c.text, marginBottom: 4 },
-    statLabel:             { fontSize: 11, color: c.textSecondary, textAlign: 'center' },
-    viewGrowthButton:      { backgroundColor: c.brandLight, paddingVertical: 12, alignItems: 'center', marginBottom: 12 },
-    viewGrowthButtonText:  { color: c.brand, fontSize: 15, fontWeight: '600' },
+    milestoneHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+    levelBadge: { backgroundColor: c.brandLight, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16 },
+    levelText: { color: c.brand, fontSize: 13, fontWeight: '700' },
+    pointsText: { fontSize: 13, color: c.textSecondary },
+    levelProgress: { fontSize: 11, color: c.textMuted, marginBottom: 16, textAlign: 'center' },
+    statsGrid: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
+    statItem: { alignItems: 'center', flex: 1 },
+    statNumber: { fontSize: 24, fontWeight: '700', color: c.text, marginBottom: 4 },
+    statLabel: { fontSize: 11, color: c.textSecondary, textAlign: 'center' },
+    viewGrowthButton: { backgroundColor: c.brandLight, paddingVertical: 12, alignItems: 'center', marginBottom: 12 },
+    viewGrowthButtonText: { color: c.brand, fontSize: 15, fontWeight: '600' },
 
     // Leaderboard Banner
     leaderboardBanner: {
@@ -516,9 +569,9 @@ function makeStyles(c: typeof lightColors) {
       color: '#fff',
     },
 
-    eventsContainer:       { paddingHorizontal: 10, paddingBottom: 10 },
-    noEventsContainer:     { alignItems: 'center', paddingVertical: 30, gap: 8 },
-    noEventsText:          { fontSize: 14, fontWeight: '600', color: c.textMuted },
-    noEventsSubText:       { fontSize: 12, color: c.textMuted, textAlign: 'center', paddingHorizontal: 20 },
+    eventsContainer: { paddingHorizontal: 10, paddingBottom: 10 },
+    noEventsContainer: { alignItems: 'center', paddingVertical: 30, gap: 8 },
+    noEventsText: { fontSize: 14, fontWeight: '600', color: c.textMuted },
+    noEventsSubText: { fontSize: 12, color: c.textMuted, textAlign: 'center', paddingHorizontal: 20 },
   });
 }

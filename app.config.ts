@@ -31,11 +31,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.goye.app",
+    "googleServicesFile": "./android/app/google-services.json",
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
-      foregroundImage: "./assets/images/android-icon-foreground.png",
-      backgroundImage: "./assets/images/android-icon-background.png",
-      monochromeImage: "./assets/images/android-icon-monochrome.png",
+      foregroundImage: "./assets/images/adaptive-icon-foreground.png",
+      backgroundImage: "./assets/images/adaptive-icon-background.png",
+      monochromeImage: "./assets/images/adaptive-icon-monochrome.png",
     },
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,

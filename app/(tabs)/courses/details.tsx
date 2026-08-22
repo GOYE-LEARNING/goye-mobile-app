@@ -1,3 +1,4 @@
+// app/(tabs)/courses/details.tsx
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
@@ -6,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useCallback } from 'react';
 import { getCourse, enrollInCourse } from '@/services/api';
 import { useUser } from '@/contexts/UserContext';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme, lightColors } from '@/contexts/ThemeContext';
 import { getImageUri } from '@/utils/helpers';
 
 export default function CourseDetails() {
@@ -21,6 +22,8 @@ export default function CourseDetails() {
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
+
+  const s = makeStyles(colors);
 
   useFocusEffect(
     useCallback(() => {
@@ -106,8 +109,6 @@ export default function CourseDetails() {
       setExpandedModules([...expandedModules, moduleId]);
     }
   };
-
-  const s = makeStyles(colors);
 
   if (loading) {
     return (
@@ -353,9 +354,12 @@ export default function CourseDetails() {
   );
 }
 
-function makeStyles(c: ReturnType<typeof useTheme>['colors']) {
+function makeStyles(c: typeof lightColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: c.background },
+    container: { 
+      flex: 1, 
+      backgroundColor: c.background 
+    },
     header: { 
       flexDirection: 'row', 
       alignItems: 'center', 
@@ -365,17 +369,62 @@ function makeStyles(c: ReturnType<typeof useTheme>['colors']) {
       borderBottomWidth: 1, 
       borderBottomColor: c.border 
     },
-    backButton: { padding: 4 },
-    headerTitle: { fontSize: 18, fontWeight: '600', color: c.text },
-    shareButton: { padding: 4, width: 32 },
-    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-    loadingText: { marginTop: 12, fontSize: 14, color: c.textSecondary },
-    errorText: { fontSize: 14, color: c.textMuted, marginBottom: 16, textAlign: 'center' },
-    retryButton: { backgroundColor: c.brand, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
-    retryText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-    titleSection: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
-    courseTitle: { fontSize: 20, fontWeight: '700', color: c.text, marginBottom: 12 },
-    courseMetaInfo: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    backButton: { 
+      padding: 4 
+    },
+    headerTitle: { 
+      fontSize: 18, 
+      fontWeight: '600', 
+      color: c.text 
+    },
+    shareButton: { 
+      padding: 4, 
+      width: 32 
+    },
+    centerContainer: { 
+      flex: 1, 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      padding: 20 
+    },
+    loadingText: { 
+      marginTop: 12, 
+      fontSize: 14, 
+      color: c.textSecondary 
+    },
+    errorText: { 
+      fontSize: 14, 
+      color: c.textMuted, 
+      marginBottom: 16, 
+      textAlign: 'center' 
+    },
+    retryButton: { 
+      backgroundColor: c.brand, 
+      paddingHorizontal: 24, 
+      paddingVertical: 12, 
+      borderRadius: 8 
+    },
+    retryText: { 
+      color: '#fff', 
+      fontSize: 14, 
+      fontWeight: '600' 
+    },
+    titleSection: { 
+      paddingHorizontal: 20, 
+      paddingTop: 16, 
+      paddingBottom: 12 
+    },
+    courseTitle: { 
+      fontSize: 20, 
+      fontWeight: '700', 
+      color: c.text, 
+      marginBottom: 12 
+    },
+    courseMetaInfo: { 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      gap: 8 
+    },
     metaTag: { 
       flexDirection: 'row', 
       alignItems: 'center', 
@@ -385,20 +434,77 @@ function makeStyles(c: ReturnType<typeof useTheme>['colors']) {
       borderRadius: 4, 
       backgroundColor: c.backgroundSoft 
     },
-    metaTagText: { fontSize: 12, fontWeight: '600', color: c.success },
-    metaDivider: { width: 1, height: 12 },
-    metaInfoText: { fontSize: 12, color: c.textSecondary, fontWeight: '500' },
-    imageContainer: { paddingHorizontal: 20, marginBottom: 16 },
-    heroImage: { width: '100%', height: 180, backgroundColor: c.backgroundMuted, borderRadius: 8 },
-    heroImagePlaceholder: { width: '100%', height: 180, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-    content: { paddingHorizontal: 20 },
-    courseDescription: { fontSize: 14, color: c.textSecondary, lineHeight: 22, marginBottom: 12 },
-    studentsInfo: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 24 },
-    studentsText: { fontSize: 13, color: c.textSecondary },
-    section: { marginBottom: 24 },
-    sectionTitle: { fontSize: 18, fontWeight: '600', color: c.text, marginBottom: 16 },
-    objectiveItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 12 },
-    objectiveText: { flex: 1, fontSize: 14, color: c.textSecondary, lineHeight: 20 },
+    metaTagText: { 
+      fontSize: 12, 
+      fontWeight: '600', 
+      color: c.success 
+    },
+    metaDivider: { 
+      width: 1, 
+      height: 12 
+    },
+    metaInfoText: { 
+      fontSize: 12, 
+      color: c.textSecondary, 
+      fontWeight: '500' 
+    },
+    imageContainer: { 
+      paddingHorizontal: 20, 
+      marginBottom: 16 
+    },
+    heroImage: { 
+      width: '100%', 
+      height: 180, 
+      backgroundColor: c.backgroundMuted, 
+      borderRadius: 8 
+    },
+    heroImagePlaceholder: { 
+      width: '100%', 
+      height: 180, 
+      borderRadius: 8, 
+      alignItems: 'center', 
+      justifyContent: 'center' 
+    },
+    content: { 
+      paddingHorizontal: 20 
+    },
+    courseDescription: { 
+      fontSize: 14, 
+      color: c.textSecondary, 
+      lineHeight: 22, 
+      marginBottom: 12 
+    },
+    studentsInfo: { 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      gap: 6, 
+      marginBottom: 24 
+    },
+    studentsText: { 
+      fontSize: 13, 
+      color: c.textSecondary 
+    },
+    section: { 
+      marginBottom: 24 
+    },
+    sectionTitle: { 
+      fontSize: 18, 
+      fontWeight: '600', 
+      color: c.text, 
+      marginBottom: 16 
+    },
+    objectiveItem: { 
+      flexDirection: 'row', 
+      alignItems: 'flex-start', 
+      gap: 10, 
+      marginBottom: 12 
+    },
+    objectiveText: { 
+      flex: 1, 
+      fontSize: 14, 
+      color: c.textSecondary, 
+      lineHeight: 20 
+    },
     actionButton: { 
       backgroundColor: c.brand, 
       paddingVertical: 14, 
@@ -409,9 +515,17 @@ function makeStyles(c: ReturnType<typeof useTheme>['colors']) {
       justifyContent: 'center', 
       gap: 8 
     },
-    continueButton: { backgroundColor: c.brand },
-    disabledButton: { opacity: 0.6 },
-    actionButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+    continueButton: { 
+      backgroundColor: c.brand 
+    },
+    disabledButton: { 
+      opacity: 0.6 
+    },
+    actionButtonText: { 
+      color: '#fff', 
+      fontSize: 16, 
+      fontWeight: '600' 
+    },
     moduleContainer: { 
       marginBottom: 12, 
       borderWidth: 1, 
@@ -434,12 +548,34 @@ function makeStyles(c: ReturnType<typeof useTheme>['colors']) {
       justifyContent: 'center', 
       marginRight: 12 
     },
-    moduleNumberText: { color: '#fff', fontSize: 14, fontWeight: '700' },
-    moduleContent: { flex: 1 },
-    moduleTitle: { fontSize: 15, fontWeight: '600', color: c.text, marginBottom: 4 },
-    moduleDescription: { fontSize: 13, color: c.textSecondary, marginBottom: 4, lineHeight: 18 },
-    moduleDuration: { fontSize: 12, color: c.textMuted },
-    lessonsContainer: { backgroundColor: c.card, paddingHorizontal: 16 },
+    moduleNumberText: { 
+      color: '#fff', 
+      fontSize: 14, 
+      fontWeight: '700' 
+    },
+    moduleContent: { 
+      flex: 1 
+    },
+    moduleTitle: { 
+      fontSize: 15, 
+      fontWeight: '600', 
+      color: c.text, 
+      marginBottom: 4 
+    },
+    moduleDescription: { 
+      fontSize: 13, 
+      color: c.textSecondary, 
+      marginBottom: 4, 
+      lineHeight: 18 
+    },
+    moduleDuration: { 
+      fontSize: 12, 
+      color: c.textMuted 
+    },
+    lessonsContainer: { 
+      backgroundColor: c.card, 
+      paddingHorizontal: 16 
+    },
     lessonItem: { 
       flexDirection: 'row', 
       alignItems: 'center', 
@@ -455,10 +591,30 @@ function makeStyles(c: ReturnType<typeof useTheme>['colors']) {
       justifyContent: 'center', 
       marginRight: 12 
     },
-    lessonNumberText: { color: c.textSecondary, fontSize: 12, fontWeight: '600' },
-    lessonInfo: { flex: 1 },
-    lessonTitle: { fontSize: 14, color: c.text, fontWeight: '500', marginBottom: 2 },
-    lessonDuration: { fontSize: 12, color: c.textMuted },
-    noContentText: { fontSize: 14, color: c.textMuted, textAlign: 'center', paddingVertical: 20, fontStyle: 'italic' },
+    lessonNumberText: { 
+      color: c.textSecondary, 
+      fontSize: 12, 
+      fontWeight: '600' 
+    },
+    lessonInfo: { 
+      flex: 1 
+    },
+    lessonTitle: { 
+      fontSize: 14, 
+      color: c.text, 
+      fontWeight: '500', 
+      marginBottom: 2 
+    },
+    lessonDuration: { 
+      fontSize: 12, 
+      color: c.textMuted 
+    },
+    noContentText: { 
+      fontSize: 14, 
+      color: c.textMuted, 
+      textAlign: 'center', 
+      paddingVertical: 20, 
+      fontStyle: 'italic' 
+    },
   });
 }

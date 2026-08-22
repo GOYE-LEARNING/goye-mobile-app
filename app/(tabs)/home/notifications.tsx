@@ -34,17 +34,19 @@ export default function Notifications() {
       console.log('🔔 Fetching notifications...');
       
       const result = await getUserNotifications(token);
+      console.log('RAW NOTIFICATION RESULT:', JSON.stringify(result, null, 2));
       
       let notificationsArray: any[] = [];
       
       // Handle different response structures
-      if (Array.isArray(result)) {
-        notificationsArray = result;
-      } else if (result?.data) {
-        if (Array.isArray(result.data)) {
-          notificationsArray = result.data;
-        }
-      }
+if (Array.isArray(result)) {
+  notificationsArray = result;
+} else if (Array.isArray(result?.data)) {
+  notificationsArray = result.data;
+} else if (Array.isArray(result?.data?.data)) {
+  // Paginated shape: { data: { data: [...], pagination: {...} } }
+  notificationsArray = result.data.data;
+}
       
       setNotifications(notificationsArray);
       console.log('✅ Notifications loaded:', notificationsArray.length);

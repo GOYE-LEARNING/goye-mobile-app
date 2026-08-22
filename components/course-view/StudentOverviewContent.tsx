@@ -4,7 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import { getCourse } from '@/services/api';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme, lightColors } from '@/contexts/ThemeContext';
 
 interface Props {
   courseData?: any;
@@ -28,6 +28,8 @@ export default function StudentOverviewContent({
   const [courseData, setCourseData] = useState(initialCourseData);
   const [loading, setLoading] = useState(!initialCourseData);
   const [error, setError] = useState<string | null>(null);
+
+  const s = makeStyles(colors);
 
   useEffect(() => {
     if (!initialCourseData && params.id) {
@@ -54,8 +56,6 @@ export default function StudentOverviewContent({
       setLoading(false);
     }
   };
-
-  const s = makeStyles(colors);
 
   if (loading) {
     return (
@@ -291,18 +291,62 @@ export default function StudentOverviewContent({
   );
 }
 
-function makeStyles(c: ReturnType<typeof useTheme>['colors']) {
+function makeStyles(c: typeof lightColors) {
   return StyleSheet.create({
-    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-    errorText: { fontSize: 14, color: c.textMuted, marginBottom: 16 },
-    retryButton: { backgroundColor: c.brand, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
-    retryText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-    courseDescription: { fontSize: 14, color: c.textSecondary, lineHeight: 22, marginBottom: 16 },
-    infoRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 24, flexWrap: 'wrap' },
-    infoItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    infoText: { fontSize: 13, color: c.textSecondary },
-    section: { marginTop: 24 },
-    sectionTitle: { fontSize: 18, fontWeight: '600', color: c.text, marginBottom: 16 },
+    centerContainer: { 
+      flex: 1, 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      padding: 20 
+    },
+    errorText: { 
+      fontSize: 14, 
+      color: c.textMuted, 
+      marginBottom: 16,
+      textAlign: 'center'
+    },
+    retryButton: { 
+      backgroundColor: c.brand, 
+      paddingHorizontal: 24, 
+      paddingVertical: 12, 
+      borderRadius: 8 
+    },
+    retryText: { 
+      color: '#fff', 
+      fontSize: 14, 
+      fontWeight: '600' 
+    },
+    courseDescription: { 
+      fontSize: 14, 
+      color: c.textSecondary, 
+      lineHeight: 22, 
+      marginBottom: 16 
+    },
+    infoRow: { 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      gap: 16, 
+      marginBottom: 24, 
+      flexWrap: 'wrap' 
+    },
+    infoItem: { 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      gap: 6 
+    },
+    infoText: { 
+      fontSize: 13, 
+      color: c.textSecondary 
+    },
+    section: { 
+      marginTop: 24 
+    },
+    sectionTitle: { 
+      fontSize: 18, 
+      fontWeight: '600', 
+      color: c.text, 
+      marginBottom: 16 
+    },
     moduleSection: { 
       backgroundColor: c.card, 
       borderRadius: 8, 
@@ -312,29 +356,120 @@ function makeStyles(c: ReturnType<typeof useTheme>['colors']) {
       shadowOpacity: 0.05, 
       shadowRadius: 2, 
       elevation: 1, 
-      overflow: 'hidden' 
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: c.border
     },
-    moduleHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', padding: 16 },
-    moduleHeaderContent: { flex: 1 },
-    moduleTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 },
-    moduleTitle: { fontSize: 16, fontWeight: '600', color: c.text, flex: 1, marginRight: 12 },
-    moduleInfo: { fontSize: 12, color: c.textSecondary, fontWeight: '500' },
-    moduleDescription: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
-    lessonsList: { borderTopWidth: 1, borderTopColor: c.border },
-    lessonItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16, gap: 12 },
-    lessonItemEven: { backgroundColor: c.backgroundSoft },
-    lessonItemOdd: { backgroundColor: c.card },
-    lessonItemActive: { backgroundColor: c.brandLighter, borderLeftWidth: 3, borderLeftColor: c.brand },
-    lessonCheckbox: { width: 20, height: 20 },
-    checkboxEmpty: { width: 20, height: 20, borderWidth: 2, borderColor: c.brand, backgroundColor: c.background, borderRadius: 4 },
-    checkboxFilled: { width: 20, height: 20, backgroundColor: c.brand, alignItems: 'center', justifyContent: 'center', borderRadius: 4 },
-    checkboxPlaying: { width: 20, height: 20, backgroundColor: c.brand, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-    lessonInfo: { flex: 1 },
-    lessonTitle: { fontSize: 14, color: c.text, marginBottom: 4 },
-    lessonTitleActive: { color: c.brand, fontWeight: '600' },
-    lessonDuration: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    durationText: { fontSize: 12, color: c.textSecondary },
-    noContentText: { fontSize: 14, color: c.textMuted, textAlign: 'center', paddingVertical: 20, fontStyle: 'italic' },
+    moduleHeader: { 
+      flexDirection: 'row', 
+      justifyContent: 'space-between', 
+      alignItems: 'flex-start', 
+      padding: 16 
+    },
+    moduleHeaderContent: { 
+      flex: 1 
+    },
+    moduleTitleRow: { 
+      flexDirection: 'row', 
+      justifyContent: 'space-between', 
+      alignItems: 'flex-start', 
+      marginBottom: 6 
+    },
+    moduleTitle: { 
+      fontSize: 16, 
+      fontWeight: '600', 
+      color: c.text, 
+      flex: 1, 
+      marginRight: 12 
+    },
+    moduleInfo: { 
+      fontSize: 12, 
+      color: c.textSecondary, 
+      fontWeight: '500' 
+    },
+    moduleDescription: { 
+      fontSize: 13, 
+      color: c.textSecondary, 
+      lineHeight: 18 
+    },
+    lessonsList: { 
+      borderTopWidth: 1, 
+      borderTopColor: c.border 
+    },
+    lessonItem: { 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      paddingVertical: 12, 
+      paddingHorizontal: 16, 
+      gap: 12 
+    },
+    lessonItemEven: { 
+      backgroundColor: c.backgroundSoft 
+    },
+    lessonItemOdd: { 
+      backgroundColor: c.card 
+    },
+    lessonItemActive: { 
+      backgroundColor: c.brandLighter, 
+      borderLeftWidth: 3, 
+      borderLeftColor: c.brand 
+    },
+    lessonCheckbox: { 
+      width: 20, 
+      height: 20 
+    },
+    checkboxEmpty: { 
+      width: 20, 
+      height: 20, 
+      borderWidth: 2, 
+      borderColor: c.brand, 
+      backgroundColor: c.background, 
+      borderRadius: 4 
+    },
+    checkboxFilled: { 
+      width: 20, 
+      height: 20, 
+      backgroundColor: c.brand, 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      borderRadius: 4 
+    },
+    checkboxPlaying: { 
+      width: 20, 
+      height: 20, 
+      backgroundColor: c.brand, 
+      borderRadius: 10, 
+      alignItems: 'center', 
+      justifyContent: 'center' 
+    },
+    lessonInfo: { 
+      flex: 1 
+    },
+    lessonTitle: { 
+      fontSize: 14, 
+      color: c.text, 
+      marginBottom: 4 
+    },
+    lessonTitleActive: { 
+      color: c.brand, 
+      fontWeight: '600' 
+    },
+    lessonDuration: { 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      gap: 4 
+    },
+    durationText: { 
+      fontSize: 12, 
+      color: c.textSecondary 
+    },
+    noContentText: { 
+      fontSize: 14, 
+      color: c.textMuted, 
+      textAlign: 'center', 
+      paddingVertical: 20, 
+      fontStyle: 'italic' 
+    },
     instructorCard: { 
       flexDirection: 'row', 
       alignItems: 'center', 
@@ -346,16 +481,56 @@ function makeStyles(c: ReturnType<typeof useTheme>['colors']) {
       shadowOffset: { width: 0, height: 1 }, 
       shadowOpacity: 0.05, 
       shadowRadius: 2, 
-      elevation: 1 
+      elevation: 1,
+      borderWidth: 1,
+      borderColor: c.border
     },
-    instructorAvatar: { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center' },
-    avatarText: { fontSize: 20, fontWeight: '600', color: c.textSecondary },
-    instructorName: { fontSize: 16, fontWeight: '600', color: c.text },
-    instructorTitle: { fontSize: 13, color: c.textSecondary },
-    outcomesList: { gap: 12 },
-    outcomeItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-    outcomeText: { fontSize: 14, color: c.textSecondary, flex: 1, lineHeight: 20 },
-    startButton: { backgroundColor: c.brand, paddingVertical: 16, alignItems: 'center', borderRadius: 8, marginTop: 24 },
-    startButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+    instructorAvatar: { 
+      width: 50, 
+      height: 50, 
+      borderRadius: 25, 
+      alignItems: 'center', 
+      justifyContent: 'center' 
+    },
+    avatarText: { 
+      fontSize: 20, 
+      fontWeight: '600', 
+      color: c.textSecondary 
+    },
+    instructorName: { 
+      fontSize: 16, 
+      fontWeight: '600', 
+      color: c.text 
+    },
+    instructorTitle: { 
+      fontSize: 13, 
+      color: c.textSecondary 
+    },
+    outcomesList: { 
+      gap: 12 
+    },
+    outcomeItem: { 
+      flexDirection: 'row', 
+      alignItems: 'flex-start', 
+      gap: 10 
+    },
+    outcomeText: { 
+      fontSize: 14, 
+      color: c.textSecondary, 
+      flex: 1, 
+      lineHeight: 20 
+    },
+    startButton: { 
+      backgroundColor: c.brand, 
+      paddingVertical: 16, 
+      alignItems: 'center', 
+      borderRadius: 8, 
+      marginTop: 24 
+    },
+    startButtonText: { 
+      color: '#fff', 
+      fontSize: 16, 
+      fontWeight: '600' 
+    },
   });
 }

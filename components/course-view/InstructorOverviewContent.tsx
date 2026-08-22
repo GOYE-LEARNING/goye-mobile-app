@@ -4,17 +4,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { getCourse } from '@/services/api';
+import { useTheme, lightColors } from '@/contexts/ThemeContext';
 
 interface Props {
   courseData?: any;
   token?: string;
 }
 
-export default function InstructorOverviewContent({ courseData: initialCourseData }: Props) {
+export default function InstructorOverviewContent({ courseData: initialCourseData, token }: Props) {
   const params = useLocalSearchParams();
+  const { colors } = useTheme();
   const [courseData, setCourseData] = useState(initialCourseData);
   const [loading, setLoading] = useState(!initialCourseData);
   const [error, setError] = useState<string | null>(null);
+
+  const s = makeStyles(colors);
 
   useEffect(() => {
     if (!initialCourseData && params.id) {
@@ -26,7 +30,7 @@ export default function InstructorOverviewContent({ courseData: initialCourseDat
     try {
       setLoading(true);
       setError(null);
-      const response = await getCourse(params.id as string);
+      const response = await getCourse(params.id as string, token);
       // Handle the response.data structure from your API
       setCourseData(response.data || response);
     } catch (err) {
@@ -39,21 +43,21 @@ export default function InstructorOverviewContent({ courseData: initialCourseDat
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#3F1F22" />
+      <View style={s.centerContainer}>
+        <ActivityIndicator size="large" color={colors.brand} />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>{error}</Text>
+      <View style={s.centerContainer}>
+        <Text style={s.errorText}>{error}</Text>
         <TouchableOpacity 
-          style={styles.retryButton}
+          style={s.retryButton}
           onPress={loadCourseData}
         >
-          <Text style={styles.retryText}>Retry</Text>
+          <Text style={s.retryText}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
@@ -66,89 +70,89 @@ export default function InstructorOverviewContent({ courseData: initialCourseDat
   return (
     <>
       {/* Course Description */}
-      <Text style={styles.courseDescription}>
+      <Text style={s.courseDescription}>
         {courseData.course_description || courseData.course_short_description || 'Discover what it means to truly follow Jesus in your daily life. This foundational course helps you build strong spiritual habits, understand key biblical principles, and live as a disciple in your community.'}
       </Text>
 
       {/* Language and Students Info */}
-      <View style={styles.infoRow}>
-        <View style={styles.infoItem}>
-          <Ionicons name="globe-outline" size={16} color="#666" />
-          <Text style={styles.infoText}>English (Auto)</Text>
+      <View style={s.infoRow}>
+        <View style={s.infoItem}>
+          <Ionicons name="globe-outline" size={16} color={colors.textSecondary} />
+          <Text style={s.infoText}>English (Auto)</Text>
         </View>
-        <View style={styles.infoItem}>
-          <Ionicons name="people-outline" size={16} color="#666" />
-          <Text style={styles.infoText}>{courseData.enrollment?.length || 0} students</Text>
+        <View style={s.infoItem}>
+          <Ionicons name="people-outline" size={16} color={colors.textSecondary} />
+          <Text style={s.infoText}>{courseData.enrollment?.length || 0} students</Text>
         </View>
       </View>
 
       {/* Quick Actions */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Action</Text>
-        <View style={styles.quickActionsRow}>
+      <View style={s.section}>
+        <Text style={s.sectionTitle}>Quick Action</Text>
+        <View style={s.quickActionsRow}>
           <TouchableOpacity
-            style={styles.quickActionCard}
+            style={s.quickActionCard}
             onPress={() => router.push(`/(tabs)/courses/${params.id}/add-module` as any)}
           >
-            <Ionicons name="add-circle-outline" size={28} color="#3F1F22" />
-            <Text style={styles.quickActionText}>Add Module</Text>
+            <Ionicons name="add-circle-outline" size={28} color={colors.brand} />
+            <Text style={s.quickActionText}>Add Module</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.quickActionCard}
+            style={s.quickActionCard}
             onPress={() => router.push(`/(tabs)/courses/${params.id}/add-quiz` as any)}
           >
-            <Ionicons name="document-text-outline" size={28} color="#3F1F22" />
-            <Text style={styles.quickActionText}>Create Quiz</Text>
+            <Ionicons name="document-text-outline" size={28} color={colors.brand} />
+            <Text style={s.quickActionText}>Create Quiz</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Stats */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{courseData.enrollment?.length || 0}</Text>
-          <Text style={styles.statLabel}>Enrolled</Text>
+      <View style={s.statsContainer}>
+        <View style={s.statCard}>
+          <Text style={s.statNumber}>{courseData.enrollment?.length || 0}</Text>
+          <Text style={s.statLabel}>Enrolled</Text>
         </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{courseData.module?.length || 0}</Text>
-          <Text style={styles.statLabel}>Modules</Text>
+        <View style={s.statCard}>
+          <Text style={s.statNumber}>{courseData.module?.length || 0}</Text>
+          <Text style={s.statLabel}>Modules</Text>
         </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{courseData.quiz?.length || 0}</Text>
-          <Text style={styles.statLabel}>Quizzes</Text>
+        <View style={s.statCard}>
+          <Text style={s.statNumber}>{courseData.quiz?.length || 0}</Text>
+          <Text style={s.statLabel}>Quizzes</Text>
         </View>
       </View>
 
       {/* View Content Button */}
       <TouchableOpacity 
-        style={styles.viewContentButton}
+        style={s.viewContentButton}
         onPress={() => {
           // Navigate to content view or handle accordingly
           console.log('View content pressed');
         }}
       >
-        <Text style={styles.viewContentText}>View Content</Text>
+        <Text style={s.viewContentText}>View Content</Text>
       </TouchableOpacity>
 
       {/* Activities */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Course Content</Text>
+      <View style={s.section}>
+        <Text style={s.sectionTitle}>Course Content</Text>
 
         {/* Modules */}
         {courseData.module && courseData.module.length > 0 ? (
           courseData.module.map((module: any, index: number) => (
-            <View key={module.id} style={styles.activityItem}>
-              <View style={[styles.activityIcon, { backgroundColor: '#EBF5FF' }]}>
-                <Ionicons name="book" size={20} color="#2563EB" />
+            <View key={module.id} style={s.activityItem}>
+              <View style={[s.activityIcon, { backgroundColor: colors.brandLighter }]}>
+                <Ionicons name="book" size={20} color={colors.brand} />
               </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityText}>
+              <View style={s.activityContent}>
+                <Text style={s.activityText}>
                   {module.module_title}
                 </Text>
-                <View style={styles.activityTimeRow}>
-                  <Ionicons name="time-outline" size={14} color="#999" />
-                  <Text style={styles.activityTime}>
+                <View style={s.activityTimeRow}>
+                  <Ionicons name="time-outline" size={14} color={colors.textMuted} />
+                  <Text style={s.activityTime}>
                     {module.module_duration} min • {module.lesson?.length || 0} lessons
                   </Text>
                 </View>
@@ -156,24 +160,24 @@ export default function InstructorOverviewContent({ courseData: initialCourseDat
             </View>
           ))
         ) : (
-          <Text style={styles.noActivitiesText}>No modules yet</Text>
+          <Text style={s.noActivitiesText}>No modules yet</Text>
         )}
 
         {/* Materials */}
         {courseData.material && courseData.material.length > 0 && (
           <>
-            <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Materials</Text>
+            <Text style={[s.sectionTitle, { marginTop: 16 }]}>Materials</Text>
             {courseData.material.map((material: any, index: number) => (
-              <View key={material.id} style={styles.activityItem}>
-                <View style={[styles.activityIcon, { backgroundColor: '#FEF3C7' }]}>
-                  <Ionicons name="document-text" size={20} color="#F59E0B" />
+              <View key={material.id} style={s.activityItem}>
+                <View style={[s.activityIcon, { backgroundColor: colors.brandLighter }]}>
+                  <Ionicons name="document-text" size={20} color={colors.brand} />
                 </View>
-                <View style={styles.activityContent}>
-                  <Text style={styles.activityText}>
+                <View style={s.activityContent}>
+                  <Text style={s.activityText}>
                     {material.material_title}
                   </Text>
-                  <View style={styles.activityTimeRow}>
-                    <Text style={styles.activityTime}>
+                  <View style={s.activityTimeRow}>
+                    <Text style={s.activityTime}>
                       {material.material_pages} pages
                     </Text>
                   </View>
@@ -189,152 +193,161 @@ export default function InstructorOverviewContent({ courseData: initialCourseDat
   );
 }
 
-const styles = StyleSheet.create({
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    fontSize: 14,
-    color: '#999',
-    marginBottom: 16,
-  },
-  retryButton: {
-    backgroundColor: '#3F1F22',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  courseDescription: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 22,
-    marginBottom: 16,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 24,
-  },
-  infoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  infoText: {
-    fontSize: 13,
-    color: '#666',
-  },
-  section: {
-    marginTop: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
-  },
-  quickActionsRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  quickActionCard: {
-    flex: 1,
-    backgroundColor: 'white',
-    padding: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-    gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  quickActionText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    textAlign: 'center',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
-  },
-  statCard: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 16,
-    backgroundColor: '#F8F8F8',
-    borderRadius: 8,
-  },
-  statNumber: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: '#666',
-  },
-  viewContentButton: {
-    backgroundColor: '#E8E8E8',
-    paddingVertical: 14,
-    alignItems: 'center',
-    borderRadius: 8,
-    marginBottom: 24,
-  },
-  viewContentText: {
-    color: '#333',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  activityItem: {
-    flexDirection: 'row',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    gap: 12,
-  },
-  activityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  activityContent: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  activityText: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 4,
-  },
-  activityTimeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  activityTime: {
-    fontSize: 12,
-    color: '#999',
-  },
-  noActivitiesText: {
-    fontSize: 14,
-    color: '#999',
-    textAlign: 'center',
-    paddingVertical: 20,
-  },
-});
+function makeStyles(c: typeof lightColors) {
+  return StyleSheet.create({
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+    },
+    errorText: {
+      fontSize: 14,
+      color: c.textMuted,
+      marginBottom: 16,
+      textAlign: 'center',
+    },
+    retryButton: {
+      backgroundColor: c.brand,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 8,
+    },
+    retryText: {
+      color: '#fff',
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    courseDescription: {
+      fontSize: 14,
+      color: c.textSecondary,
+      lineHeight: 22,
+      marginBottom: 16,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: 24,
+    },
+    infoItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    infoText: {
+      fontSize: 13,
+      color: c.textSecondary,
+    },
+    section: {
+      marginTop: 24,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: c.text,
+      marginBottom: 16,
+    },
+    quickActionsRow: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    quickActionCard: {
+      flex: 1,
+      backgroundColor: c.card,
+      padding: 24,
+      borderRadius: 8,
+      alignItems: 'center',
+      gap: 12,
+      shadowColor: c.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    quickActionText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: c.text,
+      textAlign: 'center',
+    },
+    statsContainer: {
+      flexDirection: 'row',
+      gap: 12,
+      marginBottom: 24,
+    },
+    statCard: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 16,
+      backgroundColor: c.cardContent,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    statNumber: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 4,
+    },
+    statLabel: {
+      fontSize: 11,
+      color: c.textSecondary,
+    },
+    viewContentButton: {
+      backgroundColor: c.backgroundSoft,
+      paddingVertical: 14,
+      alignItems: 'center',
+      borderRadius: 8,
+      marginBottom: 24,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    viewContentText: {
+      color: c.text,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    activityItem: {
+      flexDirection: 'row',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+      gap: 12,
+    },
+    activityIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    activityContent: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    activityText: {
+      fontSize: 14,
+      color: c.text,
+      marginBottom: 4,
+    },
+    activityTimeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    activityTime: {
+      fontSize: 12,
+      color: c.textMuted,
+    },
+    noActivitiesText: {
+      fontSize: 14,
+      color: c.textMuted,
+      textAlign: 'center',
+      paddingVertical: 20,
+    },
+  });
+}

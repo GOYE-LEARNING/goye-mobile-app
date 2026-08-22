@@ -1,6 +1,6 @@
 // File: app/(auth)/account-type.tsx
 
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,20 +20,18 @@ export default function AccountType() {
 
   return (
     <ImageBackground 
-      source={require('@/assets/images/background.png')}
+      source={require('@/assets/images/background.jpeg')}
       style={styles.background}
       resizeMode="cover"
     >
-      <LinearGradient
-        colors={['rgba(255, 245, 245, 0.95)', 'rgba(255, 255, 255, 0.85)', 'transparent']}
-        locations={[0, 0.6, 1]}
-        style={styles.gradient}
-      />
-      
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>Goye</Text>
+            <Image 
+              source={require('@/assets/images/goye_final_logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
           </View>
           
           <Text style={styles.title}>Join Our Community</Text>
@@ -41,7 +39,7 @@ export default function AccountType() {
         </View>
 
         <View style={styles.optionsContainer}>
-          {/* Individual Option - Moved first */}
+          {/* Individual Option */}
           <TouchableOpacity
             style={[
               styles.optionCard,
@@ -134,13 +132,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  gradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    height: '100%',
-  },
   container: {
     flex: 1,
     paddingHorizontal: 24,
@@ -153,38 +144,33 @@ const styles = StyleSheet.create({
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
   },
-  logoIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FFF5F5',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  logoText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#3F1F22',
+  logo: {
+    width: 90,
+    height: 90,
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: 'white',
     textAlign: 'center',
     marginBottom: 8,
-    fontFamily: 'System', // Consider using a custom font
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: 'white',
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   optionsContainer: {
     flex: 1,
@@ -257,6 +243,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
     fontStyle: 'italic',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   continueButton: {
     backgroundColor: '#3F1F22',

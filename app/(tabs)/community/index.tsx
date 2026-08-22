@@ -51,13 +51,58 @@ function useCategoryTabs(): { id: CategoryTab; label: string; icon: string }[] {
 
 export default function Community() {
   const { isOrganizationAdmin } = useUser();
-  if (isOrganizationAdmin) return <InviteMembersScreen />;
+  if (isOrganizationAdmin) return <OrgAdminCommunityScreen />;
   return <RegularCommunityScreen />;
 }
 
-// ─── Org: Invite Members ──────────────────────────────────────────────────────
+// ─── Org Admin Community Screen ──────────────────────────────────────────────
 
-function InviteMembersScreen() {
+type OrgAdminTab = 'invite' | 'feed';
+
+function OrgAdminCommunityScreen() {
+  const { user, token, isOrganizationAdmin } = useUser();
+  const { colors } = useTheme();
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<OrgAdminTab>('feed');
+  const s = makeStyles(colors);
+
+  return (
+    <SafeAreaView style={s.container} edges={['top']}>
+      <View style={s.headerRow}>
+        <Text style={s.pageTitle}>{t('community.pageTitle')}</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      {/* Org Admin Tab Switcher */}
+      <View style={s.tabSwitcher}>
+        <TouchableOpacity
+          style={[s.tabSwitchBtn, activeTab === 'feed' && s.tabSwitchBtnActive]}
+          onPress={() => setActiveTab('feed')}
+        >
+          <Ionicons name="newspaper-outline" size={16} color={activeTab === 'feed' ? colors.brand : colors.textMuted} />
+          <Text style={[s.tabSwitchText, activeTab === 'feed' && s.tabSwitchTextActive]}>Feed</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[s.tabSwitchBtn, activeTab === 'invite' && s.tabSwitchBtnActive]}
+          onPress={() => setActiveTab('invite')}
+        >
+          <Ionicons name="person-add-outline" size={16} color={activeTab === 'invite' ? colors.brand : colors.textMuted} />
+          <Text style={[s.tabSwitchText, activeTab === 'invite' && s.tabSwitchTextActive]}>Invite</Text>
+        </TouchableOpacity>
+      </View>
+
+      {activeTab === 'feed' ? (
+        <DiscussionFeed isOrgAdmin={true} />
+      ) : (
+        <InviteMembersView />
+      )}
+    </SafeAreaView>
+  );
+}
+
+// ─── Invite Members View ─────────────────────────────────────────────────────
+
+function InviteMembersView() {
   const { user, token } = useUser();
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -159,79 +204,74 @@ function InviteMembersScreen() {
   const s = makeStyles(colors);
 
   return (
-    <SafeAreaView style={s.container} edges={['top']}>
-      <View style={s.headerRow}>
-        <Text style={s.pageTitle}>{t('community.membersTitle')}</Text>
-      </View>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.inviteScroll}>
-        <View style={s.card}>
-          <Text style={s.cardTitle}>{t('community.inviteMembersTitle')}</Text>
-          <Text style={s.cardSubtitle}>{t('community.inviteMembersSubtitle')}</Text>
-          <View style={s.inputRow}>
-            <TextInput
-              style={s.emailInput}
-              placeholder={t('community.emailPlaceholder')}
-              placeholderTextColor={colors.textMuted}
-              value={emailInput}
-              onChangeText={setEmailInput}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              onSubmitEditing={handleAddToList}
-              returnKeyType="done"
-            />
-            <View style={s.rolePickerWrapper}>
-              <Picker selectedValue={roleInput} onValueChange={setRoleInput} style={s.rolePicker} dropdownIconColor={colors.brand}>
-                <Picker.Item label={t('community.roleMember')} value="Member" />
-                <Picker.Item label={t('community.roleAdmin')} value="Admin" />
-              </Picker>
-            </View>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.inviteScroll}>
+      <View style={s.card}>
+        <Text style={s.cardTitle}>{t('community.inviteMembersTitle')}</Text>
+        <Text style={s.cardSubtitle}>{t('community.inviteMembersSubtitle')}</Text>
+        <View style={s.inputRow}>
+          <TextInput
+            style={s.emailInput}
+            placeholder={t('community.emailPlaceholder')}
+            placeholderTextColor={colors.textMuted}
+            value={emailInput}
+            onChangeText={setEmailInput}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            onSubmitEditing={handleAddToList}
+            returnKeyType="done"
+          />
+          <View style={s.rolePickerWrapper}>
+            <Picker selectedValue={roleInput} onValueChange={setRoleInput} style={s.rolePicker} dropdownIconColor={colors.brand}>
+              <Picker.Item label={t('community.roleMember')} value="Member" />
+              <Picker.Item label={t('community.roleAdmin')} value="Admin" />
+            </Picker>
           </View>
-          <TouchableOpacity style={s.inviteButton} onPress={handleAddToList}>
-            <Ionicons name="add" size={18} color="#fff" />
-            <Text style={s.inviteButtonText}>{t('community.addToList')}</Text>
+        </View>
+        <TouchableOpacity style={s.inviteButton} onPress={handleAddToList}>
+          <Ionicons name="add" size={18} color="#fff" />
+          <Text style={s.inviteButtonText}>{t('community.addToList')}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {pendingInvites.length > 0 && (
+        <View style={s.card}>
+          <View style={s.pendingHeader}>
+            <Text style={s.cardTitle}>{t('community.pendingInvitesTitle')}</Text>
+            <View style={s.badge}><Text style={s.badgeText}>{pendingInvites.length}</Text></View>
+          </View>
+          {pendingInvites.map((invite) => (
+            <View key={invite.email} style={s.inviteRow}>
+              <View style={s.inviteAvatar}>
+                <Text style={s.inviteAvatarText}>{invite.email.charAt(0).toUpperCase()}</Text>
+              </View>
+              <View style={s.inviteInfo}>
+                <Text style={s.inviteEmail} numberOfLines={1}>{invite.email}</Text>
+              </View>
+              <View style={s.roleBadge}><Text style={s.roleBadgeText}>{invite.role}</Text></View>
+              <TouchableOpacity onPress={() => handleRemove(invite.email)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="close" size={16} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+          ))}
+          <TouchableOpacity style={[s.sendButton, sending && s.sendButtonDisabled]} onPress={handleSendInvites} disabled={sending}>
+            {sending ? <ActivityIndicator color="#fff" /> : (
+              <>
+                <Ionicons name="paper-plane-outline" size={18} color="#fff" />
+                <Text style={s.sendButtonText}>{t('community.invitePeople', { count: pendingInvites.length })}</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
+      )}
 
-        {pendingInvites.length > 0 && (
-          <View style={s.card}>
-            <View style={s.pendingHeader}>
-              <Text style={s.cardTitle}>{t('community.pendingInvitesTitle')}</Text>
-              <View style={s.badge}><Text style={s.badgeText}>{pendingInvites.length}</Text></View>
-            </View>
-            {pendingInvites.map((invite) => (
-              <View key={invite.email} style={s.inviteRow}>
-                <View style={s.inviteAvatar}>
-                  <Text style={s.inviteAvatarText}>{invite.email.charAt(0).toUpperCase()}</Text>
-                </View>
-                <View style={s.inviteInfo}>
-                  <Text style={s.inviteEmail} numberOfLines={1}>{invite.email}</Text>
-                </View>
-                <View style={s.roleBadge}><Text style={s.roleBadgeText}>{invite.role}</Text></View>
-                <TouchableOpacity onPress={() => handleRemove(invite.email)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                  <Ionicons name="close" size={16} color={colors.textMuted} />
-                </TouchableOpacity>
-              </View>
-            ))}
-            <TouchableOpacity style={[s.sendButton, sending && s.sendButtonDisabled]} onPress={handleSendInvites} disabled={sending}>
-              {sending ? <ActivityIndicator color="#fff" /> : (
-                <>
-                  <Ionicons name="paper-plane-outline" size={18} color="#fff" />
-                  <Text style={s.sendButtonText}>{t('community.invitePeople', { count: pendingInvites.length })}</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {pendingInvites.length === 0 && (
-          <View style={s.emptyState}>
-            <View style={s.emptyIcon}><Ionicons name="people-outline" size={40} color="#C4A882" /></View>
-            <Text style={s.emptyTitle}>{t('community.noInvitesQueuedTitle')}</Text>
-            <Text style={s.emptySubtitle}>{t('community.noInvitesQueuedSubtitle')}</Text>
-          </View>
-        )}
-      </ScrollView>
+      {pendingInvites.length === 0 && (
+        <View style={s.emptyState}>
+          <View style={s.emptyIcon}><Ionicons name="people-outline" size={40} color="#C4A882" /></View>
+          <Text style={s.emptyTitle}>{t('community.noInvitesQueuedTitle')}</Text>
+          <Text style={s.emptySubtitle}>{t('community.noInvitesQueuedSubtitle')}</Text>
+        </View>
+      )}
 
       {alert && (
         <CustomAlert
@@ -245,7 +285,7 @@ function InviteMembersScreen() {
           onSecondary={alert.onSecondary}
         />
       )}
-    </SafeAreaView>
+    </ScrollView>
   );
 }
 
@@ -319,7 +359,7 @@ function RegularCommunityScreen() {
       </View>
 
       {activeTab === 'feed' ? (
-        <DiscussionFeed />
+        <DiscussionFeed isOrgAdmin={false} />
       ) : (
         <GroupsFeed />
       )}
@@ -329,7 +369,7 @@ function RegularCommunityScreen() {
 
 // ─── Discussion Feed ──────────────────────────────────────────────────────────
 
-function DiscussionFeed() {
+function DiscussionFeed({ isOrgAdmin = false }: { isOrgAdmin?: boolean }) {
   const { user, token } = useUser();
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -360,7 +400,6 @@ function DiscussionFeed() {
   const fetchDiscussions = async () => {
     try {
       setLoading(true);
-      // Convert 'ALL' to undefined for the API call
       const categoryParam = selectedCategory === 'ALL' ? undefined : selectedCategory;
       console.log(`📡 Fetching discussions - Category: ${selectedCategory}, Sort: ${sort}`);
       
@@ -377,7 +416,6 @@ function DiscussionFeed() {
       
       console.log(`📊 Received ${discussionsArray.length} discussions for category ${selectedCategory}`);
       
-      // Optional: Double-check filter on client side (in case API doesn't filter properly)
       let filteredDiscussions = discussionsArray;
       if (selectedCategory !== 'ALL') {
         filteredDiscussions = discussionsArray.filter(
@@ -386,20 +424,55 @@ function DiscussionFeed() {
         console.log(`🔍 Client-side filter: ${filteredDiscussions.length} discussions match category ${selectedCategory}`);
       }
       
-      const initialDiscussions = filteredDiscussions.map((discussion: any) => ({
-        ...discussion,
-        _liked: discussion.liked || false,
-        _count: {
-          ...discussion._count,
-          likes: discussion._count?.likes || discussion.likes?.length || 0
+      // ✅ FIX: Properly set _liked based on the user's actual like status
+      const initialDiscussions = filteredDiscussions.map((discussion: any) => {
+        let isLiked = false;
+        const userId = user?.id;
+        
+        // Method 1: If the API returns a boolean 'liked' field
+        if (discussion.liked !== undefined) {
+          isLiked = !!discussion.liked;
         }
-      }));
+        // Method 2: If the API returns a 'likes' array with user objects
+        else if (discussion.likes && Array.isArray(discussion.likes)) {
+          isLiked = discussion.likes.some((like: any) => {
+            return like.userId === userId || like.user?.id === userId || like === userId;
+          });
+        }
+        // Method 3: If the API returns a 'likes' object with user IDs as keys
+        else if (discussion.likes && typeof discussion.likes === 'object' && !Array.isArray(discussion.likes)) {
+          isLiked = discussion.likes[userId] !== undefined || discussion.likes[userId?.toString()] !== undefined;
+        }
+        // Method 4: If the API returns 'likesCount' and we need to fetch individually
+        else if (discussion.likesCount !== undefined) {
+          // We'll fetch individual like status in a separate pass
+          isLiked = false;
+        }
+        
+        console.log(`🔍 Post ${discussion.id} - Liked: ${isLiked} for user ${userId}`);
+        
+        return {
+          ...discussion,
+          _liked: isLiked,
+          _count: {
+            ...discussion._count,
+            likes: discussion._count?.likes || 
+                   (discussion.likes?.length || 0) || 
+                   discussion.likesCount || 
+                   0
+          }
+        };
+      });
       
       setDiscussions(initialDiscussions);
       setLoading(false);
       
-      const hasLikedField = filteredDiscussions.some((d: any) => d.liked !== undefined);
-      if (!hasLikedField && filteredDiscussions.length > 0) {
+      // If we need to fetch like statuses individually (fallback)
+      const needsLikeFetch = filteredDiscussions.some((d: any) => 
+        d.liked === undefined && !d.likes && d.likesCount !== undefined
+      );
+      
+      if (needsLikeFetch && filteredDiscussions.length > 0) {
         await fetchLikeStatusesInBatches(initialDiscussions);
       }
       
@@ -525,39 +598,41 @@ function DiscussionFeed() {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Category Tabs */}
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={s.categoryTabsContainer}
-        style={{ maxHeight: 50 }}
-      >
-        {CATEGORY_TABS.map((tab) => (
-          <TouchableOpacity
-            key={tab.id}
-            style={[
-              s.categoryTab,
-              selectedCategory === tab.id && s.categoryTabActive
-            ]}
-            onPress={() => {
-              console.log(`🔄 Switching to category: ${tab.label}`);
-              setSelectedCategory(tab.id);
-            }}
-          >
-            <Ionicons 
-              name={tab.icon as any} 
-              size={16} 
-              color={selectedCategory === tab.id ? colors.brand : colors.textMuted} 
-            />
-            <Text style={[
-              s.categoryTabText,
-              selectedCategory === tab.id && s.categoryTabTextActive
-            ]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      {/* Category Tabs - Fixed at top with zIndex */}
+      <View style={s.categoryTabsWrapper}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={s.categoryTabsContainer}
+          style={s.categoryTabsScroll}
+        >
+          {CATEGORY_TABS.map((tab) => (
+            <TouchableOpacity
+              key={tab.id}
+              style={[
+                s.categoryTab,
+                selectedCategory === tab.id && s.categoryTabActive
+              ]}
+              onPress={() => {
+                console.log(`🔄 Switching to category: ${tab.label}`);
+                setSelectedCategory(tab.id);
+              }}
+            >
+              <Ionicons 
+                name={tab.icon as any} 
+                size={16} 
+                color={selectedCategory === tab.id ? colors.brand : colors.textMuted} 
+              />
+              <Text style={[
+                s.categoryTabText,
+                selectedCategory === tab.id && s.categoryTabTextActive
+              ]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
       {/* Sort Options */}
       <View style={s.sortRow}>
@@ -608,7 +683,11 @@ function DiscussionFeed() {
         />
       )}
 
-      <TouchableOpacity style={s.fab} onPress={() => setComposerVisible(true)}>
+      {/* FAB - Moved higher to avoid AI icon */}
+      <TouchableOpacity 
+        style={[s.fab, { bottom: 100 }]} 
+        onPress={() => setComposerVisible(true)}
+      >
         <Ionicons name="add" size={28} color="#fff" />
       </TouchableOpacity>
 
@@ -1177,10 +1256,22 @@ function makeStyles(c: ReturnType<typeof useTheme>['colors']) {
     tabSwitchText:       { fontSize: 14, fontWeight: '500', color: c.textMuted },
     tabSwitchTextActive: { color: c.brand, fontWeight: '600' },
 
-    // Category Tabs
+    // Category Tabs - Fixed wrapper with background
+    categoryTabsWrapper: {
+      backgroundColor: c.background,
+      paddingTop: 4,
+      paddingBottom: 4,
+      zIndex: 10,
+      elevation: 2,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    categoryTabsScroll: {
+      maxHeight: 50,
+    },
     categoryTabsContainer: {
       paddingHorizontal: 16,
-      paddingVertical: 8,
+      paddingVertical: 6,
       gap: 8,
     },
     categoryTab: {
@@ -1263,7 +1354,7 @@ function makeStyles(c: ReturnType<typeof useTheme>['colors']) {
       letterSpacing: 0.3,
     },
 
-    sortRow:          { flexDirection: 'row', paddingHorizontal: 16, gap: 8, marginBottom: 8, },
+    sortRow:          { flexDirection: 'row', paddingHorizontal: 16, gap: 8, marginVertical: 10, },
     sortPill:         { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: c.backgroundMuted, borderWidth: 1, borderColor: c.border },
     sortPillActive:   { backgroundColor: c.brand, borderColor: c.brand },
     sortPillText:     { fontSize: 13, fontWeight: '500', color: c.textSecondary },
@@ -1291,7 +1382,24 @@ function makeStyles(c: ReturnType<typeof useTheme>['colors']) {
     cardAction:       { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, gap: 6 },
     cardActionText:   { fontSize: 13, color: c.textMuted, fontWeight: '500' },
 
-    fab: { position: 'absolute', bottom: 24, right: 20, width: 56, height: 56, borderRadius: 28, backgroundColor: c.brand, alignItems: 'center', justifyContent: 'center', shadowColor: c.brand, shadowOpacity: 0.4, shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, elevation: 8 },
+    // FAB - Higher position to avoid AI icon
+    fab: { 
+      position: 'absolute', 
+      right: 20, 
+      bottom: 100,
+      width: 56, 
+      height: 56, 
+      borderRadius: 28, 
+      backgroundColor: c.brand, 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      shadowColor: c.brand, 
+      shadowOpacity: 0.4, 
+      shadowOffset: { width: 0, height: 4 }, 
+      shadowRadius: 12, 
+      elevation: 8,
+      zIndex: 20,
+    },
 
     composerHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1 },
     composerCloseBtn:    { padding: 4 },
