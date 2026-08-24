@@ -20,7 +20,7 @@ export default function AccountType() {
 
   return (
     <ImageBackground 
-      source={require('@/assets/images/background.jpeg')}
+      source={require('@/assets/images/background-photo.jpeg')}
       style={styles.background}
       resizeMode="cover"
     >
