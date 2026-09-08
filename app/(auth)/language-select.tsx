@@ -1,3 +1,4 @@
+// app/(auth)/language-select.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -25,6 +26,15 @@ const languages = [
   { code: 'sw', label: 'language.swahili', flag: '🇹🇿' },
 ];
 
+const languageNames: { [key: string]: string } = {
+  en: 'English',
+  fr: 'French',
+  ha: 'Hausa',
+  yo: 'Yoruba',
+  ig: 'Igbo',
+  sw: 'Swahili',
+};
+
 export default function LanguageSelectScreen() {
   const { t, i18n } = useTranslation();
   const { setField } = useSignUp();
@@ -36,37 +46,49 @@ export default function LanguageSelectScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleContinue = async () => {
-  if (!selectedLanguage) return;
-  setLoading(true);
+    if (!selectedLanguage) return;
+    setLoading(true);
 
-  try {
-    await AsyncStorage.setItem(HAS_ONBOARDED_LANGUAGE_KEY, 'true');
-    await changeAppLanguage(selectedLanguage);
+    try {
+      // 1. Save to AsyncStorage
+      await AsyncStorage.setItem(HAS_ONBOARDED_LANGUAGE_KEY, 'true');
+      
+      // 2. Change app language
+      await changeAppLanguage(selectedLanguage);
+      
+      // 3. Get language name
+      const languageName = languageNames[selectedLanguage] || 'English';
+      
+      console.log('📝 Saving language to context:', {
+        language: languageName,
+        languageCode: selectedLanguage
+      });
 
-    if (isSettingsMode) {
-      router.back();
-      return;
+      // 4. Save to SignUp Context
+      setField('language', languageName);
+      setField('languageCode', selectedLanguage);
+
+      // 5. If in settings mode, just go back
+      if (isSettingsMode) {
+        router.back();
+        return;
+      }
+
+      // 6. Wait a moment for state to update, then navigate
+      setTimeout(() => {
+        console.log('✅ Navigation to start screen with language:', {
+          language: languageName,
+          languageCode: selectedLanguage
+        });
+        router.replace('/(auth)/start');
+      }, 150);
+
+    } catch (error) {
+      console.error('❌ Error saving language:', error);
+    } finally {
+      setLoading(false);
     }
-
-    const languageNames: { [key: string]: string } = {
-      en: 'English',
-      fr: 'French',
-      ha: 'Hausa',
-      yo: 'Yoruba',
-      ig: 'Igbo',
-      sw: 'Swahili',
-    };
-
-    setField('language', languageNames[selectedLanguage] || 'English');
-    setField('languageCode', selectedLanguage);
-
-    router.replace('/(auth)/start');
-  } catch (error) {
-    console.error('Error saving language:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -76,6 +98,7 @@ export default function LanguageSelectScreen() {
             <Ionicons name="chevron-back" size={28} color="#3F1F22" />
           </TouchableOpacity>
         )}
+        
         <View style={styles.header}>
           <Text style={styles.title}>{t('language.title')}</Text>
           <Text style={styles.subtitle}>{t('language.subtitle')}</Text>

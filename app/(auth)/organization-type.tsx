@@ -2,7 +2,6 @@
 
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ImageBackground } from 'react-native';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 
@@ -44,18 +43,16 @@ export default function OrganizationType() {
   };
 
   return (
-    <ImageBackground 
-      source={require('@/assets/images/background.png')}
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <LinearGradient
-        colors={['rgba(255, 245, 245, 0.95)', 'rgba(255, 255, 255, 0.85)', 'transparent']}
-        locations={[0, 0.6, 1]}
-        style={styles.gradient}
+    <View style={styles.container}>
+      {/* ✅ Clean background - no blur at all */}
+      <ImageBackground 
+        source={require('@/assets/images/background-photo.jpeg')}
+        style={styles.background}
+        resizeMode="cover"
       />
-      
-      <View style={styles.container}>
+
+      {/* Content on top */}
+      <View style={styles.contentWrapper}>
         <View style={styles.header}>
           <TouchableOpacity 
             onPress={() => router.back()}
@@ -91,6 +88,7 @@ export default function OrganizationType() {
                   selectedType === type.id && styles.typeCardSelected
                 ]}
                 onPress={() => setSelectedType(type.id)}
+                activeOpacity={0.7}
               >
                 <View style={styles.typeCardContent}>
                   <View style={[
@@ -134,6 +132,7 @@ export default function OrganizationType() {
               ]}
               disabled={!selectedType}
               onPress={handleContinue}
+              activeOpacity={0.8}
             >
               <Text style={styles.continueButtonText}>Continue</Text>
               <Ionicons name="arrow-forward" size={20} color="white" style={styles.buttonIcon} />
@@ -141,25 +140,27 @@ export default function OrganizationType() {
           </View>
         </View>
       </View>
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
+  container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  background: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     width: '100%',
     height: '100%',
   },
-  gradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    height: '100%',
-  },
-  container: {
+  contentWrapper: {
     flex: 1,
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -188,11 +189,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: 'white',
   },
   headerSubtitle: {
     fontSize: 12,
-    color: '#888',
+    color: 'white',
     marginTop: 2,
   },
   headerRight: {
@@ -210,13 +211,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: 'white',
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: 'white',
     textAlign: 'center',
     maxWidth: '90%',
     lineHeight: 22,
@@ -228,11 +229,11 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   typeCard: {
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
     borderRadius: 20,
     marginBottom: 12,
     borderWidth: 1.5,
-    borderColor: '#F0F0F0',
+    borderColor: 'rgba(240, 240, 240, 0.8)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -242,10 +243,9 @@ const styles = StyleSheet.create({
   },
   typeCardSelected: {
     borderColor: '#3F1F22',
-    backgroundColor: '#FFF5F5',
+    backgroundColor: 'rgba(255, 245, 245, 0.95)',
     shadowColor: '#3F1F22',
     shadowOpacity: 0.1,
-    transform: [{ scale: 1.01 }],
   },
   typeCardContent: {
     flexDirection: 'row',

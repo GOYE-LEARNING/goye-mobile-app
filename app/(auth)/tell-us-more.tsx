@@ -1,11 +1,11 @@
+// app/(auth)/tell-us-more.tsx
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, Alert, ActivityIndicator } from 'react-native';
 import { useSignUp } from '@/contexts/SignUpContext';
 import { useUser } from '@/contexts/UserContext';
-import { useTranslation } from 'react-i18next'; // ✅ CHANGE 1: ADD THIS
+import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '@/constants/config';
@@ -46,7 +46,7 @@ const COUNTRY_CODES = [
 export default function TellUsMore() {
   const { data, setField } = useSignUp();
   const { setUser } = useUser();
-  const { t } = useTranslation(); // ✅ CHANGE 2: ADD THIS
+  const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [country, setCountry] = useState('');
   const [state, setStateVal] = useState('');
@@ -59,10 +59,57 @@ export default function TellUsMore() {
   const [showCountryModal, setShowCountryModal] = useState(false);
   const [showStateModal, setShowStateModal] = useState(false);
 
+  // ─── Helper to get language from storage if context is empty ──────────────
+  const getLanguageFromStorage = async () => {
+    try {
+      const lang = await AsyncStorage.getItem('@user_language');
+      const code = await AsyncStorage.getItem('@user_language_code');
+      if (lang && code) {
+        console.log('📝 Got language from AsyncStorage:', { lang, code });
+        return { language: lang, languageCode: code };
+      }
+    } catch (error) {
+      console.error('❌ Error reading language from storage:', error);
+    }
+    return { language: '', languageCode: '' };
+  };
+
   const handleSignUp = async () => {
     setLoading(true);
 
     try {
+      // ─── DEBUG: Log current context ──────────────────────────────────────
+      console.log('🔍 SignUp Context in TellUsMore:', {
+        language: data.language,
+        languageCode: data.languageCode,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        isGoogleAuth: data.isGoogleAuth,
+        fullData: data
+      });
+
+      // ─── Get language from context or storage ──────────────────────────
+      let finalLanguage = data.language;
+      let finalLanguageCode = data.languageCode;
+
+      // If context is empty, try AsyncStorage
+      if (!finalLanguage || !finalLanguageCode) {
+        console.log('⚠️ Language not in context, checking AsyncStorage...');
+        const stored = await getLanguageFromStorage();
+        if (stored.language && stored.languageCode) {
+          finalLanguage = stored.language;
+          finalLanguageCode = stored.languageCode;
+          console.log('✅ Using language from AsyncStorage:', { finalLanguage, finalLanguageCode });
+        }
+      }
+
+      // Final fallback
+      if (!finalLanguage) finalLanguage = 'English';
+      if (!finalLanguageCode) finalLanguageCode = 'en';
+
+      console.log('📝 Final language being used:', { finalLanguage, finalLanguageCode });
+
       if (data.isGoogleAuth) {
         // ─── Google Sign Up ───────────────────────────────────────────
         const result = await completeProfile(data.googleToken, {
@@ -74,8 +121,8 @@ export default function TellUsMore() {
           state,
           role,
           level,
-          language: data.language,        // ✅ CHANGE 3: ADD THIS
-          languageCode: data.languageCode, // ✅ CHANGE 3: ADD THIS
+          language: finalLanguage,
+          languageCode: finalLanguageCode,
         });
 
         console.log('=== COMPLETE PROFILE RESPONSE ===');
@@ -100,8 +147,8 @@ export default function TellUsMore() {
           phone_number: `${countryCode}${phone}`,
           role,
           level,
-          language: data.language,        // ✅ CHANGE 4: ADD THIS
-          languageCode: data.languageCode, // ✅ CHANGE 4: ADD THIS
+          language: finalLanguage,
+          languageCode: finalLanguageCode,
         };
 
         console.log('=== SIGNUP REQUEST ===');
@@ -205,7 +252,6 @@ export default function TellUsMore() {
     if (step < 2) {
       setStep(step + 1);
     } else {
-      // On final step, call the API
       handleSignUp();
     }
   };
@@ -222,16 +268,10 @@ export default function TellUsMore() {
     setCountry(value);
     setStateVal('');
     
-    // Auto-select country code when country changes
     const countryData = COUNTRY_CODES.find(item => item.country === value);
     if (countryData) {
       setCountryCode(countryData.code);
     }
-  };
-
-  const selectCountryCode = (code: string) => {
-    setCountryCode(code);
-    setShowCountryCodeModal(false);
   };
 
   const getStepContent = () => {
@@ -276,50 +316,42 @@ export default function TellUsMore() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Back Button */}
       <TouchableOpacity style={styles.backButton} onPress={handleBack} disabled={loading}>
         <Ionicons name="chevron-back" size={28} color="#000" />
       </TouchableOpacity>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Progress Bar */}
         {renderProgressBar()}
 
-        {/* Title and Subtitle */}
         <View style={styles.headerSection}>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.subtitle}>{subtitle}</Text>
         </View>
 
-        {/* Step Content */}
         <View style={styles.content}>
           {step === 0 && (
             <>
-              {/* Country Picker */}
-              {/* Country Selector */}
-<TouchableOpacity 
-  style={styles.pickerContainer} 
-  onPress={() => setShowCountryModal(true)}
->
-  <Text style={[styles.pickerText, !country && styles.placeholderText]}>
-    {country || 'Select Country'}
-  </Text>
-  <Ionicons name="chevron-down" size={16} color="#666" />
-</TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.pickerContainer} 
+                onPress={() => setShowCountryModal(true)}
+              >
+                <Text style={[styles.pickerText, !country && styles.placeholderText]}>
+                  {country || 'Select Country'}
+                </Text>
+                <Ionicons name="chevron-down" size={16} color="#666" />
+              </TouchableOpacity>
 
-{/* State Selector */}
-<TouchableOpacity 
-  style={styles.pickerContainer} 
-  onPress={() => setShowStateModal(true)}
-  disabled={!country}
->
-  <Text style={[styles.pickerText, !state && styles.placeholderText]}>
-    {state || 'Select State'}
-  </Text>
-  <Ionicons name="chevron-down" size={16} color="#666" />
-</TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.pickerContainer} 
+                onPress={() => setShowStateModal(true)}
+                disabled={!country}
+              >
+                <Text style={[styles.pickerText, !state && styles.placeholderText]}>
+                  {state || 'Select State'}
+                </Text>
+                <Ionicons name="chevron-down" size={16} color="#666" />
+              </TouchableOpacity>
 
-              {/* Phone Input with Country Code */}
               <View style={styles.phoneContainer}>
                 <TouchableOpacity 
                   style={styles.countryCodeButton}
@@ -355,7 +387,7 @@ export default function TellUsMore() {
                   Student
                 </Text>
                 <Text style={styles.optionDescription}>
-                  i want to learn and track my journey
+                  I want to learn and track my journey
                 </Text>
               </TouchableOpacity>
 
@@ -368,7 +400,7 @@ export default function TellUsMore() {
                   Instructor
                 </Text>
                 <Text style={styles.optionDescription}>
-                  i want to teach and mentor students
+                  I want to teach and mentor students
                 </Text>
               </TouchableOpacity>
             </View>
@@ -406,7 +438,6 @@ export default function TellUsMore() {
         </View>
       </ScrollView>
 
-      {/* Next/Finish Button */}
       <TouchableOpacity 
         style={[styles.button, loading && styles.buttonDisabled]} 
         onPress={handleNext}
@@ -419,56 +450,88 @@ export default function TellUsMore() {
         )}
       </TouchableOpacity>
 
-
-
       {/* Country Code Modal */}
-      {/* Country Modal */}
-<Modal visible={showCountryModal} animationType="slide" presentationStyle="pageSheet">
-  <SafeAreaView style={styles.modalContainer}>
-    <View style={styles.modalHeader}>
-      <Text style={styles.modalTitle}>Select Country</Text>
-      <TouchableOpacity onPress={() => setShowCountryModal(false)}>
-        <Ionicons name="close" size={24} color="#333" />
-      </TouchableOpacity>
-    </View>
-    <ScrollView style={styles.modalContent}>
-      {COUNTRIES.map((c) => (
-        <TouchableOpacity
-          key={c}
-          style={[styles.countryCodeItem, country === c && styles.selectedCountryCode]}
-          onPress={() => { handleCountryChange(c); setShowCountryModal(false); }}
-        >
-          <Text style={styles.countryName}>{c}</Text>
-          {country === c && <Ionicons name="checkmark" size={20} color="#3F1F22" />}
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  </SafeAreaView>
-</Modal>
+      <Modal visible={showCountryCodeModal} animationType="slide" presentationStyle="pageSheet">
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Country Code</Text>
+            <TouchableOpacity onPress={() => setShowCountryCodeModal(false)}>
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.modalContent}>
+            {COUNTRY_CODES.map((item) => (
+              <TouchableOpacity
+                key={item.code + item.country}
+                style={[styles.countryCodeItem, countryCode === item.code && styles.selectedCountryCode]}
+                onPress={() => {
+                  selectCountryCode(item.code);
+                  if (!country) {
+                    setCountry(item.country);
+                    const stateList = STATES_BY_COUNTRY[item.country] || [];
+                    if (stateList.length > 0) setStateVal('');
+                  }
+                }}
+              >
+                <Text style={styles.countryFlag}>{item.flag}</Text>
+                <View style={styles.countryInfo}>
+                  <Text style={styles.countryName}>{item.country}</Text>
+                  <Text style={styles.countryCode}>{item.code}</Text>
+                </View>
+                {countryCode === item.code && <Ionicons name="checkmark" size={20} color="#3F1F22" />}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
 
-{/* State Modal */}
-<Modal visible={showStateModal} animationType="slide" presentationStyle="pageSheet">
-  <SafeAreaView style={styles.modalContainer}>
-    <View style={styles.modalHeader}>
-      <Text style={styles.modalTitle}>Select State</Text>
-      <TouchableOpacity onPress={() => setShowStateModal(false)}>
-        <Ionicons name="close" size={24} color="#333" />
-      </TouchableOpacity>
-    </View>
-    <ScrollView style={styles.modalContent}>
-      {availableStates.map((s) => (
-        <TouchableOpacity
-          key={s}
-          style={[styles.countryCodeItem, state === s && styles.selectedCountryCode]}
-          onPress={() => { setStateVal(s); setShowStateModal(false); }}
-        >
-          <Text style={styles.countryName}>{s}</Text>
-          {state === s && <Ionicons name="checkmark" size={20} color="#3F1F22" />}
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  </SafeAreaView>
-</Modal>
+      {/* Country Modal */}
+      <Modal visible={showCountryModal} animationType="slide" presentationStyle="pageSheet">
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Country</Text>
+            <TouchableOpacity onPress={() => setShowCountryModal(false)}>
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.modalContent}>
+            {COUNTRIES.map((c) => (
+              <TouchableOpacity
+                key={c}
+                style={[styles.countryCodeItem, country === c && styles.selectedCountryCode]}
+                onPress={() => { handleCountryChange(c); setShowCountryModal(false); }}
+              >
+                <Text style={styles.countryName}>{c}</Text>
+                {country === c && <Ionicons name="checkmark" size={20} color="#3F1F22" />}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
+      {/* State Modal */}
+      <Modal visible={showStateModal} animationType="slide" presentationStyle="pageSheet">
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select State</Text>
+            <TouchableOpacity onPress={() => setShowStateModal(false)}>
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.modalContent}>
+            {availableStates.map((s) => (
+              <TouchableOpacity
+                key={s}
+                style={[styles.countryCodeItem, state === s && styles.selectedCountryCode]}
+                onPress={() => { setStateVal(s); setShowStateModal(false); }}
+              >
+                <Text style={styles.countryName}>{s}</Text>
+                {state === s && <Ionicons name="checkmark" size={20} color="#3F1F22" />}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -528,16 +591,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 15,
   },
-   pickerText: {
-  fontSize: 16,
-  color: '#000',
-  flex: 1,
-},
+  pickerText: {
+    fontSize: 16,
+    color: '#000',
+    flex: 1,
+  },
   placeholderText: {
-  color: '#999',
-},
-  picker: {
-    height: 50,
+    color: '#999',
   },
   phoneContainer: {
     flexDirection: 'row',
@@ -631,9 +691,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
-  closeButton: {
-    padding: 4,
-  },
   modalContent: {
     flex: 1,
     paddingHorizontal: 20,
@@ -665,7 +722,4 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
- 
-
-
 });

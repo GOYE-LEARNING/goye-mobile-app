@@ -1,3 +1,4 @@
+// app/(auth)/organization-form.tsx
 import { 
   View, 
   Text, 
@@ -75,15 +76,15 @@ export default function OrganizationForm() {
   const { orgType } = useLocalSearchParams();
   const { organizationData, updateOrganizationData } = useOrganization();
   
+  // ✅ FIX: Safely access organizationData with fallback
   const [formData, setFormData] = useState({
-    organizationName: organizationData.organizationName || '',
-    email: organizationData.email || '',
-    phone: organizationData.phone || '',
-    country: organizationData.country || '',
-    state: organizationData.state || '',
-    yearEstablished: organizationData.yearEstablished || '',
-    description: organizationData.description || '',
-    
+    organizationName: organizationData?.organizationName || '',
+    email: organizationData?.email || '',
+    phone: organizationData?.phone || '',
+    country: organizationData?.country || '',
+    state: organizationData?.state || '',
+    yearEstablished: organizationData?.yearEstablished || '',
+    description: organizationData?.description || '',
   });
 
   const [showCountryModal, setShowCountryModal] = useState(false);
@@ -125,35 +126,28 @@ export default function OrganizationForm() {
   const handleContinue = () => {
     if (!isFormValid()) return;
     
+    // ✅ Update organization data with safe values
     updateOrganizationData({
-      organizationType: orgType,
+      organizationType: orgType as string || 'club',
       ...formData
     });
     
-    // Navigate to type-specific form
-    const routes = {
-      church: '/(auth)/church-form',
-      school: '/(auth)/school-form',
-      club: '/(auth)/club-form',
-      nonprofit: '/(auth)/organization-form',
-      ministry: '/(auth)/organization-form',
-    };
-    
+    // Navigate to user-profile-form
     router.push({
-  pathname: '/(auth)/user-profile-form',
-  params: { orgType: orgType }
-}); // Goes
+      pathname: '/(auth)/user-profile-form',
+      params: { orgType: orgType as string || 'club' }
+    });
   };
 
   const getOrgTypeDisplay = () => {
-    const typeMap = {
+    const typeMap: { [key: string]: string } = {
       church: 'Church',
       school: 'School',
       club: 'Community Club',
       nonprofit: 'Non-Profit',
       ministry: 'Ministry'
     };
-    return typeMap[orgType] || orgType.charAt(0).toUpperCase() + orgType.slice(1);
+    return typeMap[orgType as string] || (orgType as string)?.charAt(0)?.toUpperCase() + (orgType as string)?.slice(1) || 'Organization';
   };
 
   return (

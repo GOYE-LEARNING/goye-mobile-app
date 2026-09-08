@@ -1,22 +1,36 @@
 // components/course-view/InstructorOverviewContent.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useState, useEffect } from 'react';
-import { getCourse } from '@/services/api';
-import { useTheme, lightColors } from '@/contexts/ThemeContext';
+import { lightColors, useTheme } from "@/contexts/ThemeContext";
+import { getCourse } from "@/services/api";
+import { Ionicons } from "@expo/vector-icons";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface Props {
   courseData?: any;
   token?: string;
+  onLessonSelect?: (lesson: any) => void;
+  currentLessonId?: string;
 }
 
-export default function InstructorOverviewContent({ courseData: initialCourseData, token }: Props) {
+export default function InstructorOverviewContent({
+  courseData: initialCourseData,
+  token,
+  onLessonSelect,
+  currentLessonId,
+}: Props) {
   const params = useLocalSearchParams();
   const { colors } = useTheme();
   const [courseData, setCourseData] = useState(initialCourseData);
   const [loading, setLoading] = useState(!initialCourseData);
   const [error, setError] = useState<string | null>(null);
+  const [expandedModules, setExpandedModules] = useState<string[]>([]);
 
   const s = makeStyles(colors);
 
@@ -26,19 +40,35 @@ export default function InstructorOverviewContent({ courseData: initialCourseDat
     }
   }, [params.id, initialCourseData]);
 
+  useEffect(() => {
+    if (initialCourseData) {
+      setCourseData(initialCourseData);
+      if (initialCourseData.module && initialCourseData.module.length > 0) {
+        setExpandedModules([initialCourseData.module[0].id]);
+      }
+    }
+  }, [initialCourseData]);
+
   const loadCourseData = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await getCourse(params.id as string, token);
-      // Handle the response.data structure from your API
       setCourseData(response.data || response);
     } catch (err) {
-      setError('Failed to load course data');
-      console.error('Error loading course:', err);
+      setError("Failed to load course data");
+      console.error("Error loading course:", err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleModule = (moduleId: string) => {
+    setExpandedModules((prev) =>
+      prev.includes(moduleId)
+        ? prev.filter((id) => id !== moduleId)
+        : [...prev, moduleId]
+    );
   };
 
   if (loading) {
@@ -53,10 +83,7 @@ export default function InstructorOverviewContent({ courseData: initialCourseDat
     return (
       <View style={s.centerContainer}>
         <Text style={s.errorText}>{error}</Text>
-        <TouchableOpacity 
-          style={s.retryButton}
-          onPress={loadCourseData}
-        >
+        <TouchableOpacity style={s.retryButton} onPress={loadCourseData}>
           <Text style={s.retryText}>Retry</Text>
         </TouchableOpacity>
       </View>
@@ -71,7 +98,9 @@ export default function InstructorOverviewContent({ courseData: initialCourseDat
     <>
       {/* Course Description */}
       <Text style={s.courseDescription}>
-        {courseData.course_description || courseData.course_short_description || 'Discover what it means to truly follow Jesus in your daily life. This foundational course helps you build strong spiritual habits, understand key biblical principles, and live as a disciple in your community.'}
+        {courseData.course_description ||
+          courseData.course_short_description ||
+          "Discover what it means to truly follow Jesus in your daily life."}
       </Text>
 
       {/* Language and Students Info */}
@@ -82,33 +111,17 @@ export default function InstructorOverviewContent({ courseData: initialCourseDat
         </View>
         <View style={s.infoItem}>
           <Ionicons name="people-outline" size={16} color={colors.textSecondary} />
-          <Text style={s.infoText}>{courseData.enrollment?.length || 0} students</Text>
+          <Text style={s.infoText}>
+            {courseData.enrollment?.length || 0} students
+          </Text>
+        </View>
+        <View style={s.infoItem}>
+          <Ionicons name="bar-chart-outline" size={16} color={colors.textSecondary} />
+          <Text style={s.infoText}>{courseData.course_level || "All Levels"}</Text>
         </View>
       </View>
 
-      {/* Quick Actions */}
-      <View style={s.section}>
-        <Text style={s.sectionTitle}>Quick Action</Text>
-        <View style={s.quickActionsRow}>
-          <TouchableOpacity
-            style={s.quickActionCard}
-            onPress={() => router.push(`/(tabs)/courses/${params.id}/add-module` as any)}
-          >
-            <Ionicons name="add-circle-outline" size={28} color={colors.brand} />
-            <Text style={s.quickActionText}>Add Module</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={s.quickActionCard}
-            onPress={() => router.push(`/(tabs)/courses/${params.id}/add-quiz` as any)}
-          >
-            <Ionicons name="document-text-outline" size={28} color={colors.brand} />
-            <Text style={s.quickActionText}>Create Quiz</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Stats */}
+      {/* Stats Cards */}
       <View style={s.statsContainer}>
         <View style={s.statCard}>
           <Text style={s.statNumber}>{courseData.enrollment?.length || 0}</Text>
@@ -124,68 +137,141 @@ export default function InstructorOverviewContent({ courseData: initialCourseDat
         </View>
       </View>
 
-      {/* View Content Button */}
-      <TouchableOpacity 
-        style={s.viewContentButton}
-        onPress={() => {
-          // Navigate to content view or handle accordingly
-          console.log('View content pressed');
-        }}
-      >
-        <Text style={s.viewContentText}>View Content</Text>
-      </TouchableOpacity>
-
-      {/* Activities */}
+      {/* Course Content - Modules (clickable lessons, no edit icons) */}
       <View style={s.section}>
         <Text style={s.sectionTitle}>Course Content</Text>
 
-        {/* Modules */}
         {courseData.module && courseData.module.length > 0 ? (
-          courseData.module.map((module: any, index: number) => (
-            <View key={module.id} style={s.activityItem}>
-              <View style={[s.activityIcon, { backgroundColor: colors.brandLighter }]}>
-                <Ionicons name="book" size={20} color={colors.brand} />
-              </View>
-              <View style={s.activityContent}>
-                <Text style={s.activityText}>
-                  {module.module_title}
-                </Text>
-                <View style={s.activityTimeRow}>
-                  <Ionicons name="time-outline" size={14} color={colors.textMuted} />
-                  <Text style={s.activityTime}>
-                    {module.module_duration} min • {module.lesson?.length || 0} lessons
-                  </Text>
-                </View>
-              </View>
-            </View>
-          ))
-        ) : (
-          <Text style={s.noActivitiesText}>No modules yet</Text>
-        )}
+          courseData.module.map((module: any, index: number) => {
+            const isExpanded = expandedModules.includes(module.id);
+            const hasLessons = module.lesson && module.lesson.length > 0;
+            const totalDuration =
+              module.lesson?.reduce(
+                (total: number, lesson: any) => total + (parseInt(lesson.duration) || 0),
+                0
+              ) || parseInt(module.module_duration) || 0;
 
-        {/* Materials */}
-        {courseData.material && courseData.material.length > 0 && (
-          <>
-            <Text style={[s.sectionTitle, { marginTop: 16 }]}>Materials</Text>
-            {courseData.material.map((material: any, index: number) => (
-              <View key={material.id} style={s.activityItem}>
-                <View style={[s.activityIcon, { backgroundColor: colors.brandLighter }]}>
-                  <Ionicons name="document-text" size={20} color={colors.brand} />
-                </View>
-                <View style={s.activityContent}>
-                  <Text style={s.activityText}>
-                    {material.material_title}
-                  </Text>
-                  <View style={s.activityTimeRow}>
-                    <Text style={s.activityTime}>
-                      {material.material_pages} pages
-                    </Text>
+            return (
+              <View key={module.id} style={s.moduleSection}>
+                <TouchableOpacity
+                  style={s.moduleHeader}
+                  onPress={() => hasLessons && toggleModule(module.id)}
+                >
+                  <View style={s.moduleHeaderContent}>
+                    <View style={s.moduleTitleRow}>
+                      <Text style={s.moduleTitle}>
+                        {module.module_title || `Module ${index + 1}`}
+                      </Text>
+                      <Text style={s.moduleInfo}>
+                        {module.lesson?.length || 0} lessons • {totalDuration} min
+                      </Text>
+                    </View>
+                    {module.module_description && (
+                      <Text style={s.moduleDescription}>
+                        {module.module_description}
+                      </Text>
+                    )}
                   </View>
-                </View>
+                  {hasLessons ? (
+                    <Ionicons
+                      name={isExpanded ? "chevron-down" : "chevron-forward"}
+                      size={20}
+                      color={colors.textSecondary}
+                    />
+                  ) : (
+                    <Ionicons name="lock-closed" size={20} color={colors.textMuted} />
+                  )}
+                </TouchableOpacity>
+
+                {/* Lessons List */}
+                {isExpanded && hasLessons && (
+                  <View style={s.lessonsList}>
+                    {module.lesson.map((lesson: any, lessonIndex: number) => {
+                      const hasVideo =
+                        lesson.lesson_video && lesson.lesson_video.trim() !== "";
+                      const isCurrent = currentLessonId === lesson.id;
+
+                      return (
+                        <TouchableOpacity
+                          key={lesson.id}
+                          style={[
+                            s.lessonItem,
+                            lessonIndex % 2 === 0 ? s.lessonItemEven : s.lessonItemOdd,
+                            isCurrent && s.lessonItemActive,
+                          ]}
+                          onPress={() => onLessonSelect && onLessonSelect(lesson)}
+                        >
+                          {/* Empty checkbox placeholder */}
+                          <View style={s.lessonCheckbox}>
+                            <View style={s.checkboxEmpty} />
+                          </View>
+                          <View style={s.lessonInfo}>
+                            <Text
+                              style={[
+                                s.lessonTitle,
+                                isCurrent && s.lessonTitleActive,
+                              ]}
+                            >
+                              {lesson.lesson_title || `Lesson ${lessonIndex + 1}`}
+                            </Text>
+                            <View style={s.lessonDuration}>
+                              {hasVideo ? (
+                                <Ionicons
+                                  name="play-circle"
+                                  size={14}
+                                  color={isCurrent ? colors.brand : colors.textSecondary}
+                                />
+                              ) : (
+                                <Ionicons
+                                  name="document-text-outline"
+                                  size={14}
+                                  color={colors.textMuted}
+                                />
+                              )}
+                              <Text style={s.durationText}>
+                                {lesson.duration || 0} min
+                                {!hasVideo && " • No video"}
+                              </Text>
+                            </View>
+                          </View>
+                          {/* ✅ No pencil icon */}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
               </View>
-            ))}
-          </>
+            );
+          })
+        ) : (
+          <Text style={s.noContentText}>No course content available yet.</Text>
         )}
+      </View>
+
+      {/* Quick Actions - Add Module/Quiz */}
+      <View style={s.section}>
+        <Text style={s.sectionTitle}>Quick Actions</Text>
+        <View style={s.quickActionsRow}>
+          <TouchableOpacity
+            style={s.quickActionCard}
+            onPress={() =>
+              router.push(`/(tabs)/courses/${params.id}/add-module` as any)
+            }
+          >
+            <Ionicons name="add-circle-outline" size={28} color={colors.brand} />
+            <Text style={s.quickActionText}>Add Module</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={s.quickActionCard}
+            onPress={() =>
+              router.push(`/(tabs)/courses/${params.id}/add-quiz` as any)
+            }
+          >
+            <Ionicons name="document-text-outline" size={28} color={colors.brand} />
+            <Text style={s.quickActionText}>Create Quiz</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={{ height: 40 }} />
@@ -197,15 +283,15 @@ function makeStyles(c: typeof lightColors) {
   return StyleSheet.create({
     centerContainer: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
       padding: 20,
     },
     errorText: {
       fontSize: 14,
       color: c.textMuted,
       marginBottom: 16,
-      textAlign: 'center',
+      textAlign: "center",
     },
     retryButton: {
       backgroundColor: c.brand,
@@ -214,9 +300,9 @@ function makeStyles(c: typeof lightColors) {
       borderRadius: 8,
     },
     retryText: {
-      color: '#fff',
+      color: "#fff",
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     courseDescription: {
       fontSize: 14,
@@ -225,18 +311,43 @@ function makeStyles(c: typeof lightColors) {
       marginBottom: 16,
     },
     infoRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 12,
       marginBottom: 24,
+      flexWrap: "wrap",
     },
     infoItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 6,
     },
     infoText: {
       fontSize: 13,
+      color: c.textSecondary,
+    },
+    statsContainer: {
+      flexDirection: "row",
+      gap: 12,
+      marginBottom: 24,
+    },
+    statCard: {
+      flex: 1,
+      alignItems: "center",
+      paddingVertical: 16,
+      backgroundColor: c.cardContent,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    statNumber: {
+      fontSize: 28,
+      fontWeight: "700",
+      color: c.text,
+      marginBottom: 4,
+    },
+    statLabel: {
+      fontSize: 11,
       color: c.textSecondary,
     },
     section: {
@@ -244,12 +355,119 @@ function makeStyles(c: typeof lightColors) {
     },
     sectionTitle: {
       fontSize: 18,
-      fontWeight: '600',
+      fontWeight: "600",
       color: c.text,
       marginBottom: 16,
     },
+    moduleSection: {
+      backgroundColor: c.card,
+      borderRadius: 8,
+      marginBottom: 12,
+      shadowColor: c.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    moduleHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      padding: 16,
+    },
+    moduleHeaderContent: {
+      flex: 1,
+    },
+    moduleTitleRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      marginBottom: 6,
+    },
+    moduleTitle: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: c.text,
+      flex: 1,
+      marginRight: 12,
+    },
+    moduleInfo: {
+      fontSize: 12,
+      color: c.textSecondary,
+      fontWeight: "500",
+    },
+    moduleDescription: {
+      fontSize: 13,
+      color: c.textSecondary,
+      lineHeight: 18,
+    },
+    lessonsList: {
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    lessonItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      gap: 12,
+    },
+    lessonItemEven: {
+      backgroundColor: c.backgroundSoft,
+    },
+    lessonItemOdd: {
+      backgroundColor: c.card,
+    },
+    lessonItemActive: {
+      backgroundColor: c.brandLighter,
+      borderLeftWidth: 3,
+      borderLeftColor: c.brand,
+    },
+    lessonCheckbox: {
+      width: 20,
+      height: 20,
+    },
+    checkboxEmpty: {
+      width: 20,
+      height: 20,
+      borderWidth: 2,
+      borderColor: c.brand,
+      backgroundColor: c.background,
+      borderRadius: 4,
+    },
+    lessonInfo: {
+      flex: 1,
+    },
+    lessonTitle: {
+      fontSize: 14,
+      color: c.text,
+      marginBottom: 4,
+    },
+    lessonTitleActive: {
+      color: c.brand,
+      fontWeight: "600",
+    },
+    lessonDuration: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    durationText: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    noContentText: {
+      fontSize: 14,
+      color: c.textMuted,
+      textAlign: "center",
+      paddingVertical: 20,
+      fontStyle: "italic",
+    },
     quickActionsRow: {
-      flexDirection: 'row',
+      flexDirection: "row",
       gap: 12,
     },
     quickActionCard: {
@@ -257,7 +475,7 @@ function makeStyles(c: typeof lightColors) {
       backgroundColor: c.card,
       padding: 24,
       borderRadius: 8,
-      alignItems: 'center',
+      alignItems: "center",
       gap: 12,
       shadowColor: c.shadow,
       shadowOffset: { width: 0, height: 1 },
@@ -269,85 +487,9 @@ function makeStyles(c: typeof lightColors) {
     },
     quickActionText: {
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: "600",
       color: c.text,
-      textAlign: 'center',
-    },
-    statsContainer: {
-      flexDirection: 'row',
-      gap: 12,
-      marginBottom: 24,
-    },
-    statCard: {
-      flex: 1,
-      alignItems: 'center',
-      paddingVertical: 16,
-      backgroundColor: c.cardContent,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: c.border,
-    },
-    statNumber: {
-      fontSize: 28,
-      fontWeight: '700',
-      color: c.text,
-      marginBottom: 4,
-    },
-    statLabel: {
-      fontSize: 11,
-      color: c.textSecondary,
-    },
-    viewContentButton: {
-      backgroundColor: c.backgroundSoft,
-      paddingVertical: 14,
-      alignItems: 'center',
-      borderRadius: 8,
-      marginBottom: 24,
-      borderWidth: 1,
-      borderColor: c.border,
-    },
-    viewContentText: {
-      color: c.text,
-      fontSize: 15,
-      fontWeight: '600',
-    },
-    activityItem: {
-      flexDirection: 'row',
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: c.border,
-      gap: 12,
-    },
-    activityIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    activityContent: {
-      flex: 1,
-      justifyContent: 'center',
-    },
-    activityText: {
-      fontSize: 14,
-      color: c.text,
-      marginBottom: 4,
-    },
-    activityTimeRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    activityTime: {
-      fontSize: 12,
-      color: c.textMuted,
-    },
-    noActivitiesText: {
-      fontSize: 14,
-      color: c.textMuted,
-      textAlign: 'center',
-      paddingVertical: 20,
+      textAlign: "center",
     },
   });
 }
