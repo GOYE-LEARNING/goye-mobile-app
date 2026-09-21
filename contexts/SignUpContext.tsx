@@ -18,9 +18,10 @@ interface SignUpData {
   otpSessionToken?: string; 
   isGoogleAuth: boolean;
   googleToken: string;
-  language: string;        // ✅ ADD THIS
-  languageCode: string;    // ✅ ADD THIS
+  language: string;        
+  languageCode: string;   
 }
+
 
 const initialState: SignUpData = {
   firstName: '',
