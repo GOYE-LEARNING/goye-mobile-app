@@ -19,9 +19,19 @@ import Toast from 'react-native-toast-message';
 import { useUser } from '@/contexts/UserContext';
 import { useSignUp } from '@/contexts/SignUpContext';
 import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import eventEmitter from '@/utils/eventEmitter';
 
 const HAS_ONBOARDED_LANGUAGE_KEY = '@has_selected_language';
+
+// ─── Push Notification Handler Component ────────────────────────────────────
+// A plain hook call, not a provider — needs to render inside UserProvider to
+// read auth state, same reason SessionHandler below isn't just called
+// directly from RootLayout.
+function PushNotificationHandler() {
+  usePushNotifications();
+  return null;
+}
 
 // ─── Session Handler Component ───────────────────────────────────────────────
 function SessionHandler() {
@@ -131,6 +141,7 @@ export default function RootLayout() {
             <NetworkProvider>
               <LanguageCheck />
               <SessionHandler />
+              <PushNotificationHandler />
               <Stack
                 screenOptions={{
                   headerShown: false,

@@ -2053,3 +2053,20 @@ export const updateNotificationSettings = async (
   if (!response.ok) throw new Error(result.message || 'Failed to update notification settings');
   return result;
 };
+
+export const registerPushToken = async (expoPushToken: string, token: string): Promise<any> => {
+  const response = await fetchWithAuth('/user/push-token', {
+    method: 'PUT',
+    body: JSON.stringify({ expoPushToken }),
+  }, token);
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to register push token');
+  return result;
+};
+
+export const unregisterPushToken = async (token: string): Promise<any> => {
+  const response = await fetchWithAuth('/user/push-token', { method: 'DELETE' }, token);
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to unregister push token');
+  return result;
+};
