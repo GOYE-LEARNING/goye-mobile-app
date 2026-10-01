@@ -63,3 +63,4 @@ expo-env.d.ts
 /ios
 /android
 EOFgoogle-services.json 
+google-service-account.json

@@ -63,6 +63,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-video",
     googleSigninPlugin,
     "expo-localization",
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/images/android-icon-monochrome.png",
+        color: "#FFA500",
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,
