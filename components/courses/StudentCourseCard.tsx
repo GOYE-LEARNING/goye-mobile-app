@@ -6,6 +6,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { getImageUri } from '@/utils/helpers';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
+import { useUser } from '@/contexts/UserContext';
+import { saveCourse, unsaveCourse } from '@/services/api';
+import Toast from 'react-native-toast-message';
 
 interface Course {
   id: string;
@@ -26,11 +30,47 @@ interface Course {
 
 interface StudentCourseCardProps {
   course: Course;
+  onToggleSaved?: (courseId: string, saved: boolean) => void;
 }
 
-export default function StudentCourseCard({ course }: StudentCourseCardProps) {
+export default function StudentCourseCard({ course, onToggleSaved }: StudentCourseCardProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const { token } = useUser();
+  const [saved, setSaved] = useState(course.saved);
+  const [togglingSave, setTogglingSave] = useState(false);
+
+  const handleToggleSave = async () => {
+    if (togglingSave || !token) return;
+    const next = !saved;
+    setTogglingSave(true);
+    setSaved(next);
+    try {
+      if (next) {
+        await saveCourse(course.id, token);
+      } else {
+        await unsaveCourse(course.id, token);
+      }
+      onToggleSaved?.(course.id, next);
+      Toast.show({
+        type: 'success',
+        text1: t('common.success'),
+        text2: next ? t('courses.courseSavedSuccess') : t('courses.courseRemovedFromSaved'),
+        position: 'bottom',
+      });
+    } catch (err) {
+      console.error('[StudentCourseCard] toggle save error:', err);
+      setSaved(!next);
+      Toast.show({
+        type: 'error',
+        text1: t('common.error'),
+        text2: t('courses.couldNotUpdateSavedStatus'),
+        position: 'bottom',
+      });
+    } finally {
+      setTogglingSave(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -84,9 +124,16 @@ export default function StudentCourseCard({ course }: StudentCourseCardProps) {
               <Ionicons name="book-outline" size={32} color={colors.textMuted} />
             </View>
           )}
-          <TouchableOpacity style={s.bookmarkButton}>
+          <TouchableOpacity
+            style={s.bookmarkButton}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleToggleSave();
+            }}
+            disabled={togglingSave}
+          >
             <Ionicons
-              name={course.saved ? 'bookmark' : 'bookmark-outline'}
+              name={saved ? 'bookmark' : 'bookmark-outline'}
               size={18}
               color={colors.brand}
             />

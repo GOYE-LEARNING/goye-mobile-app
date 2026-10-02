@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { useTheme, lightColors } from '@/contexts/ThemeContext';
 import { getGrowthByProgressId, getUserCertificates } from '@/services/api';
+import { useTranslation } from 'react-i18next';
 
 const BADGE_ICON_MAP: Record<string, string> = {
   CADET_BADGE: 'shield-outline',
@@ -22,6 +23,7 @@ export default function SpiritualGrowth() {
   const params = useLocalSearchParams<{ progressId?: string; tab?: string }>();
   const { token } = useUser();
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const isValidTab = (tab?: string): tab is 'achievements' | 'certificates' | 'badges' =>
     tab === 'achievements' || tab === 'certificates' || tab === 'badges';
@@ -87,18 +89,18 @@ export default function SpiritualGrowth() {
   const handleViewCertificate = (cert: any) => {
     const certUrl = cert.url || cert.certificate_url;
     Alert.alert(
-      'Certificate Details',
-      `Course: ${cert.courseTitle || cert.course_title || 'Course Certificate'}\n` +
-      `Issued: ${new Date(cert.issuedAt || cert.createdAt || Date.now()).toLocaleDateString()}\n` +
-      `ID: ${cert.id || cert._id || 'N/A'}`,
+      t('home.growth.certificateDetailsTitle'),
+      `${t('home.growth.courseLabel')}: ${cert.courseTitle || cert.course_title || t('home.growth.defaultCertificateTitle')}\n` +
+      `${t('home.growth.issuedLabel')}: ${new Date(cert.issuedAt || cert.createdAt || Date.now()).toLocaleDateString()}\n` +
+      `${t('home.growth.idLabel')}: ${cert.id || cert._id || 'N/A'}`,
       [
-        { text: 'Close', style: 'cancel' },
-        ...(certUrl ? [{ 
-          text: 'View PDF', 
+        { text: t('home.growth.close'), style: 'cancel' },
+        ...(certUrl ? [{
+          text: t('home.growth.viewPdf'),
           onPress: () => {
             Linking.openURL(certUrl).catch(err => {
               console.error('Error opening URL:', err);
-              Alert.alert('Error', 'Could not open the certificate. Please try again.');
+              Alert.alert(t('common.error'), t('home.growth.couldNotOpenCertificate'));
             });
           }
         }] : [])
@@ -113,7 +115,7 @@ export default function SpiritualGrowth() {
   const badges = achievements?.badges || [];
   const levelProgress = achievements?.levelProgress || {};
   
-  const levelName = levelProgress?.name || user?.currentLevel?.replace(/_/g, ' ') || 'Seeker';
+  const levelName = levelProgress?.name || user?.currentLevel?.replace(/_/g, ' ') || t('home.studentDashboard.defaultLevelSeeker');
   const currentLevel = levelProgress?.level || user?.levelNumber || 1;
   const nextLevelXP = levelProgress?.nextLevelXP || user?.nextLevelXP || 460;
   const progressToNext = levelProgress?.progressToNext || user?.progressToNextLevel || 0;
@@ -126,7 +128,7 @@ export default function SpiritualGrowth() {
 
   const achievementItems = badges.map((badge: any) => ({
     id: badge.id,
-    title: badge.achievement?.title || badge.badges?.replace(/_/g, ' ') || 'Achievement',
+    title: badge.achievement?.title || badge.badges?.replace(/_/g, ' ') || t('home.growth.defaultAchievementTitle'),
     content: badge.achievement?.content || '',
     point: badge.achievement?.point || 0,
     createdAt: badge.createdAt,
@@ -142,12 +144,12 @@ export default function SpiritualGrowth() {
           <TouchableOpacity onPress={() => router.back()} style={s.backButton}>
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={s.headerTitle}>Spiritual Growth</Text>
+          <Text style={s.headerTitle}>{t('home.growth.headerTitle')}</Text>
           <View style={{ width: 24 }} />
         </View>
         <View style={s.loadingContainer}>
           <ActivityIndicator size="large" color={colors.brand} />
-          <Text style={s.loadingText}>Loading growth data...</Text>
+          <Text style={s.loadingText}>{t('home.growth.loadingGrowthData')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -160,18 +162,18 @@ export default function SpiritualGrowth() {
           <TouchableOpacity onPress={() => router.back()} style={s.backButton}>
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={s.headerTitle}>Spiritual Growth</Text>
+          <Text style={s.headerTitle}>{t('home.growth.headerTitle')}</Text>
           <View style={{ width: 24 }} />
         </View>
         <View style={s.emptyState}>
           <Ionicons name="leaf-outline" size={64} color={colors.textMuted} />
-          <Text style={s.emptyText}>No growth data available</Text>
-          <Text style={s.emptySubText}>Start your journey to see your progress</Text>
-          <TouchableOpacity 
+          <Text style={s.emptyText}>{t('home.growth.noGrowthDataAvailable')}</Text>
+          <Text style={s.emptySubText}>{t('home.growth.startJourneyToSeeProgress')}</Text>
+          <TouchableOpacity
             style={s.startButton}
             onPress={() => router.back()}
           >
-            <Text style={s.startButtonText}>Go Back</Text>
+            <Text style={s.startButtonText}>{t('home.growth.goBack')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -185,7 +187,7 @@ export default function SpiritualGrowth() {
         <TouchableOpacity onPress={() => router.back()} style={s.backButton}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={s.headerTitle}>Spiritual Growth</Text>
+        <Text style={s.headerTitle}>{t('home.growth.headerTitle')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -195,36 +197,36 @@ export default function SpiritualGrowth() {
           <View style={s.progressHeader}>
             <View style={s.levelBadge}>
               <Text style={s.levelText}>
-                {levelName} (Level {currentLevel})
+                {t('home.growth.levelBadge', { levelName, level: currentLevel })}
               </Text>
             </View>
-            <Text style={s.pointsText}>{totalPoints} XP</Text>
+            <Text style={s.pointsText}>{t('home.studentDashboard.xpSuffix', { points: totalPoints })}</Text>
           </View>
 
           <View style={s.progressBar}>
             <View style={[s.progressFill, { width: `${progressPct}%` }]} />
           </View>
           <Text style={s.progressInfo}>
-            {progressToNext} / {nextLevelXP} XP to next level
+            {t('home.studentDashboard.xpToNextLevel', { progress: progressToNext, max: nextLevelXP })}
           </Text>
 
           {/* Stats Grid */}
           <View style={s.statsGrid}>
             <View style={s.statItem}>
               <Text style={s.statNumber}>{totalAchievements}</Text>
-              <Text style={s.statLabel}>Achievements</Text>
+              <Text style={s.statLabel}>{t('home.studentDashboard.statAchievements')}</Text>
             </View>
             <View style={s.statItem}>
               <Text style={s.statNumber}>{completedCourses}</Text>
-              <Text style={s.statLabel}>Certificates</Text>
+              <Text style={s.statLabel}>{t('home.studentDashboard.statCertificates')}</Text>
             </View>
             <View style={s.statItem}>
               <Text style={s.statNumber}>{totalBadges}</Text>
-              <Text style={s.statLabel}>Badges</Text>
+              <Text style={s.statLabel}>{t('home.studentDashboard.statBadges')}</Text>
             </View>
             <View style={s.statItem}>
               <Text style={s.statNumber}>{totalPoints}</Text>
-              <Text style={s.statLabel}>Total Points</Text>
+              <Text style={s.statLabel}>{t('home.studentDashboard.statTotalPoints')}</Text>
             </View>
           </View>
         </View>
@@ -237,7 +239,7 @@ export default function SpiritualGrowth() {
               onPress={() => setActiveTab('achievements')}
             >
               <Text style={[s.tabText, activeTab === 'achievements' && s.tabTextActive]}>
-                Achievements
+                {t('home.studentDashboard.statAchievements')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -245,7 +247,7 @@ export default function SpiritualGrowth() {
               onPress={() => setActiveTab('badges')}
             >
               <Text style={[s.tabText, activeTab === 'badges' && s.tabTextActive]}>
-                Badges
+                {t('home.studentDashboard.statBadges')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -253,7 +255,7 @@ export default function SpiritualGrowth() {
               onPress={() => setActiveTab('certificates')}
             >
               <Text style={[s.tabText, activeTab === 'certificates' && s.tabTextActive]}>
-                Certificates
+                {t('home.studentDashboard.statCertificates')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -265,8 +267,8 @@ export default function SpiritualGrowth() {
             {achievementItems.length === 0 ? (
               <View style={s.emptyState}>
                 <Ionicons name="trophy-outline" size={48} color={colors.textMuted} />
-                <Text style={s.emptyText}>No achievements yet</Text>
-                <Text style={s.emptySubText}>Complete activities to earn achievements</Text>
+                <Text style={s.emptyText}>{t('home.growth.noAchievementsYet')}</Text>
+                <Text style={s.emptySubText}>{t('home.growth.completeActivitiesForAchievements')}</Text>
               </View>
             ) : (
               achievementItems.map((item: any) => (
@@ -282,8 +284,10 @@ export default function SpiritualGrowth() {
                     <Text style={s.achievementTitle}>{item.title}</Text>
                     <Text style={s.achievementDescription}>{item.content}</Text>
                     <Text style={s.achievementDate}>
-                      Earned {new Date(item.createdAt).toLocaleDateString('en-US', {
-                        month: 'short', day: 'numeric', year: 'numeric',
+                      {t('home.growth.earnedOn', {
+                        date: new Date(item.createdAt).toLocaleDateString('en-US', {
+                          month: 'short', day: 'numeric', year: 'numeric',
+                        }),
                       })}
                     </Text>
                   </View>
@@ -302,8 +306,8 @@ export default function SpiritualGrowth() {
             {badges.length === 0 ? (
               <View style={s.emptyState}>
                 <Ionicons name="shield-outline" size={48} color={colors.textMuted} />
-                <Text style={s.emptyText}>No badges yet</Text>
-                <Text style={s.emptySubText}>Earn badges by completing achievements</Text>
+                <Text style={s.emptyText}>{t('home.growth.noBadgesYet')}</Text>
+                <Text style={s.emptySubText}>{t('home.growth.earnBadgesByCompleting')}</Text>
               </View>
             ) : (
               <View style={s.badgesGrid}>
@@ -337,44 +341,44 @@ export default function SpiritualGrowth() {
             {loadingCertificates ? (
               <View style={s.loadingContainer}>
                 <ActivityIndicator size="small" color={colors.brand} />
-                <Text style={s.loadingText}>Loading certificates...</Text>
+                <Text style={s.loadingText}>{t('home.growth.loadingCertificates')}</Text>
               </View>
             ) : certificates.length === 0 ? (
               <View style={s.emptyState}>
                 <Ionicons name="ribbon-outline" size={48} color={colors.textMuted} />
-                <Text style={s.emptyText}>No certificates yet</Text>
-                <Text style={s.emptySubText}>Complete courses to earn certificates</Text>
-                
+                <Text style={s.emptyText}>{t('home.growth.noCertificatesYet')}</Text>
+                <Text style={s.emptySubText}>{t('home.growth.completeCoursesForCertificates')}</Text>
+
                 {growthData?.courses?.completed?.length > 0 && (
                   <View style={s.completedCoursesInfo}>
-                    <Text style={s.completedCoursesTitle}>Completed Courses:</Text>
+                    <Text style={s.completedCoursesTitle}>{t('home.growth.completedCoursesTitle')}</Text>
                     {growthData.courses.completed.map((course: any) => (
                       <View key={course.courseId} style={s.completedCourseItem}>
                         <Ionicons name="checkmark-circle" size={16} color={colors.success} />
                         <Text style={s.completedCourseName}>{course.course_title}</Text>
                         <View style={s.pendingBadge}>
-                          <Text style={s.pendingBadgeText}>Pending</Text>
+                          <Text style={s.pendingBadgeText}>{t('home.growth.pending')}</Text>
                         </View>
                       </View>
                     ))}
                     <Text style={s.certificatePendingText}>
-                      Certificates will be available soon
+                      {t('home.growth.certificatesComingSoon')}
                     </Text>
                   </View>
                 )}
-                
-                <TouchableOpacity 
+
+                <TouchableOpacity
                   style={s.browseButton}
                   onPress={() => router.push('/(tabs)/home')}
                 >
-                  <Text style={s.browseButtonText}>Browse Courses</Text>
+                  <Text style={s.browseButtonText}>{t('home.studentDashboard.browseCourses')}</Text>
                 </TouchableOpacity>
               </View>
             ) : (
               <View style={s.certificatesList}>
                 <View style={s.certCountContainer}>
                   <Text style={s.certCountText}>
-                    You have {certificates.length} certificate{certificates.length > 1 ? 's' : ''}
+                    {t('home.growth.certCount', { count: certificates.length })}
                   </Text>
                 </View>
                 
@@ -389,15 +393,15 @@ export default function SpiritualGrowth() {
                     </View>
                     <View style={s.certificateInfo}>
                       <Text style={s.certificateTitle}>
-                        {cert.courseTitle || cert.course_title || 'Course Certificate'}
+                        {cert.courseTitle || cert.course_title || t('home.growth.defaultCertificateTitle')}
                       </Text>
                       <Text style={s.certificateSubtitle}>
-                        Issued: {new Date(cert.issuedAt || cert.createdAt || Date.now()).toLocaleDateString('en-US', {
+                        {t('home.growth.issuedLabel')}: {new Date(cert.issuedAt || cert.createdAt || Date.now()).toLocaleDateString('en-US', {
                           month: 'long', day: 'numeric', year: 'numeric',
                         })}
                       </Text>
                       {cert.credentialId && (
-                        <Text style={s.certificateId}>ID: {cert.credentialId}</Text>
+                        <Text style={s.certificateId}>{t('home.growth.idLabel')}: {cert.credentialId}</Text>
                       )}
                     </View>
                     <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />

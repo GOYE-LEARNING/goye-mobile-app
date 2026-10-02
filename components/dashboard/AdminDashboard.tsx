@@ -18,6 +18,7 @@ import { getAdminDashboardStats, sendSuperAdminAnnouncement } from '@/services/a
 import { NotificationBadge } from '@/components/NotificationBadge';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 interface AdminStats {
   totalUsers: number;
@@ -44,17 +45,17 @@ interface AdminActivity {
   createdAt: string;
 }
 
-const getTimeAgo = (dateString: string) => {
+const getTimeAgo = (dateString: string, t: (key: string, opts?: any) => string) => {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
 
-  if (diffHours < 1) return 'Just now';
-  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffHours < 1) return t('home.instructorDashboard.timeJustNow');
+  if (diffHours < 24) return t('home.instructorDashboard.timeHoursAgo', { count: diffHours });
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return `${Math.floor(diffDays / 7)}w ago`;
+  if (diffDays < 7) return t('home.instructorDashboard.timeDaysAgo', { count: diffDays });
+  return t('home.instructorDashboard.timeWeeksAgo', { count: Math.floor(diffDays / 7) });
 };
 
 const activityIcon = (type: string) => {
@@ -68,6 +69,7 @@ export default function AdminDashboard() {
   const { colors } = useTheme();
   const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const unreadCount = useUnreadNotificationCount();
+  const { t } = useTranslation();
 
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [activities, setActivities] = useState<AdminActivity[]>([]);
@@ -97,7 +99,7 @@ export default function AdminDashboard() {
 
   const handleSendAnnouncement = async () => {
     if (!announcementTitle.trim() || !announcementMessage.trim()) {
-      Alert.alert('Required Fields', 'Please enter both a title and a message');
+      Alert.alert(t('home.adminDashboard.requiredFieldsTitle'), t('home.adminDashboard.requiredFieldsMessage'));
       return;
     }
     setSendingAnnouncement(true);
@@ -106,12 +108,15 @@ export default function AdminDashboard() {
         { title: announcementTitle.trim(), message: announcementMessage.trim(), audience: 'all' },
         token!
       );
-      Alert.alert('Announcement Sent', `Delivered to ${result.data?.recipientCount ?? 0} user(s).`);
+      Alert.alert(
+        t('home.adminDashboard.announcementSentTitle'),
+        t('home.adminDashboard.announcementSentMessage', { count: result.data?.recipientCount ?? 0 }),
+      );
       setShowAnnouncementModal(false);
       setAnnouncementTitle('');
       setAnnouncementMessage('');
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to send announcement');
+      Alert.alert(t('common.error'), err?.message || t('home.adminDashboard.announcementSendFailed'));
     } finally {
       setSendingAnnouncement(false);
     }
@@ -139,9 +144,9 @@ export default function AdminDashboard() {
             style={styles.avatar}
           />
           <View>
-            <Text style={styles.greeting}>Welcome back</Text>
+            <Text style={styles.greeting}>{t('home.adminDashboard.welcomeBack')}</Text>
             <Text style={styles.userName}>
-              {user?.first_name || 'Admin'}
+              {user?.first_name || t('home.adminDashboard.defaultAdminName')}
             </Text>
           </View>
         </View>
@@ -157,23 +162,23 @@ export default function AdminDashboard() {
       {/* Dashboard Card */}
       <View style={styles.dashboardCard}>
         <View style={styles.dashboardHeader}>
-          <Text style={styles.dashboardTitle}>Dashboard</Text>
+          <Text style={styles.dashboardTitle}>{t('home.adminDashboard.dashboardTitle')}</Text>
         </View>
 
         {/* Overview Section */}
-        <Text style={styles.sectionTitle}>Overview</Text>
+        <Text style={styles.sectionTitle}>{t('home.adminDashboard.overview')}</Text>
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{stats?.activeUsers ?? 0}</Text>
-            <Text style={styles.statLabel}>Active Users</Text>
+            <Text style={styles.statLabel}>{t('home.adminDashboard.activeUsers')}</Text>
             <Ionicons name="trending-up" size={20} color={colors.textSecondary} style={styles.statIcon} />
           </View>
 
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{stats?.newUsersToday ?? 0}</Text>
-            <Text style={styles.statLabel}>New Today</Text>
+            <Text style={styles.statLabel}>{t('home.adminDashboard.newToday')}</Text>
             <Ionicons name="people" size={20} color={colors.textSecondary} style={styles.statIcon} />
           </View>
         </View>
@@ -181,58 +186,58 @@ export default function AdminDashboard() {
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{stats?.avgCompletionRate ?? 0}%</Text>
-            <Text style={styles.statLabel}>Avg. Completion</Text>
+            <Text style={styles.statLabel}>{t('home.adminDashboard.avgCompletion')}</Text>
             <Ionicons name="stats-chart" size={20} color={colors.textSecondary} style={styles.statIcon} />
           </View>
 
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{stats?.engagementRate ?? 0}%</Text>
-            <Text style={styles.statLabel}>Engagement</Text>
+            <Text style={styles.statLabel}>{t('home.adminDashboard.engagement')}</Text>
             <Ionicons name="bar-chart" size={20} color={colors.textSecondary} style={styles.statIcon} />
           </View>
         </View>
 
         {/* Users Breakdown */}
-        <Text style={styles.sectionTitle}>Users Breakdown</Text>
+        <Text style={styles.sectionTitle}>{t('home.adminDashboard.usersBreakdown')}</Text>
         <View style={styles.breakdownGrid}>
           <View style={styles.breakdownItem}>
             <Text style={styles.breakdownValue}>{stats?.totalUsers?.toLocaleString() ?? 0}</Text>
-            <Text style={styles.breakdownLabel}>All Users</Text>
+            <Text style={styles.breakdownLabel}>{t('home.adminDashboard.allUsers')}</Text>
           </View>
           <View style={styles.breakdownItem}>
             <Text style={styles.breakdownValue}>{stats?.userTypeBreakdown?.individualUsers ?? 0}</Text>
-            <Text style={styles.breakdownLabel}>Individual</Text>
+            <Text style={styles.breakdownLabel}>{t('home.adminDashboard.individual')}</Text>
           </View>
           <View style={styles.breakdownItem}>
             <Text style={styles.breakdownValue}>{stats?.userTypeBreakdown?.orgOwners ?? 0}</Text>
-            <Text style={styles.breakdownLabel}>Org Owners</Text>
+            <Text style={styles.breakdownLabel}>{t('home.adminDashboard.orgOwners')}</Text>
           </View>
         </View>
 
         <View style={styles.breakdownGrid}>
           <View style={styles.breakdownItem}>
             <Text style={styles.breakdownValue}>{stats?.userTypeBreakdown?.invitedMembers ?? 0}</Text>
-            <Text style={styles.breakdownLabel}>Invited Members</Text>
+            <Text style={styles.breakdownLabel}>{t('home.adminDashboard.invitedMembers')}</Text>
           </View>
           <View style={styles.breakdownItem}>
             <Text style={styles.breakdownValue}>{stats?.totalOrganizations ?? 0}</Text>
-            <Text style={styles.breakdownLabel}>Organizations</Text>
+            <Text style={styles.breakdownLabel}>{t('home.adminDashboard.organizations')}</Text>
           </View>
           <View style={styles.breakdownItem}>
             <Text style={styles.breakdownValue}>{stats?.totalCourses ?? 0}</Text>
-            <Text style={styles.breakdownLabel}>Courses</Text>
+            <Text style={styles.breakdownLabel}>{t('home.adminDashboard.courses')}</Text>
           </View>
         </View>
 
         {/* Quick Actions */}
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <Text style={styles.sectionTitle}>{t('home.adminDashboard.quickActions')}</Text>
         <View style={styles.quickActionsGrid}>
           <TouchableOpacity
             style={styles.actionCard}
             onPress={() => router.push('/(admin)/users')}
           >
             <Ionicons name="people" size={24} color={colors.brand} />
-            <Text style={styles.actionText}>Manage Users</Text>
+            <Text style={styles.actionText}>{t('home.adminDashboard.manageUsers')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -240,7 +245,7 @@ export default function AdminDashboard() {
             onPress={() => router.push('/(admin)/courses')}
           >
             <Ionicons name="book" size={24} color={colors.brand} />
-            <Text style={styles.actionText}>Review Courses</Text>
+            <Text style={styles.actionText}>{t('home.adminDashboard.reviewCourses')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -250,7 +255,7 @@ export default function AdminDashboard() {
             onPress={() => router.push('/(tabs)/community')}
           >
             <Ionicons name="people-circle" size={24} color={colors.brand} />
-            <Text style={styles.actionText}>Manage Groups</Text>
+            <Text style={styles.actionText}>{t('home.adminDashboard.manageGroups')}</Text>
           </TouchableOpacity>
 
           {isSuperAdmin && (
@@ -259,7 +264,7 @@ export default function AdminDashboard() {
               onPress={() => router.push('/(admin)/announcements')}
             >
               <Ionicons name="megaphone" size={24} color={colors.brand} />
-              <Text style={styles.actionText}>Announcement</Text>
+              <Text style={styles.actionText}>{t('home.adminDashboard.announcement')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -269,14 +274,14 @@ export default function AdminDashboard() {
             is how they're reached. */}
         {isSuperAdmin && (
           <>
-            <Text style={styles.sectionTitle}>Platform</Text>
+            <Text style={styles.sectionTitle}>{t('home.adminDashboard.platform')}</Text>
             <View style={styles.quickActionsGrid}>
               <TouchableOpacity
                 style={styles.actionCard}
                 onPress={() => router.push('/(admin)/organizations')}
               >
                 <Ionicons name="business" size={24} color={colors.brand} />
-                <Text style={styles.actionText}>Organizations</Text>
+                <Text style={styles.actionText}>{t('home.adminDashboard.organizations')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -284,7 +289,7 @@ export default function AdminDashboard() {
                 onPress={() => router.push('/(admin)/activity')}
               >
                 <Ionicons name="pulse" size={24} color={colors.brand} />
-                <Text style={styles.actionText}>Activity</Text>
+                <Text style={styles.actionText}>{t('home.adminDashboard.activity')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -294,7 +299,7 @@ export default function AdminDashboard() {
                 onPress={() => router.push('/(admin)/events')}
               >
                 <Ionicons name="calendar" size={24} color={colors.brand} />
-                <Text style={styles.actionText}>All Events</Text>
+                <Text style={styles.actionText}>{t('home.adminDashboard.allEvents')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -302,23 +307,23 @@ export default function AdminDashboard() {
                 onPress={() => router.push('/(admin)/feedback' as any)}
               >
                 <Ionicons name="chatbox-ellipses" size={24} color={colors.brand} />
-                <Text style={styles.actionText}>Feedback</Text>
+                <Text style={styles.actionText}>{t('home.adminDashboard.feedback')}</Text>
               </TouchableOpacity>
             </View>
           </>
         )}
 
         {/* Activities */}
-        <Text style={styles.sectionTitle}>Activities</Text>
+        <Text style={styles.sectionTitle}>{t('home.adminDashboard.activities')}</Text>
         {activities.length === 0 ? (
-          <Text style={styles.emptyText}>No recent activity</Text>
+          <Text style={styles.emptyText}>{t('home.adminDashboard.noRecentActivity')}</Text>
         ) : (
           activities.map((activity) => (
             <View key={`${activity.type}-${activity.id}`} style={styles.activityItem}>
               <Ionicons name={activityIcon(activity.type) as any} size={24} color={colors.brand} />
               <View style={styles.activityContent}>
                 <Text style={styles.activityText}>{activity.detail}</Text>
-                <Text style={styles.activityTime}>{getTimeAgo(activity.createdAt)}</Text>
+                <Text style={styles.activityTime}>{getTimeAgo(activity.createdAt, t)}</Text>
               </View>
             </View>
           ))
@@ -333,17 +338,17 @@ export default function AdminDashboard() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>New Announcement</Text>
+            <Text style={styles.modalTitle}>{t('home.adminDashboard.newAnnouncement')}</Text>
             <TextInput
               style={styles.modalInput}
-              placeholder="Title"
+              placeholder={t('home.adminDashboard.titlePlaceholder')}
               value={announcementTitle}
               onChangeText={setAnnouncementTitle}
               editable={!sendingAnnouncement}
             />
             <TextInput
               style={[styles.modalInput, styles.modalTextArea]}
-              placeholder="Message"
+              placeholder={t('home.adminDashboard.messagePlaceholder')}
               value={announcementMessage}
               onChangeText={setAnnouncementMessage}
               multiline
@@ -355,7 +360,7 @@ export default function AdminDashboard() {
                 onPress={() => setShowAnnouncementModal(false)}
                 disabled={sendingAnnouncement}
               >
-                <Text style={styles.modalCancelText}>Cancel</Text>
+                <Text style={styles.modalCancelText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalSendButton}
@@ -365,7 +370,7 @@ export default function AdminDashboard() {
                 {sendingAnnouncement ? (
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
-                  <Text style={styles.modalSendText}>Send</Text>
+                  <Text style={styles.modalSendText}>{t('home.adminDashboard.send')}</Text>
                 )}
               </TouchableOpacity>
             </View>

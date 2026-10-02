@@ -122,6 +122,52 @@ export const deleteCourse = async (courseId: string, token: string): Promise<Api
 };
 
 /**
+ * Save a course to the user's saved list
+ * POST /course/save-course/{courseId}
+ */
+export const saveCourse = async (courseId: string, token: string): Promise<ApiResponse<any>> => {
+  try {
+    const response = await fetchWithAuth(`/course/save-course/${courseId}`, {
+      method: 'POST',
+    }, token);
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error saving course:', error);
+    throw error;
+  }
+};
+
+/**
+ * Remove a course from the user's saved list
+ * DELETE /course/unsave-course/{courseId}
+ */
+export const unsaveCourse = async (courseId: string, token: string): Promise<ApiResponse<any>> => {
+  try {
+    const response = await fetchWithAuth(`/course/unsave-course/${courseId}`, {
+      method: 'DELETE',
+    }, token);
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error unsaving course:', error);
+    throw error;
+  }
+};
+
+/**
  * Complete a lesson - marks lesson as completed for the user
  * POST /course/complete-lesson/{courseId}/{lessonId}
  */

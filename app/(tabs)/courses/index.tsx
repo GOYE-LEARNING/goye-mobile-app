@@ -259,7 +259,12 @@ const fetchAllCoursesForStudent = async (filterType: string) => {
         renderItem={({ item: course }) =>
           isInstructor
             ? <InstructorCourseCard course={course} />
-            : <StudentCourseCard course={course} />
+            : <StudentCourseCard
+                course={course}
+                onToggleSaved={(courseId, saved) =>
+                  setCourses((prev) => prev.map((c) => (c.id === courseId ? { ...c, saved } : c)))
+                }
+              />
         }
         ListEmptyComponent={
           <View style={s.emptyState}>
