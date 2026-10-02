@@ -76,9 +76,9 @@ const BRAND = '#FFA500';
 
 // Simplified, cohesive palette - just 3 main colors
 const COLORS = {
-  blue: '#2A7DE1',
-  green: '#1D9A83',
-  amber: '#E8871E',
+  blue: '#2C7FFF',
+  green: '#30A46F',
+  amber: '#FBB041',
   purple: '#7C5CBF',
 };
 
