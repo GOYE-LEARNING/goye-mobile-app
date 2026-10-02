@@ -193,9 +193,13 @@ export default function Leaderboard() {
     <SafeAreaView style={s.container} edges={['top']}>
       {/* Header */}
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={colors.headerText} />
-        </TouchableOpacity>
+        {router.canGoBack() ? (
+          <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
+            <Ionicons name="chevron-back" size={24} color={colors.headerText} />
+          </TouchableOpacity>
+        ) : (
+          <View style={s.backBtn} />
+        )}
         <View style={s.headerCenter}>
           <Text style={s.headerTitle}>Leaderboard</Text>
           <Ionicons name="bar-chart" size={20} color={colors.headerText} style={{ marginLeft: 6 }} />
