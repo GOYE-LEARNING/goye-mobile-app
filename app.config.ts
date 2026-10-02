@@ -16,6 +16,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "goye-mobile-app",
   slug: "goye-mobile-app",
+  owner: "temzy",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
