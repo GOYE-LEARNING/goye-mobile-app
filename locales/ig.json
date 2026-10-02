@@ -81,7 +81,8 @@
       "alertJourneyStartedMessage": "Njem uto ime mmụọ gị amalitela!",
       "alertJourneyAlreadyStartedTitle": "Njem amalitelarị",
       "alertJourneyAlreadyStartedMessage": "Njem uto ime mmụọ gị amalitelarị!",
-      "alertStartJourneyErrorFallback": "Enweghị ike ịmalite njem. Biko nwaa ọzọ."
+      "alertStartJourneyErrorFallback": "Enweghị ike ịmalite njem. Biko nwaa ọzọ.",
+      "announcementLabel": "ọkwa"
     },
     "instructorDashboard": {
       "greeting": "Mgbede ọma",

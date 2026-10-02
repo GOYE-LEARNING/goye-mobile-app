@@ -927,6 +927,29 @@ export const getUserNotifications = async (token: string): Promise<ApiResponse<a
 };
 
 /**
+ * Get the latest admin announcement for the signed-in user's role
+ */
+export const getAnnouncementsByAdmin = async (token: string): Promise<ApiResponse<any>> => {
+  try {
+    const response = await fetchWithAuth('/notifications/fetch-annocucment-by-admin', {
+      method: 'GET',
+    }, token);
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error('Get announcements failed:', response.status, result);
+      throw new Error(result.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error fetching announcements:', error);
+    throw error;
+  }
+};
+
+/**
  * Get unread notifications count
  */
 export const getUnreadCount = async (token: string): Promise<ApiResponse<any>> => {

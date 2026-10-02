@@ -81,7 +81,8 @@
       "alertJourneyStartedMessage": "Tafiya ta haɓaka ta ruhaniya ta fara!",
       "alertJourneyAlreadyStartedTitle": "An Fara Tafiya",
       "alertJourneyAlreadyStartedMessage": "Tafiya ta haɓaka ta ruhaniya ta riga ta fara!",
-      "alertStartJourneyErrorFallback": "An kasa fara tafiya. Da fatan za a sake gwadawa."
+      "alertStartJourneyErrorFallback": "An kasa fara tafiya. Da fatan za a sake gwadawa.",
+      "announcementLabel": "Sanarwa"
     },
     "instructorDashboard": {
       "greeting": "Barka da yamma",

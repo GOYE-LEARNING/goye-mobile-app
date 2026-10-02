@@ -9,7 +9,7 @@ import { Image } from 'expo-image';
 import { startGrowthJourney, getGrowthByProgressId } from '@/services/api';
 import { getStudentGroupEvents, getUserProfile } from '@/services/api';
 import { getImageUri } from '@/utils/helpers';
-import { getEnrolledCourses } from '@/services/api';
+import { getEnrolledCourses, getAnnouncementsByAdmin } from '@/services/api';
 import EventCard from '@/components/community/EventCard';
 import { useTheme, lightColors } from '@/contexts/ThemeContext';
 import { NotificationBadge } from '@/components/NotificationBadge';
@@ -17,6 +17,12 @@ import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useTranslation } from 'react-i18next';
 
 const { height } = Dimensions.get('window');
+
+function getProgressColor(percentage: number) {
+  if (percentage >= 80) return '#10B981';
+  if (percentage >= 50) return '#F59E0B';
+  return '#FFA500';
+}
 
 export default function Dashboard() {
   const { data } = useSignUp();
@@ -34,6 +40,8 @@ export default function Dashboard() {
   const [eventsLoading, setEventsLoading] = useState(false);
   const [enrolledCourse, setEnrolledCourse] = useState<any>(null);
   const [courseLoading, setCourseLoading] = useState(true);
+  const [announcement, setAnnouncement] = useState<{ id: string; title: string; message: string } | null>(null);
+  const [showAnnouncement, setShowAnnouncement] = useState(true);
 
   const fetchEnrolledCourse = async () => {
     setCourseLoading(true);
@@ -54,7 +62,18 @@ export default function Dashboard() {
     fetchProfilePic();
     checkJourneyStatus();
     fetchEnrolledCourse();
+    fetchAnnouncement();
   }, []);
+
+  const fetchAnnouncement = async () => {
+    try {
+      const result = await getAnnouncementsByAdmin(token!);
+      const list = Array.isArray(result?.data) ? result.data : [];
+      if (list.length > 0) setAnnouncement(list[0]);
+    } catch (err) {
+      console.error('[Dashboard] announcement error:', err);
+    }
+  };
 
   const checkJourneyStatus = async () => {
     try {
@@ -206,6 +225,22 @@ export default function Dashboard() {
             <Text style={s.title}>{t('home.studentDashboard.dashboardTitle')}</Text>
           </View>
 
+          {announcement && showAnnouncement && (
+            <View style={s.announcementCard}>
+              <View style={s.announcementTopRow}>
+                <View style={s.announcementLabelRow}>
+                  <Ionicons name="megaphone-outline" size={14} color={colors.success} />
+                  <Text style={s.announcementLabel}>{t('home.studentDashboard.announcementLabel')}</Text>
+                </View>
+                <TouchableOpacity onPress={() => setShowAnnouncement(false)}>
+                  <Ionicons name="close" size={18} color={colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+              <Text style={s.announcementTitle}>{announcement.title}</Text>
+              <Text style={s.announcementMessage}>{announcement.message}</Text>
+            </View>
+          )}
+
           {/* Course Card */}
           <View style={s.card}>
             <View style={s.sectionHeader}>
@@ -231,7 +266,15 @@ export default function Dashboard() {
                     </Text>
                   </View>
                   <View style={s.progressTrack}>
-                    <View style={[s.progressFill, { width: `${enrolledCourse.course_progress?.percentage ?? 0}%` }]} />
+                    <View
+                      style={[
+                        s.progressFill,
+                        {
+                          width: `${enrolledCourse.course_progress?.percentage ?? 0}%`,
+                          backgroundColor: getProgressColor(enrolledCourse.course_progress?.percentage ?? 0),
+                        },
+                      ]}
+                    />
                   </View>
                   <TouchableOpacity
                     style={s.continueButton}
@@ -292,7 +335,15 @@ export default function Dashboard() {
                   <Text style={s.pointsText}>{t('home.studentDashboard.xpSuffix', { points: totalPoints })}</Text>
                 </View>
                 <View style={s.progressTrack}>
-                  <View style={[s.progressFill, { width: `${Math.min(progressPercentage, 100)}%` }]} />
+                  <View
+                    style={[
+                      s.progressFill,
+                      {
+                        width: `${Math.min(progressPercentage, 100)}%`,
+                        backgroundColor: getProgressColor(progressPercentage),
+                      },
+                    ]}
+                  />
                 </View>
                 <Text style={s.levelProgress}>
                   {t('home.studentDashboard.xpToNextLevel', { progress: progressToNext, max: nextLevelXP })}
@@ -310,6 +361,20 @@ export default function Dashboard() {
                     </View>
                   ))}
                 </View>
+
+                {Array.isArray(growthData?.recentActivity) && growthData.recentActivity.length > 0 && (
+                  <View style={s.recentActivitySection}>
+                    <Text style={s.recentActivityHeading}>{t('home.studentDashboard.recentActivity')}</Text>
+                    {growthData.recentActivity.slice(0, 5).map((activity: any, idx: number) => (
+                      <View key={idx} style={s.recentActivityRow}>
+                        <Text style={s.recentActivityAction}>{activity.action}</Text>
+                        {activity.points != 0 && (
+                          <Text style={s.recentActivityPoints}>+{activity.points} XP</Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                )}
 
                 {/* Action Row: View Growth + Leaderboard Banner */}
                 <TouchableOpacity style={s.viewGrowthButton} onPress={handleGrowthPress}>
@@ -427,6 +492,19 @@ function makeStyles(c: typeof lightColors) {
     headerRow: { paddingHorizontal: 20, marginBottom: 20 },
     title: { fontSize: 24, fontWeight: '700', color: c.text },
 
+    announcementCard: {
+      backgroundColor: '#30A46F1A',
+      borderRadius: 12,
+      marginHorizontal: 10,
+      marginBottom: 16,
+      padding: 16,
+    },
+    announcementTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    announcementLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    announcementLabel: { fontSize: 12, fontWeight: '600', color: c.success },
+    announcementTitle: { fontSize: 14, fontWeight: '700', color: c.text, marginTop: 8 },
+    announcementMessage: { fontSize: 13, color: c.textSecondary, marginTop: 4, lineHeight: 18 },
+
     sectionHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -492,6 +570,20 @@ function makeStyles(c: typeof lightColors) {
 
     milestoneHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
     levelBadge: { backgroundColor: c.brandLight, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16 },
+    recentActivitySection: { marginTop: 16 },
+    recentActivityHeading: { fontSize: 13, fontWeight: '600', color: c.text, marginBottom: 8 },
+    recentActivityRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: c.backgroundMuted,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      marginBottom: 6,
+    },
+    recentActivityAction: { fontSize: 12, color: c.textSecondary, flex: 1, marginRight: 8 },
+    recentActivityPoints: { fontSize: 12, fontWeight: '600', color: c.success },
     levelText: { color: c.brand, fontSize: 13, fontWeight: '700' },
     pointsText: { fontSize: 13, color: c.textSecondary },
     levelProgress: { fontSize: 11, color: c.textMuted, marginBottom: 16, textAlign: 'center' },

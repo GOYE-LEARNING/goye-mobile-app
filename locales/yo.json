@@ -81,7 +81,8 @@
       "alertJourneyStartedMessage": "Irin-ajo idagbasoke ti ẹmi rẹ ti bẹrẹ!",
       "alertJourneyAlreadyStartedTitle": "Irin-ajo Ti Bẹrẹ",
       "alertJourneyAlreadyStartedMessage": "Irin-ajo idagbasoke ti ẹmi rẹ ti bẹrẹ tẹlẹ!",
-      "alertStartJourneyErrorFallback": "Could not start journey. Jọwọ gbiyanju lẹẹkansi."
+      "alertStartJourneyErrorFallback": "Could not start journey. Jọwọ gbiyanju lẹẹkansi.",
+      "announcementLabel": "Ikede"
     },
     "instructorDashboard": {
       "greeting": "Ka a ale",
@@ -106,7 +107,7 @@
     }
   },
   "aiAssistant": {
-    "title": "ShekiAI",
+    "title": "ṢekiAI",
     "greeting": "Kaabo, {{name}}!",
     "studentSubtitle": "Nwa fun olutojueni? Jẹ ká wa awọn ọtun eniyan.",
     "tutorSubtitle": "Bawo ni MO ṣe le ran ọ lọwọ loni?",

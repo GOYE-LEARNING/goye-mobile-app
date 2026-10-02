@@ -81,7 +81,8 @@
       "alertJourneyStartedMessage": "Safari yako ya kukua kiroho imeanza!",
       "alertJourneyAlreadyStartedTitle": "Safari Tayari Imeanza",
       "alertJourneyAlreadyStartedMessage": "Safari yako ya kukua kiroho tayari imeanza!",
-      "alertStartJourneyErrorFallback": "Haikuweza kuanza safari. Tafadhali jaribu tena."
+      "alertStartJourneyErrorFallback": "Haikuweza kuanza safari. Tafadhali jaribu tena.",
+      "announcementLabel": "Tangazo"
     },
     "instructorDashboard": {
       "greeting": "Habari za jioni",

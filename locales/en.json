@@ -52,6 +52,7 @@
     "studentDashboard": {
       "greeting": "Good evening",
       "dashboardTitle": "Dashboard",
+      "announcementLabel": "Announcement",
       "myCourses": "My Courses",
       "viewAll": "View All",
       "continueCourse": "Continue Course",
@@ -69,6 +70,7 @@
       "statCertificates": "Certificates",
       "statBadges": "Badges",
       "statTotalPoints": "Total Points",
+      "recentActivity": "Recent Activity",
       "viewGrowth": "View Growth",
       "leaderboard": "Leaderboard",
       "leaderboardSubtitle": "See how you rank globally",

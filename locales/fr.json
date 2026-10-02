@@ -81,7 +81,8 @@
       "alertJourneyStartedMessage": "Votre voyage de croissance spirituelle a commencé !",
       "alertJourneyAlreadyStartedTitle": "Voyage déjà commencé",
       "alertJourneyAlreadyStartedMessage": "Votre voyage de croissance spirituelle a déjà commencé !",
-      "alertStartJourneyErrorFallback": "Impossible de commencer le voyage. Veuillez réessayer."
+      "alertStartJourneyErrorFallback": "Impossible de commencer le voyage. Veuillez réessayer.",
+      "announcementLabel": "Annonce"
     },
     "instructorDashboard": {
       "greeting": "Bonne soirée",
@@ -250,7 +251,7 @@
     "tabForums": "Forums",
     "lessonCompleteTitle": "Leçon terminée ! 🎉",
     "lessonCompleteMessage": "Super travail ! Vous avez terminé cette leçon.",
-    "courseCompleteTitle": "Course Complete! 🎉",
+    "courseCompleteTitle": "Cours terminé ! 🎉",
     "courseCompleteMessage": "Vous avez terminé toutes les leçons de ce cours !",
     "courseCompleteMessagePendingCert": "Vous avez terminé toutes les leçons de ce cours ! Le certificat sera disponible prochainement.",
     "certificateReadyTitle": "🎓 Félicitations !",
