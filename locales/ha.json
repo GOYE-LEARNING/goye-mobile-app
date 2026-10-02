@@ -423,6 +423,12 @@
     "weeksAgo_one": "{{count}} satin da ya wuce",
     "weeksAgo_other": "{{count}} makonni da suka gabata",
     "monthsAgo_one": "{{count}} watan da ya gabata",
-    "monthsAgo_other": "{{count}} watanni da suka gabata"
+    "monthsAgo_other": "{{count}} watanni da suka gabata",
+    "sortTrending": "📈 Trending",
+    "caughtUp": "An kama ku duka",
+    "editPost": "Gyara Post",
+    "edited": "gyara",
+    "postUpdatedSuccess": "An sabunta sakon cikin nasara!",
+    "preview": "Dubawa"
   }
 }

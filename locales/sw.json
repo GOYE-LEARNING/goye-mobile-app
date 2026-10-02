@@ -423,6 +423,12 @@
     "weeksAgo_one": "{{count}} wiki iliyopita",
     "weeksAgo_other": "{{count}} wiki zilizopita",
     "monthsAgo_one": "{{count}} mwezi uliopita",
-    "monthsAgo_other": "{{count}} miezi iliyopita"
+    "monthsAgo_other": "{{count}} miezi iliyopita",
+    "sortTrending": "📈 Zinazovuma",
+    "caughtUp": "Wote mmeshikwa",
+    "editPost": "Hariri Chapisho",
+    "edited": "imehaririwa",
+    "postUpdatedSuccess": "Chapisho limesasishwa!",
+    "preview": "Hakiki"
   }
 }

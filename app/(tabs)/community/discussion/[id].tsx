@@ -12,8 +12,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUser } from '@/contexts/UserContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { getDiscussion, replyToDiscussion, likeDiscussion, getDiscussionComments } from '@/services/api';
+import { getDiscussion, replyToDiscussion, replyToNestedComment, likeDiscussion, getDiscussionComments } from '@/services/api';
 import { getImageUri } from '@/utils/helpers';
+import FormattedText from '@/components/community/FormattedText';
 
 export default function DiscussionDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,6 +32,9 @@ export default function DiscussionDetail() {
   const [commentsPage, setCommentsPage] = useState(1);
   const [hasMoreComments, setHasMoreComments] = useState(true);
   const [totalComments, setTotalComments] = useState(0);
+  const [replyingToId, setReplyingToId] = useState<string | null>(null);
+  const [nestedReplyText, setNestedReplyText] = useState('');
+  const [postingNestedReply, setPostingNestedReply] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -192,6 +196,62 @@ export default function DiscussionDetail() {
     }
   };
 
+  const handleCommentLike = async (commentId: string) => {
+    try {
+      const result = await likeDiscussion(token!, commentId);
+      const newLiked = result?.data?.liked ?? false;
+      const newCount = result?.data?.likeCount ?? 0;
+      setComments(prev => prev.map(c =>
+        c.id === commentId ? { ...c, _liked: newLiked, _count: { ...c._count, likes: newCount } } : c
+      ));
+    } catch (error) {
+      console.error('Comment like error:', error);
+    }
+  };
+
+  const handleNestedReplyLike = async (parentCommentId: string, nestedReplyId: string) => {
+    try {
+      const result = await likeDiscussion(token!, nestedReplyId);
+      const newLiked = result?.data?.liked ?? false;
+      const newCount = result?.data?.likeCount ?? 0;
+      setComments(prev => prev.map(c =>
+        c.id === parentCommentId
+          ? {
+              ...c,
+              replies: c.replies?.map((nr: any) =>
+                nr.id === nestedReplyId ? { ...nr, _liked: newLiked, _count: { ...nr._count, likes: newCount } } : nr
+              ),
+            }
+          : c
+      ));
+    } catch (error) {
+      console.error('Nested reply like error:', error);
+    }
+  };
+
+  const startReplyTo = (commentId: string) => {
+    setReplyingToId(prev => (prev === commentId ? null : commentId));
+    setNestedReplyText('');
+  };
+
+  const submitNestedReply = async (parentCommentId: string) => {
+    const content = nestedReplyText.trim();
+    if (!content) return;
+    try {
+      setPostingNestedReply(true);
+      await replyToNestedComment(token!, parentCommentId, { content, mediaUrls: [] });
+      setNestedReplyText('');
+      setReplyingToId(null);
+      setCommentsPage(1);
+      await fetchComments(1, false);
+    } catch (error: any) {
+      console.error('Nested reply error:', error);
+      Alert.alert('Error', error.message || 'Failed to post reply');
+    } finally {
+      setPostingNestedReply(false);
+    }
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
     setCommentsPage(1);
@@ -317,7 +377,7 @@ export default function DiscussionDetail() {
               </View>
             </View>
             
-            <Text style={[styles.content, { color: colors.text }]}>{discussion.content}</Text>
+            <FormattedText content={discussion.content} style={styles.content} color={colors.text} />
             
             {/* Media if any */}
             {renderMedia()}
@@ -376,16 +436,58 @@ export default function DiscussionDetail() {
                       </View>
                     </View>
                     <Text style={[styles.replyContent, { color: colors.text }]}>{comment.content}</Text>
-                    
+
+                    <View style={styles.commentActionsRow}>
+                      <TouchableOpacity style={styles.commentActionBtn} onPress={() => handleCommentLike(comment.id)}>
+                        <Ionicons
+                          name={comment._liked ? 'heart' : 'heart-outline'}
+                          size={16}
+                          color={comment._liked ? '#E53E3E' : colors.textMuted}
+                        />
+                        <Text style={[styles.commentActionText, { color: comment._liked ? '#E53E3E' : colors.textMuted }]}>
+                          {comment._count?.likes ?? 0}
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.commentActionBtn} onPress={() => startReplyTo(comment.id)}>
+                        <Ionicons name="return-down-forward-outline" size={16} color={colors.textMuted} />
+                        <Text style={[styles.commentActionText, { color: colors.textMuted }]}>Reply</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {replyingToId === comment.id && (
+                      <View style={[styles.nestedReplyInputRow, { borderTopColor: colors.border }]}>
+                        <TextInput
+                          style={[styles.nestedReplyInput, { backgroundColor: colors.backgroundMuted, color: colors.text }]}
+                          placeholder={`Reply to ${commentAuthorName}...`}
+                          placeholderTextColor={colors.textMuted}
+                          value={nestedReplyText}
+                          onChangeText={setNestedReplyText}
+                          multiline
+                          autoFocus
+                        />
+                        <TouchableOpacity
+                          style={[styles.sendButton, { width: 36, height: 36, borderRadius: 18 }, (!nestedReplyText.trim() || postingNestedReply) && styles.sendButtonDisabled]}
+                          onPress={() => submitNestedReply(comment.id)}
+                          disabled={!nestedReplyText.trim() || postingNestedReply}
+                        >
+                          {postingNestedReply ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <Ionicons name="send" size={16} color="#fff" />
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    )}
+
                     {/* Nested replies if any */}
                     {comment.replies && comment.replies.length > 0 && (
                       <View style={styles.nestedRepliesContainer}>
                         {comment.replies.map((nestedReply: any, nestedIdx: number) => {
                           const nestedAuthor = nestedReply.author;
-                          const nestedAuthorName = nestedAuthor 
+                          const nestedAuthorName = nestedAuthor
                             ? `${nestedAuthor.first_name || ''} ${nestedAuthor.last_name || ''}`.trim()
                             : 'Anonymous User';
-                          
+
                           return (
                             <View key={nestedIdx} style={[styles.nestedReplyCard, { borderLeftColor: colors.brand }]}>
                               <Text style={[styles.nestedReplyAuthor, { color: colors.brand }]}>
@@ -394,6 +496,19 @@ export default function DiscussionDetail() {
                               <Text style={[styles.nestedReplyContent, { color: colors.textSecondary }]}>
                                 {nestedReply.content}
                               </Text>
+                              <TouchableOpacity
+                                style={styles.commentActionBtn}
+                                onPress={() => handleNestedReplyLike(comment.id, nestedReply.id)}
+                              >
+                                <Ionicons
+                                  name={nestedReply._liked ? 'heart' : 'heart-outline'}
+                                  size={14}
+                                  color={nestedReply._liked ? '#E53E3E' : colors.textMuted}
+                                />
+                                <Text style={[styles.commentActionText, { color: nestedReply._liked ? '#E53E3E' : colors.textMuted, fontSize: 11 }]}>
+                                  {nestedReply._count?.likes ?? 0}
+                                </Text>
+                              </TouchableOpacity>
                             </View>
                           );
                         })}
@@ -500,6 +615,11 @@ const styles = StyleSheet.create({
   nestedReplyCard: { paddingLeft: 12, borderLeftWidth: 2, marginTop: 4 },
   nestedReplyAuthor: { fontSize: 12, fontWeight: '600', marginBottom: 2 },
   nestedReplyContent: { fontSize: 13, lineHeight: 18 },
+  commentActionsRow: { flexDirection: 'row', gap: 20, marginTop: 10 },
+  commentActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  commentActionText: { fontSize: 12, fontWeight: '500' },
+  nestedReplyInputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 10, paddingTop: 10, borderTopWidth: 0.5 },
+  nestedReplyInput: { flex: 1, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8, maxHeight: 80, fontSize: 13 },
   replyInputContainer: { flexDirection: 'row', padding: 12, borderTopWidth: 1, alignItems: 'flex-end', gap: 8 },
   replyInput: { flex: 1, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, maxHeight: 100, fontSize: 14 },
   sendButton: { backgroundColor: '#C85C1A', width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },

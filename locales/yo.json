@@ -423,6 +423,12 @@
     "weeksAgo_one": "{{count}} ọsẹ sẹyin",
     "weeksAgo_other": "{{count}} ọsẹ sẹyin",
     "monthsAgo_one": "{{count}} oṣu sẹyin",
-    "monthsAgo_other": "{{count}} oṣu sẹyin"
+    "monthsAgo_other": "{{count}} oṣu sẹyin",
+    "sortTrending": "📈 Trending",
+    "caughtUp": "O ti mu gbogbo rẹ",
+    "editPost": "Ṣatunkọ Post",
+    "edited": "satunkọ",
+    "postUpdatedSuccess": "Ifiweranṣẹ ti ni imudojuiwọn ni aṣeyọri!",
+    "preview": "Awotẹlẹ"
   }
 }

@@ -423,6 +423,12 @@
     "weeksAgo_one": "il y a {{count}} semaine",
     "weeksAgo_other": "il y a {{count}} semaines",
     "monthsAgo_one": "il y a {{count}} mois",
-    "monthsAgo_other": "il y a {{count}} mois"
+    "monthsAgo_other": "il y a {{count}} mois",
+    "sortTrending": "📈 Tendance",
+    "caughtUp": "Vous êtes tous rattrapés",
+    "editPost": "Modifier le message",
+    "edited": "édité",
+    "postUpdatedSuccess": "Message mis à jour avec succès !",
+    "preview": "Aperçu"
   }
 }

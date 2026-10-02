@@ -1449,20 +1449,51 @@ export const createPublicDiscussion = async (
 };
 
 /**
+ * Update a discussion's content/category (owner only)
+ * PUT /discussion/{discussionId}
+ */
+export const updateDiscussion = async (
+  token: string,
+  discussionId: string,
+  payload: {
+    content: string;
+    category?: string;
+    mediaUrls?: DiscussionMediaUrl[];
+  }
+): Promise<ApiResponse<any>> => {
+  try {
+    const response = await fetchWithAuth(`/discussion/${discussionId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }, token);
+
+    const result = await response.json();
+
+    if (!response.ok) throw new Error(result.message || 'Failed to update discussion');
+    return result;
+  } catch (error) {
+    console.error('[Discussion] Error updating discussion:', error);
+    throw error;
+  }
+};
+
+/**
  * Get public discussions
  */
 export const getPublicDiscussions = async (
   token: string,
   sort: 'latest' | 'popular' = 'latest',
-  category?: DiscussionCategory
+  category?: DiscussionCategory,
+  page: number = 1,
+  limit: number = 10
 ): Promise<ApiResponse<any>> => {
   try {
-    let url = `/discussion/public?sort=${sort}`;
+    let url = `/discussion/public?sort=${sort}&page=${page}&limit=${limit}`;
     if (category) {
       url += `&category=${category}`;
     }
-    
-    console.log('[Discussion] Fetching discussions with sort:', sort, 'category:', category || 'ALL');
+
+    console.log('[Discussion] Fetching discussions with sort:', sort, 'category:', category || 'ALL', 'page:', page);
     
     const response = await fetchWithAuth(url, {
       method: 'GET',
@@ -1624,6 +1655,31 @@ export const getReply = async (
 /**
  * Like a discussion
  */
+/**
+ * Reply to a specific comment (threaded/nested reply), not the top-level post
+ * POST /discussion/reply/{replyId}/nested
+ */
+export const replyToNestedComment = async (
+  token: string,
+  replyId: string,
+  payload: { content: string; mediaUrls?: DiscussionMediaUrl[] }
+): Promise<ApiResponse<any>> => {
+  try {
+    const response = await fetchWithAuth(`/discussion/reply/${replyId}/nested`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }, token);
+
+    const result = await response.json();
+
+    if (!response.ok) throw new Error(result.message || 'Failed to post nested reply');
+    return result;
+  } catch (error) {
+    console.error('[Discussion] Error posting nested reply:', error);
+    throw error;
+  }
+};
+
 export const likeDiscussion = async (token: string, discussionId: string): Promise<ApiResponse<any>> => {
   try {
     console.log('[Discussion] Liking discussion:', discussionId);

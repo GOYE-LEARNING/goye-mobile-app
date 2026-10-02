@@ -423,6 +423,12 @@
     "weeksAgo_one": "{{count}} izu gara aga",
     "weeksAgo_other": "{{count}} izu gara aga",
     "monthsAgo_one": "{{count}} ọnwa gara aga",
-    "monthsAgo_other": "{{count}} ọnwa gara aga"
+    "monthsAgo_other": "{{count}} ọnwa gara aga",
+    "sortTrending": "📈 Trending",
+    "caughtUp": "Ejidela unu niile",
+    "editPost": "Dezie biputere",
+    "edited": "edeziri",
+    "postUpdatedSuccess": "Emelitere ọkwa nke ọma!",
+    "preview": "Nhụchalụ"
   }
 }

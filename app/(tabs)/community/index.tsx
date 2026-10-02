@@ -7,12 +7,12 @@ import {
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import { useUser } from '@/contexts/UserContext';
 import {
   getGroups, inviteUsersToOrganization,
-  getPublicDiscussions, createPublicDiscussion,
+  getPublicDiscussions, createPublicDiscussion, updateDiscussion,
   uploadDiscussionImage, uploadDiscussionVideo,
   likeDiscussion, deleteDiscussion, getDiscussion, getPrivateUnreadCount,
   DiscussionCategory
@@ -26,6 +26,7 @@ import { getImageUri } from '@/utils/helpers';
 import Toast from 'react-native-toast-message';
 import { CustomAlert } from '@/components/CustomAlert';
 import { useTranslation } from 'react-i18next';
+import FormattedText from '@/components/community/FormattedText';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -33,6 +34,38 @@ interface PendingInvite { email: string; role: string; }
 interface MediaItem { uri: string; type: 'image' | 'video'; filename: string; mimeType: string; base64?: string; uploaded?: boolean; remoteUrl?: string; }
 
 type CategoryTab = 'ALL' | DiscussionCategory;
+
+type TextFormat = 'bold' | 'italic' | 'underline' | 'h1' | 'h2' | 'h3' | 'ul' | 'ol';
+
+// Mirrors web's applyFormatting in general_post.tsx exactly: wraps the
+// current selection in markdown syntax, or appends a placeholder example
+// when nothing is selected.
+function applyFormatting(text: string, selectedText: string, format: TextFormat): string {
+  if (!selectedText) {
+    switch (format) {
+      case 'bold': return text + '**bold**';
+      case 'italic': return text + '*italic*';
+      case 'underline': return text + '__underline__';
+      case 'h1': return text + '\n# Heading 1\n';
+      case 'h2': return text + '\n## Heading 2\n';
+      case 'h3': return text + '\n### Heading 3\n';
+      case 'ul': return text + '\n- List item\n';
+      case 'ol': return text + '\n1. List item\n';
+      default: return text;
+    }
+  }
+  switch (format) {
+    case 'bold': return text.replace(selectedText, `**${selectedText}**`);
+    case 'italic': return text.replace(selectedText, `*${selectedText}*`);
+    case 'underline': return text.replace(selectedText, `__${selectedText}__`);
+    case 'h1': return text.replace(selectedText, `# ${selectedText}`);
+    case 'h2': return text.replace(selectedText, `## ${selectedText}`);
+    case 'h3': return text.replace(selectedText, `### ${selectedText}`);
+    case 'ul': return text.replace(selectedText, selectedText.split('\n').map(line => `- ${line}`).join('\n'));
+    case 'ol': return text.replace(selectedText, selectedText.split('\n').map((line, idx) => `${idx + 1}. ${line}`).join('\n'));
+    default: return text;
+  }
+}
 
 function useCategoryTabs(): { id: CategoryTab; label: string; icon: string }[] {
   const { t } = useTranslation();
@@ -377,9 +410,13 @@ function DiscussionFeed({ isOrgAdmin = false }: { isOrgAdmin?: boolean }) {
   const [discussions, setDiscussions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [sort, setSort] = useState<'latest' | 'popular'>('latest');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [sort, setSort] = useState<'latest' | 'popular' | 'trending'>('latest');
   const [selectedCategory, setSelectedCategory] = useState<CategoryTab>('ALL');
   const [composerVisible, setComposerVisible] = useState(false);
+  const [editTarget, setEditTarget] = useState<any>(null);
   
   const [alert, setAlert] = useState<{
     visible: boolean;
@@ -393,17 +430,30 @@ function DiscussionFeed({ isOrgAdmin = false }: { isOrgAdmin?: boolean }) {
 
   const s = makeStyles(colors);
 
-  useFocusEffect(useCallback(() => { 
-    fetchDiscussions(); 
+  const displayedDiscussions = sort === 'trending'
+    ? [...discussions].sort((a, b) => {
+        const aEngagement = (a._count?.likes || 0) + (a._count?.replies || 0);
+        const bEngagement = (b._count?.likes || 0) + (b._count?.replies || 0);
+        return bEngagement - aEngagement;
+      })
+    : discussions;
+
+  useFocusEffect(useCallback(() => {
+    fetchDiscussions();
   }, [sort, selectedCategory]));
 
-  const fetchDiscussions = async () => {
+  const fetchDiscussions = async (pageNum: number = 1, append: boolean = false) => {
     try {
-      setLoading(true);
+      if (append) setLoadingMore(true);
+      else setLoading(true);
       const categoryParam = selectedCategory === 'ALL' ? undefined : selectedCategory;
-      console.log(`📡 Fetching discussions - Category: ${selectedCategory}, Sort: ${sort}`);
-      
-      const result = await getPublicDiscussions(token, sort, categoryParam);
+      // "trending" isn't a backend sort — it's a client-side re-sort by
+      // engagement over whatever "latest" returns, matching web's
+      // activeFilter handling in general_post.tsx.
+      const backendSort = sort === 'popular' ? 'popular' : 'latest';
+      console.log(`📡 Fetching discussions - Category: ${selectedCategory}, Sort: ${sort}, Page: ${pageNum}`);
+
+      const result = await getPublicDiscussions(token, backendSort, categoryParam, pageNum, 10);
       
       let discussionsArray = [];
       if (result?.data?.discussions) {
@@ -464,20 +514,25 @@ function DiscussionFeed({ isOrgAdmin = false }: { isOrgAdmin?: boolean }) {
         };
       });
       
-      setDiscussions(initialDiscussions);
+      setDiscussions(prev => (append ? [...prev, ...initialDiscussions] : initialDiscussions));
+      setHasMore(!!result?.data?.pagination?.hasMore);
+      setPage(pageNum);
       setLoading(false);
-      
+      setLoadingMore(false);
+
       // If we need to fetch like statuses individually (fallback)
-      const needsLikeFetch = filteredDiscussions.some((d: any) => 
+      const needsLikeFetch = filteredDiscussions.some((d: any) =>
         d.liked === undefined && !d.likes && d.likesCount !== undefined
       );
-      
+
       if (needsLikeFetch && filteredDiscussions.length > 0) {
         await fetchLikeStatusesInBatches(initialDiscussions);
       }
-      
+
     } catch (err) {
       console.error('fetchDiscussions error:', err);
+      setLoading(false);
+      setLoadingMore(false);
       Toast.show({
         type: 'error',
         text1: t('community.errorTitle'),
@@ -527,10 +582,15 @@ function DiscussionFeed({ isOrgAdmin = false }: { isOrgAdmin?: boolean }) {
     }
   };
 
-  const onRefresh = async () => { 
-    setRefreshing(true); 
-    await fetchDiscussions(); 
-    setRefreshing(false); 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchDiscussions();
+    setRefreshing(false);
+  };
+
+  const handleLoadMore = () => {
+    if (!hasMore || loadingMore || loading) return;
+    fetchDiscussions(page + 1, true);
   };
 
   const handleLike = async (id: string) => {
@@ -560,6 +620,22 @@ function DiscussionFeed({ isOrgAdmin = false }: { isOrgAdmin?: boolean }) {
         onPrimary: () => setAlert(null)
       });
     }
+  };
+
+  const handleEdit = (discussion: any) => {
+    setEditTarget(discussion);
+    setComposerVisible(true);
+  };
+
+  const handleEdited = (id: string, newContent: string) => {
+    setDiscussions(prev => prev.map(d => (d.id === id ? { ...d, content: newContent, isEdited: true } : d)));
+    setComposerVisible(false);
+    setEditTarget(null);
+    Toast.show({
+      type: 'success',
+      text1: t('common.success'),
+      text2: t('community.postUpdatedSuccess'),
+    });
   };
 
   const handleDelete = (id: string) => {
@@ -636,14 +712,14 @@ function DiscussionFeed({ isOrgAdmin = false }: { isOrgAdmin?: boolean }) {
 
       {/* Sort Options */}
       <View style={s.sortRow}>
-        {(['latest', 'popular'] as const).map(opt => (
+        {(['latest', 'popular', 'trending'] as const).map(opt => (
           <TouchableOpacity
             key={opt}
             style={[s.sortPill, sort === opt && s.sortPillActive]}
             onPress={() => setSort(opt)}
           >
             <Text style={[s.sortPillText, sort === opt && s.sortPillTextActive]}>
-              {opt === 'latest' ? t('community.sortLatest') : t('community.sortPopular')}
+              {opt === 'latest' ? t('community.sortLatest') : opt === 'popular' ? t('community.sortPopular') : t('community.sortTrending')}
             </Text>
           </TouchableOpacity>
         ))}
@@ -656,10 +732,21 @@ function DiscussionFeed({ isOrgAdmin = false }: { isOrgAdmin?: boolean }) {
         </View>
       ) : (
         <FlatList
-          data={discussions}
+          data={displayedDiscussions}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.brand]} />}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.4}
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={{ paddingVertical: 20 }}>
+                <ActivityIndicator size="small" color={colors.brand} />
+              </View>
+            ) : !hasMore && displayedDiscussions.length > 0 ? (
+              <Text style={s.endOfListText}>{t('community.caughtUp')}</Text>
+            ) : null
+          }
           ListEmptyComponent={
             <View style={s.centerContainer}>
               <Ionicons name="chatbubbles-outline" size={48} color={colors.borderMid} />
@@ -676,6 +763,7 @@ function DiscussionFeed({ isOrgAdmin = false }: { isOrgAdmin?: boolean }) {
               currentUserId={user?.id}
               onLike={() => handleLike(item.id)}
               onDelete={() => handleDelete(item.id)}
+              onEdit={() => handleEdit(item)}
               onPress={() => router.push(`/(tabs)/community/discussion/${item.id}` as any)}
               colors={colors}
             />
@@ -693,9 +781,9 @@ function DiscussionFeed({ isOrgAdmin = false }: { isOrgAdmin?: boolean }) {
 
       <PostComposerModal
         visible={composerVisible}
-        onClose={() => setComposerVisible(false)}
-        onPosted={() => { 
-          setComposerVisible(false); 
+        onClose={() => { setComposerVisible(false); setEditTarget(null); }}
+        onPosted={() => {
+          setComposerVisible(false);
           fetchDiscussions();
           Toast.show({
             type: 'success',
@@ -703,6 +791,8 @@ function DiscussionFeed({ isOrgAdmin = false }: { isOrgAdmin?: boolean }) {
             text2: 'Your post has been published',
           });
         }}
+        onEdited={handleEdited}
+        editTarget={editTarget}
         token={token}
         user={user}
         colors={colors}
@@ -726,7 +816,7 @@ function DiscussionFeed({ isOrgAdmin = false }: { isOrgAdmin?: boolean }) {
 
 // ─── Discussion Card ──────────────────────────────────────────────────────────
 
-function DiscussionCard({ discussion, currentUserId, onLike, onDelete, onPress, colors }: any) {
+function DiscussionCard({ discussion, currentUserId, onLike, onDelete, onEdit, onPress, colors }: any) {
   const { t } = useTranslation();
   const s = makeStyles(colors);
   const isOwner = discussion.userId === currentUserId || discussion.user?.id === currentUserId || discussion.authorId === currentUserId;
@@ -783,12 +873,20 @@ function DiscussionCard({ discussion, currentUserId, onLike, onDelete, onPress, 
         </View>
         <View style={{ flex: 1 }}>
           <Text style={s.cardAuthorName}>{authorName}</Text>
-          <Text style={s.cardDate}>{formatDate(discussion.createdAt)}</Text>
+          <Text style={s.cardDate}>
+            {formatDate(discussion.createdAt)}
+            {discussion.isEdited ? ` · ${t('community.edited')}` : ''}
+          </Text>
         </View>
         {isOwner && (
-          <TouchableOpacity onPress={onDelete} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Ionicons name="trash-outline" size={18} color={colors.textMuted} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 16 }}>
+            <TouchableOpacity onPress={onEdit} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="pencil-outline" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={onDelete} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="trash-outline" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+          </View>
         )}
       </View>
 
@@ -803,7 +901,7 @@ function DiscussionCard({ discussion, currentUserId, onLike, onDelete, onPress, 
       )}
 
       {discussion.content ? (
-        <Text style={s.cardContent} numberOfLines={4}>{discussion.content}</Text>
+        <FormattedText content={discussion.content} style={s.cardContent} color={colors.text} />
       ) : null}
 
       {images.length > 0 && (
@@ -868,12 +966,29 @@ function DiscussionCard({ discussion, currentUserId, onLike, onDelete, onPress, 
 
 // ─── Post Composer Modal ──────────────────────────────────────────────────────
 
-function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: any) {
+function PostComposerModal({ visible, onClose, onPosted, onEdited, token, user, colors, editTarget }: any) {
   const { t } = useTranslation();
-  const [content, setContent] = useState('');
+  const isEditing = !!editTarget;
+  const [content, setContent] = useState(editTarget?.content ?? '');
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [posting, setPosting] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<DiscussionCategory>(DiscussionCategory.DISCUSSION);
+  const [selectedCategory, setSelectedCategory] = useState<DiscussionCategory>(
+    editTarget?.category ?? DiscussionCategory.DISCUSSION
+  );
+  const [selection, setSelection] = useState({ start: 0, end: 0 });
+
+  const handleFormat = (format: TextFormat) => {
+    const selectedText = content.slice(selection.start, selection.end);
+    const newContent = applyFormatting(content, selectedText, format);
+    setContent(newContent);
+  };
+
+  useEffect(() => {
+    if (visible) {
+      setContent(editTarget?.content ?? '');
+      setSelectedCategory(editTarget?.category ?? DiscussionCategory.DISCUSSION);
+    }
+  }, [visible, editTarget]);
   
   const [alert, setAlert] = useState<{
     visible: boolean;
@@ -941,6 +1056,31 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
       });
       return;
     }
+
+    if (isEditing) {
+      try {
+        setPosting(true);
+        await updateDiscussion(token, editTarget.id, {
+          content: content.trim(),
+          category: selectedCategory,
+          mediaUrls: editTarget.mediaUrls,
+        });
+        onEdited?.(editTarget.id, content.trim());
+      } catch (err: any) {
+        console.error('Edit post error:', err);
+        setAlert({
+          visible: true,
+          type: 'error',
+          title: t('community.errorTitle'),
+          message: err.message || t('community.postFailedFallback'),
+          onPrimary: () => setAlert(null)
+        });
+      } finally {
+        setPosting(false);
+      }
+      return;
+    }
+
     try {
       setPosting(true);
 
@@ -1005,7 +1145,9 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
           <TouchableOpacity onPress={handleClose} style={s.composerCloseBtn}>
             <Ionicons name="close" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[s.composerTitle, { color: colors.text }]}>{t('community.newPost')}</Text>
+          <Text style={[s.composerTitle, { color: colors.text }]}>
+            {isEditing ? t('community.editPost') : t('community.newPost')}
+          </Text>
           <TouchableOpacity
             style={[s.composerPostBtn, (posting || (!content.trim() && mediaItems.length === 0)) && s.composerPostBtnDisabled]}
             onPress={handlePost}
@@ -1014,7 +1156,7 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
             {posting ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={s.composerPostBtnText}>{t('community.post')}</Text>
+              <Text style={s.composerPostBtnText}>{isEditing ? t('common.save') : t('community.post')}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -1061,16 +1203,53 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
             </ScrollView>
           </View>
 
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[s.formatToolbar, { backgroundColor: colors.backgroundMuted }]}>
+            <TouchableOpacity style={s.formatBtn} onPress={() => handleFormat('bold')}>
+              <Text style={[s.formatBtnText, { fontWeight: '700', color: colors.textSecondary }]}>B</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.formatBtn} onPress={() => handleFormat('italic')}>
+              <Text style={[s.formatBtnText, { fontStyle: 'italic', color: colors.textSecondary }]}>I</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.formatBtn} onPress={() => handleFormat('underline')}>
+              <Text style={[s.formatBtnText, { textDecorationLine: 'underline', color: colors.textSecondary }]}>U</Text>
+            </TouchableOpacity>
+            <View style={s.formatDivider} />
+            <TouchableOpacity style={s.formatBtn} onPress={() => handleFormat('h1')}>
+              <Text style={[s.formatBtnText, { color: colors.textSecondary }]}>H1</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.formatBtn} onPress={() => handleFormat('h2')}>
+              <Text style={[s.formatBtnText, { color: colors.textSecondary }]}>H2</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.formatBtn} onPress={() => handleFormat('h3')}>
+              <Text style={[s.formatBtnText, { color: colors.textSecondary }]}>H3</Text>
+            </TouchableOpacity>
+            <View style={s.formatDivider} />
+            <TouchableOpacity style={s.formatBtn} onPress={() => handleFormat('ul')}>
+              <Ionicons name="list" size={18} color={colors.textSecondary} />
+            </TouchableOpacity>
+            <TouchableOpacity style={s.formatBtn} onPress={() => handleFormat('ol')}>
+              <Ionicons name="list-outline" size={18} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </ScrollView>
+
           <TextInput
             style={[s.composerInput, { color: colors.text }]}
             placeholder={t('community.postPlaceholder')}
             placeholderTextColor={colors.textMuted}
             value={content}
             onChangeText={setContent}
+            onSelectionChange={(e) => setSelection(e.nativeEvent.selection)}
             multiline
             autoFocus
             textAlignVertical="top"
           />
+
+          {content.trim().length > 0 && (
+            <View style={[s.formatPreview, { borderColor: colors.border }]}>
+              <Text style={[s.formatPreviewLabel, { color: colors.textMuted }]}>{t('community.preview')}</Text>
+              <FormattedText content={content} color={colors.text} />
+            </View>
+          )}
 
           {mediaItems.length > 0 && (
             <View style={s.composerMediaRow}>
@@ -1093,20 +1272,22 @@ function PostComposerModal({ visible, onClose, onPosted, token, user, colors }: 
           )}
         </ScrollView>
 
-        <View style={[s.composerToolbar, { borderTopColor: colors.border, backgroundColor: colors.background }]}>
-          <TouchableOpacity style={s.composerToolBtn} onPress={() => pickMedia('image')}>
-            <Ionicons name="image-outline" size={24} color={colors.brand} />
-            <Text style={[s.composerToolText, { color: colors.brand }]}>{t('community.photo')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={s.composerToolBtn} onPress={() => pickMedia('video')}>
-            <Ionicons name="videocam-outline" size={24} color={colors.brand} />
-            <Text style={[s.composerToolText, { color: colors.brand }]}>{t('community.video')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={s.composerToolBtn}>
-            <Ionicons name="happy-outline" size={24} color={colors.textMuted} />
-            <Text style={[s.composerToolText, { color: colors.textMuted }]}>{t('community.feeling')}</Text>
-          </TouchableOpacity>
-        </View>
+        {!isEditing && (
+          <View style={[s.composerToolbar, { borderTopColor: colors.border, backgroundColor: colors.background }]}>
+            <TouchableOpacity style={s.composerToolBtn} onPress={() => pickMedia('image')}>
+              <Ionicons name="image-outline" size={24} color={colors.brand} />
+              <Text style={[s.composerToolText, { color: colors.brand }]}>{t('community.photo')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.composerToolBtn} onPress={() => pickMedia('video')}>
+              <Ionicons name="videocam-outline" size={24} color={colors.brand} />
+              <Text style={[s.composerToolText, { color: colors.brand }]}>{t('community.video')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.composerToolBtn}>
+              <Ionicons name="happy-outline" size={24} color={colors.textMuted} />
+              <Text style={[s.composerToolText, { color: colors.textMuted }]}>{t('community.feeling')}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </KeyboardAvoidingView>
       
       {alert && (
@@ -1411,6 +1592,12 @@ function makeStyles(c: ReturnType<typeof useTheme>['colors']) {
     composerPublicBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, marginTop: 4, alignSelf: 'flex-start' },
     composerPublicText:  { fontSize: 11, fontWeight: '500' },
     composerInput:       { fontSize: 16, lineHeight: 24, paddingHorizontal: 16, paddingBottom: 16, minHeight: 120 },
+    formatToolbar:       { flexDirection: 'row', marginHorizontal: 16, borderRadius: 8, paddingHorizontal: 4 },
+    formatBtn:           { paddingHorizontal: 12, paddingVertical: 10, alignItems: 'center', justifyContent: 'center' },
+    formatBtnText:       { fontSize: 15 },
+    formatDivider:       { width: 1, height: 20, backgroundColor: 'rgba(128,128,128,0.3)', alignSelf: 'center', marginHorizontal: 4 },
+    formatPreview:       { marginHorizontal: 16, marginTop: 8, padding: 12, borderWidth: 1, borderRadius: 8 },
+    formatPreviewLabel:  { fontSize: 11, marginBottom: 6, textTransform: 'uppercase' },
     composerMediaRow:    { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, gap: 8, paddingBottom: 16 },
     composerMediaThumb:  { width: 90, height: 90, borderRadius: 10, overflow: 'hidden', backgroundColor: '#111', position: 'relative' },
     composerMediaRemove: { position: 'absolute', top: 4, right: 4 },
@@ -1422,6 +1609,7 @@ function makeStyles(c: ReturnType<typeof useTheme>['colors']) {
     searchInput:          { flex: 1, fontSize: 15, color: c.text },
     centerContainer:      { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, gap: 16, minHeight: 240 },
     loadingText:          { fontSize: 16, color: c.textSecondary },
+    endOfListText:        { textAlign: 'center', fontSize: 12, color: c.textMuted, paddingVertical: 20 },
     errorText:            { fontSize: 16, color: c.textSecondary, textAlign: 'center' },
     emptyText:            { fontSize: 16, color: c.textMuted, textAlign: 'center' },
     retryButton:          { backgroundColor: c.brand, paddingVertical: 12, paddingHorizontal: 32, borderRadius: 8, marginTop: 8 },
