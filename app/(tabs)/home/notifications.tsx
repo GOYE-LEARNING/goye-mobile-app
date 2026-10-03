@@ -6,11 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useCallback } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { 
-  getUserNotifications, 
+import {
+  getUserNotifications,
   markNotificationAsRead,
-  markAllNotificationsAsRead 
+  markAllNotificationsAsRead,
+  clearAllNotifications,
 } from '@/services/api';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function Notifications() {
   const { token } = useUser();
@@ -21,6 +23,8 @@ export default function Notifications() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [markingRead, setMarkingRead] = useState<Set<string>>(new Set());
+  const [clearing, setClearing] = useState(false);
+  const { alert, AlertComponent } = useAlert();
 
   useFocusEffect(
     useCallback(() => {
@@ -116,7 +120,39 @@ if (Array.isArray(result)) {
     }
   };
 
-  const unreadCount = notifications.filter(n => 
+  const handleClearAll = () => {
+    alert(
+      'Clear All Notifications',
+      'Are you sure you want to delete all notifications?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear All',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setClearing(true);
+              const prevNotifications = notifications;
+              setNotifications([]);
+              try {
+                await clearAllNotifications(token!);
+              } catch (err) {
+                setNotifications(prevNotifications);
+                throw err;
+              }
+            } catch (error) {
+              console.error('❌ Error clearing all notifications:', error);
+              alert('Error', 'Could not clear notifications. Please try again.');
+            } finally {
+              setClearing(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const unreadCount = notifications.filter(n =>
     !(n.isRead || n.read)
   ).length;
 
@@ -282,12 +318,18 @@ if (Array.isArray(result)) {
           </TouchableOpacity>
         </View>
 
-        {unreadCount > 0 && (
-          <TouchableOpacity onPress={handleMarkAllAsRead} style={s.markAllButton}>
-            <Ionicons name="checkmark-done-outline" size={16} color={colors.brand} />
-            <Text style={s.markAllText}>Mark all Read</Text>
+        <View style={{ flexDirection: 'row', gap: 16 }}>
+          {unreadCount > 0 && (
+            <TouchableOpacity onPress={handleMarkAllAsRead} style={s.markAllButton}>
+              <Ionicons name="checkmark-done-outline" size={16} color={colors.brand} />
+              <Text style={s.markAllText}>Mark all Read</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity onPress={handleClearAll} style={s.markAllButton} disabled={clearing}>
+            <Ionicons name="trash-outline" size={16} color="#E53E3E" />
+            <Text style={[s.markAllText, { color: '#E53E3E' }]}>Clear All</Text>
           </TouchableOpacity>
-        )}
+        </View>
       </View>
 
       {/* Notifications List */}
@@ -347,6 +389,7 @@ if (Array.isArray(result)) {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

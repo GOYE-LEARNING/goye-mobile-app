@@ -2,7 +2,7 @@
 
 import {
   View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity,
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
+  ActivityIndicator, KeyboardAvoidingView, Platform,
   RefreshControl
 } from 'react-native';
 import { Image } from 'expo-image';
@@ -15,9 +15,11 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { getDiscussion, replyToDiscussion, replyToNestedComment, likeDiscussion, getDiscussionComments } from '@/services/api';
 import { getImageUri } from '@/utils/helpers';
 import FormattedText from '@/components/community/FormattedText';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function DiscussionDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { alert, AlertComponent } = useAlert();
   const { token, user } = useUser();
   const { colors } = useTheme();
   const [discussion, setDiscussion] = useState<any>(null);
@@ -89,7 +91,7 @@ export default function DiscussionDetail() {
       
     } catch (error) {
       console.error('Error fetching discussion:', error);
-      Alert.alert('Error', 'Failed to load discussion');
+      alert('Error', 'Failed to load discussion');
     } finally {
       setLoading(false);
     }
@@ -147,7 +149,7 @@ export default function DiscussionDetail() {
 
   const handleReply = async () => {
     if (!replyContent.trim()) {
-      Alert.alert('Error', 'Please enter a reply');
+      alert('Error', 'Please enter a reply');
       return;
     }
 
@@ -169,10 +171,10 @@ export default function DiscussionDetail() {
       // Update total comments count
       setTotalComments(prev => prev + 1);
       
-      Alert.alert('Success', 'Reply posted!');
+      alert('Success', 'Reply posted!');
     } catch (error: any) {
       console.error('Reply error:', error);
-      Alert.alert('Error', error.message || 'Failed to post reply');
+      alert('Error', error.message || 'Failed to post reply');
     } finally {
       setPostingReply(false);
     }
@@ -192,7 +194,7 @@ export default function DiscussionDetail() {
       
     } catch (error) {
       console.error('Like error:', error);
-      Alert.alert('Error', 'Failed to like post');
+      alert('Error', 'Failed to like post');
     }
   };
 
@@ -246,7 +248,7 @@ export default function DiscussionDetail() {
       await fetchComments(1, false);
     } catch (error: any) {
       console.error('Nested reply error:', error);
-      Alert.alert('Error', error.message || 'Failed to post reply');
+      alert('Error', error.message || 'Failed to post reply');
     } finally {
       setPostingNestedReply(false);
     }
@@ -269,6 +271,7 @@ export default function DiscussionDetail() {
           <ActivityIndicator size="large" color={colors.brand} />
           <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading discussion...</Text>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -283,6 +286,7 @@ export default function DiscussionDetail() {
             <Text style={styles.backButtonText}>Go Back</Text>
           </TouchableOpacity>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -566,6 +570,7 @@ export default function DiscussionDetail() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

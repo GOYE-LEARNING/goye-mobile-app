@@ -1061,6 +1061,53 @@ export const markAllNotificationsAsRead = async (token: string): Promise<ApiResp
   }
 };
 
+/**
+ * Delete a single notification
+ * DELETE /notifications/{notificationId}
+ */
+export const deleteNotification = async (notificationId: string, token: string): Promise<ApiResponse<any>> => {
+  try {
+    const response = await fetchWithAuth(`/notifications/${notificationId}`, {
+      method: 'DELETE',
+    }, token);
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    throw error;
+  }
+};
+
+/**
+ * Clear all notifications (broadcasts are dismissed per-user, personal
+ * notifications are hard-deleted - same clear-all endpoint web uses)
+ * DELETE /notifications/clear-all
+ */
+export const clearAllNotifications = async (token: string): Promise<ApiResponse<any>> => {
+  try {
+    const response = await fetchWithAuth('/notifications/clear-all', {
+      method: 'DELETE',
+    }, token);
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error clearing all notifications:', error);
+    throw error;
+  }
+};
+
 // ─── Growth APIs ─────────────────────────────────────────────────────────────
 
 /**
@@ -1909,6 +1956,48 @@ export const refreshAccessToken = async (refreshToken: string): Promise<any> => 
     console.error('Error refreshing token:', error);
     throw error;
   }
+};
+
+/**
+ * Send a one-time password to the given email (change/forgot password flow)
+ * POST /user/sendOtp
+ */
+export const sendOtp = async (email: string): Promise<any> => {
+  const response = await apiCall('/user/sendOtp', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to send OTP');
+  return result;
+};
+
+/**
+ * Verify a one-time password against its session token
+ * POST /user/verify-otp
+ */
+export const verifyOtp = async (sessionToken: string, otp: string): Promise<any> => {
+  const response = await apiCall('/user/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ sessionToken, otp }),
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to verify OTP');
+  return result;
+};
+
+/**
+ * Set a new password for the signed-in user, after OTP verification
+ * PUT /user/update-password
+ */
+export const updatePassword = async (newPassword: string, token: string): Promise<ApiResponse<any>> => {
+  const response = await fetchWithAuth('/user/update-password', {
+    method: 'PUT',
+    body: JSON.stringify({ newPassword }),
+  }, token);
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.message || 'Failed to update password');
+  return result;
 };
 
 /**
