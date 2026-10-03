@@ -34,7 +34,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   package: "com.goye.app",
   googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
   adaptiveIcon: {
-    backgroundColor: "#E6F4FE",
+    backgroundColor: "#000000",
     foregroundImage: "./assets/images/adaptive-icon-foreground.png",
     backgroundImage: "./assets/images/adaptive-icon-background.png",
     monochromeImage: "./assets/images/adaptive-icon-monochrome.png",
@@ -54,7 +54,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         image: "./assets/images/splash-icon.png",
         imageWidth: 200,
         resizeMode: "contain",
-        backgroundColor: "#ffffff",
+        // Both themes use black: the logo is a glow effect designed against
+        // a dark backdrop (see assets/images/_backup_old_logo for the old
+        // flat-orange-on-white mark) - on white, the shadowed creases
+        // between the ribbon folds go fully transparent and the glow reads
+        // as washed out instead of dimensional.
+        backgroundColor: "#000000",
         dark: {
           backgroundColor: "#000000",
         },
