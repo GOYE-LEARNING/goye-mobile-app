@@ -1,11 +1,12 @@
 // app/(tabs)/courses/[id]/add-quiz.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { API_CONFIG } from '@/constants/config';
 import { useUser } from '@/contexts/UserContext';
+import { useAlert } from '@/hooks/useAlert';
 
 interface Option {
   id: string;
@@ -37,7 +38,8 @@ export default function AddQuiz() {
   const params = useLocalSearchParams();
   const { id: courseId } = params;
   const { token } = useUser();
-  
+  const { alert, AlertComponent } = useAlert();
+
   const [quizzes, setQuizzes] = useState<Quiz[]>([
     {
       id: '1',
@@ -72,7 +74,7 @@ export default function AddQuiz() {
 
   const deleteQuiz = (quizId: string) => {
     if (quizzes.length === 1) {
-      Alert.alert('Error', 'You must have at least one quiz');
+      alert('Error', 'You must have at least one quiz');
       return;
     }
     setQuizzes(quizzes.filter(q => q.id !== quizId));
@@ -197,31 +199,31 @@ export default function AddQuiz() {
       // Validate quizzes
       for (const quiz of quizzes) {
         if (!quiz.title.trim()) {
-          Alert.alert('Validation Error', 'Quiz title is required');
+          alert('Validation Error', 'Quiz title is required');
           return;
         }
         if (!quiz.duration.trim()) {
-          Alert.alert('Validation Error', 'Quiz duration is required');
+          alert('Validation Error', 'Quiz duration is required');
           return;
         }
         if (!quiz.passingScore.trim()) {
-          Alert.alert('Validation Error', 'Passing score is required');
+          alert('Validation Error', 'Passing score is required');
           return;
         }
-        
+
         // Validate questions
         for (const question of quiz.questions) {
           if (!question.text.trim()) {
-            Alert.alert('Validation Error', 'All questions must have text');
+            alert('Validation Error', 'All questions must have text');
             return;
           }
           if (!question.correctAnswer.trim()) {
-            Alert.alert('Validation Error', 'All questions must have a correct answer selected');
+            alert('Validation Error', 'All questions must have a correct answer selected');
             return;
           }
           for (const option of question.options) {
             if (!option.text.trim()) {
-              Alert.alert('Validation Error', 'All options must have text');
+              alert('Validation Error', 'All options must have text');
               return;
             }
           }
@@ -273,16 +275,16 @@ export default function AddQuiz() {
         results.push(result);
       }
 
-      Alert.alert('Success', 'Quizzes created successfully', [
-        { 
-          text: 'OK', 
-          onPress: () => router.back() 
+      alert('Success', 'Quizzes created successfully', [
+        {
+          text: 'OK',
+          onPress: () => router.back()
         }
       ]);
 
     } catch (error: any) {
       console.error('Error saving quizzes:', error);
-      Alert.alert('Error', error.message || 'Failed to save quizzes. Please try again.');
+      alert('Error', error.message || 'Failed to save quizzes. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -518,6 +520,7 @@ export default function AddQuiz() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

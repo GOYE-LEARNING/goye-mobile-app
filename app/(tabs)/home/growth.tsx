@@ -1,5 +1,5 @@
 // app/(tabs)/spiritual-growth.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Linking } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { useUser } from '@/contexts/UserContext';
 import { useTheme, lightColors } from '@/contexts/ThemeContext';
 import { getGrowthByProgressId, getUserCertificates } from '@/services/api';
 import { useTranslation } from 'react-i18next';
+import { useAlert } from '@/hooks/useAlert';
 
 const BADGE_ICON_MAP: Record<string, string> = {
   CADET_BADGE: 'shield-outline',
@@ -20,6 +21,7 @@ const BADGE_ICON_MAP: Record<string, string> = {
 };
 
 export default function SpiritualGrowth() {
+  const { alert, AlertComponent } = useAlert();
   const params = useLocalSearchParams<{ progressId?: string; tab?: string }>();
   const { token } = useUser();
   const { colors } = useTheme();
@@ -88,7 +90,7 @@ export default function SpiritualGrowth() {
 
   const handleViewCertificate = (cert: any) => {
     const certUrl = cert.url || cert.certificate_url;
-    Alert.alert(
+    alert(
       t('home.growth.certificateDetailsTitle'),
       `${t('home.growth.courseLabel')}: ${cert.courseTitle || cert.course_title || t('home.growth.defaultCertificateTitle')}\n` +
       `${t('home.growth.issuedLabel')}: ${new Date(cert.issuedAt || cert.createdAt || Date.now()).toLocaleDateString()}\n` +
@@ -100,7 +102,7 @@ export default function SpiritualGrowth() {
           onPress: () => {
             Linking.openURL(certUrl).catch(err => {
               console.error('Error opening URL:', err);
-              Alert.alert(t('common.error'), t('home.growth.couldNotOpenCertificate'));
+              alert(t('common.error'), t('home.growth.couldNotOpenCertificate'));
             });
           }
         }] : [])
@@ -154,6 +156,7 @@ export default function SpiritualGrowth() {
           <ActivityIndicator size="large" color={colors.brand} />
           <Text style={s.loadingText}>{t('home.growth.loadingGrowthData')}</Text>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -179,6 +182,7 @@ export default function SpiritualGrowth() {
             <Text style={s.startButtonText}>{t('home.growth.goBack')}</Text>
           </TouchableOpacity>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -417,6 +421,7 @@ export default function SpiritualGrowth() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

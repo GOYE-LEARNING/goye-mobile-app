@@ -1,5 +1,5 @@
 // app/(tabs)/profile.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Switch } from 'react-native';
 import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +14,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from 'react-i18next';
+import { useAlert } from '@/hooks/useAlert';
 
 const LANGUAGE_NAMES: { [code: string]: string } = {
   en: 'English',
@@ -29,6 +30,7 @@ export default function Profile() {
   const { reset } = useSignUp();
   const { signOutGoogle } = useGoogleSignIn();
   const { colors, isDark, toggleTheme } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const { t, i18n } = useTranslation();
   const currentLanguageLabel = LANGUAGE_NAMES[i18n.language] || 'English';
   const [profileData, setProfileData] = useState<any>(null);
@@ -150,7 +152,7 @@ export default function Profile() {
   const handleUploadProfilePicture = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(t('profile.permissionRequiredTitle'), t('profile.permissionRequiredMessage'));
+      alert(t('profile.permissionRequiredTitle'), t('profile.permissionRequiredMessage'));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -162,7 +164,7 @@ export default function Profile() {
     });
     if (result.canceled || !result.assets?.[0]) return;
     const asset = result.assets[0];
-    if (!asset.base64) { Alert.alert(t('common.error'), t('profile.couldNotReadImage')); return; }
+    if (!asset.base64) { alert(t('common.error'), t('profile.couldNotReadImage')); return; }
 
     setUploadingPic(true);
     try {
@@ -173,17 +175,17 @@ export default function Profile() {
         fileName: asset.fileName ?? `profile_${Date.now()}.${extension}`,
         file: asset.base64,
       });
-      Alert.alert(t('common.success'), t('profile.profilePicUpdated'));
+      alert(t('common.success'), t('profile.profilePicUpdated'));
       await fetchProfileData();
     } catch (err: any) {
-      Alert.alert(t('common.error'), err?.message ?? t('profile.failedUploadPic'));
+      alert(t('common.error'), err?.message ?? t('profile.failedUploadPic'));
     } finally {
       setUploadingPic(false);
     }
   };
 
   const handleLogout = () => {
-    Alert.alert(t('profile.logoutConfirmTitle'), t('profile.logoutConfirmMessage'), [
+    alert(t('profile.logoutConfirmTitle'), t('profile.logoutConfirmMessage'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
         text: t('profile.logout'),
@@ -212,6 +214,7 @@ export default function Profile() {
           <ActivityIndicator size="large" color={colors.brand} />
           <Text style={s.loadingText}>{t('profile.loadingProfile')}</Text>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -229,6 +232,7 @@ export default function Profile() {
             <Text style={s.backButtonText}>{t('profile.goBack')}</Text>
           </TouchableOpacity>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -246,8 +250,20 @@ export default function Profile() {
     t,
   };
 
-  if (isOrganizationAdmin) return <OrganizationProfileView {...sharedProps} />;
-  return <IndividualProfileView {...sharedProps} />;
+  if (isOrganizationAdmin) {
+    return (
+      <>
+        <OrganizationProfileView {...sharedProps} />
+        {AlertComponent}
+      </>
+    );
+  }
+  return (
+    <>
+      <IndividualProfileView {...sharedProps} />
+      {AlertComponent}
+    </>
+  );
 }
 // ── Shared prop type ──────────────────────────────────────────────────────────
 type ViewProps = {

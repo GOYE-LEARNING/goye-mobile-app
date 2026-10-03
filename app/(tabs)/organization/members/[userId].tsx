@@ -7,7 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -17,11 +16,13 @@ import { useUser } from '@/contexts/UserContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getOrgMemberDetail, suspendMember, removeMember } from '@/services/api';
 import { getImageUri } from '@/utils/helpers';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function OrganizationMemberDetail() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const { user, token } = useUser();
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const organizationId = user?.organizationId;
 
   const [member, setMember] = useState<any>(null);
@@ -53,14 +54,14 @@ export default function OrganizationMemberDetail() {
       await suspendMember(organizationId, userId, !member.isSuspended, token!);
       setMember({ ...member, isSuspended: !member.isSuspended });
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to update member status');
+      alert('Error', err?.message || 'Failed to update member status');
     } finally {
       setUpdating(false);
     }
   };
 
   const handleRemove = () => {
-    Alert.alert(
+    alert(
       'Remove Member',
       `Remove ${member.first_name} ${member.last_name} from the organization? This cannot be undone.`,
       [
@@ -75,7 +76,7 @@ export default function OrganizationMemberDetail() {
               await removeMember(organizationId, userId, token!);
               router.back();
             } catch (err: any) {
-              Alert.alert('Error', err?.message || 'Failed to remove member');
+              alert('Error', err?.message || 'Failed to remove member');
               setUpdating(false);
             }
           },
@@ -88,6 +89,7 @@ export default function OrganizationMemberDetail() {
     return (
       <SafeAreaView style={s.loadingContainer}>
         <ActivityIndicator size="large" color={colors.brand} />
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -96,6 +98,7 @@ export default function OrganizationMemberDetail() {
     return (
       <SafeAreaView style={s.loadingContainer}>
         <Text style={s.emptyText}>Member not found</Text>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -193,6 +196,7 @@ export default function OrganizationMemberDetail() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      {AlertComponent}
     </View>
   );
 }

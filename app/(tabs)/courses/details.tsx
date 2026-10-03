@@ -1,5 +1,5 @@
 // app/(tabs)/courses/details.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,8 +9,10 @@ import { getCourse, enrollInCourse } from '@/services/api';
 import { useUser } from '@/contexts/UserContext';
 import { useTheme, lightColors } from '@/contexts/ThemeContext';
 import { getImageUri } from '@/utils/helpers';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function CourseDetails() {
+  const { alert, AlertComponent } = useAlert();
   const params = useLocalSearchParams();
   const courseId = params.id as string;
   const { user, token } = useUser();
@@ -72,10 +74,10 @@ export default function CourseDetails() {
       
       console.log('✅ Enrollment successful:', result);
       setIsEnrolled(true);
-      
-      Alert.alert('Success', 'You have been enrolled in this course!', [
-        { 
-          text: 'Start Learning', 
+
+      alert('Success', 'You have been enrolled in this course!', [
+        {
+          text: 'Start Learning',
           onPress: () => router.push(`/(tabs)/courses/${courseId}/overview` as any)
         }
       ]);
@@ -89,9 +91,9 @@ export default function CourseDetails() {
       // Check if already enrolled error
       if (error.message?.includes('already enrolled') || error.message?.includes('Already enrolled')) {
         setIsEnrolled(true);
-        Alert.alert('Already Enrolled', 'You are already enrolled in this course');
+        alert('Already Enrolled', 'You are already enrolled in this course');
       } else {
-        Alert.alert('Error', error.message || 'Failed to enroll in course. Please try again.');
+        alert('Error', error.message || 'Failed to enroll in course. Please try again.');
       }
     } finally {
       setEnrolling(false);
@@ -124,6 +126,7 @@ export default function CourseDetails() {
           <ActivityIndicator size="large" color={colors.brand} />
           <Text style={s.loadingText}>Loading course details...</Text>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -148,6 +151,7 @@ export default function CourseDetails() {
             <Text style={s.retryText}>Try Again</Text>
           </TouchableOpacity>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -350,6 +354,7 @@ export default function CourseDetails() {
           <View style={{ height: 40 }} />
         </View>
       </ScrollView>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

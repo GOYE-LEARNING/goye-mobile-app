@@ -1,5 +1,5 @@
 // app/(tabs)/community/[groupId].tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,8 +11,10 @@ import { getGroup, deleteGroup, getGroupEvents, joinGroup, exitGroup } from '@/s
 import { getImageUri } from '@/utils/helpers';
 import EventCard from '@/components/community/EventCard';
 import { Menu, MenuOptions, MenuOption, MenuTrigger, MenuProvider } from 'react-native-popup-menu';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function GroupDetails() {
+  const { alert, AlertComponent } = useAlert();
   const params = useLocalSearchParams();
   const { user, token, isInstructor } = useUser();
   const { colors } = useTheme();
@@ -136,12 +138,12 @@ export default function GroupDetails() {
           // Was a member, now leaving
           const result = await exitGroup(params.groupId as string, token);
           console.log('✅ Left group:', result.message);
-          Alert.alert('Success', result.message || 'You have left the group');
+          alert('Success', result.message || 'You have left the group');
         } else {
           // Was not a member, now joining
           const result = await joinGroup(params.groupId as string, token);
           console.log('✅ Joined group:', result.message);
-          Alert.alert('Success', result.message || 'You have joined the group');
+          alert('Success', result.message || 'You have joined the group');
         }
         
         // Refresh group data to get the actual count from server
@@ -155,7 +157,7 @@ export default function GroupDetails() {
         
         // Show error message
         const errorMessage = apiError.message || 'Failed to update group membership';
-        Alert.alert('Error', errorMessage);
+        alert('Error', errorMessage);
       }
       
     } finally {
@@ -168,7 +170,7 @@ export default function GroupDetails() {
   };
 
   const handleDelete = () => {
-    Alert.alert(
+    alert(
       'Delete Group',
       'Are you sure you want to delete this group? This action cannot be undone.',
       [
@@ -179,12 +181,12 @@ export default function GroupDetails() {
           onPress: async () => {
             try {
               const result = await deleteGroup(params.groupId as string, token);
-              Alert.alert('Success', result.message || 'Group deleted successfully', [
+              alert('Success', result.message || 'Group deleted successfully', [
                 { text: 'OK', onPress: () => router.back() }
               ]);
             } catch (error) {
               console.error('Error deleting group:', error);
-              Alert.alert('Error', 'Failed to delete group. Please try again.');
+              alert('Error', 'Failed to delete group. Please try again.');
             }
           },
         },
@@ -204,6 +206,7 @@ export default function GroupDetails() {
           <ActivityIndicator size="large" color={colors.brand} />
           <Text style={s.loadingText}>Loading group...</Text>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -223,6 +226,7 @@ export default function GroupDetails() {
             <Text style={s.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -398,6 +402,7 @@ export default function GroupDetails() {
             )}
           </View>
         </ScrollView>
+        {AlertComponent}
       </SafeAreaView>
     </MenuProvider>
   );

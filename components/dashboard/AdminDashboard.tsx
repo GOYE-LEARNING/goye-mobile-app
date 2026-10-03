@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Modal,
   TextInput,
-  Alert,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +18,7 @@ import { NotificationBadge } from '@/components/NotificationBadge';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { useAlert } from '@/hooks/useAlert';
 
 interface AdminStats {
   totalUsers: number;
@@ -70,6 +70,7 @@ export default function AdminDashboard() {
   const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const unreadCount = useUnreadNotificationCount();
   const { t } = useTranslation();
+  const { alert, AlertComponent } = useAlert();
 
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [activities, setActivities] = useState<AdminActivity[]>([]);
@@ -99,7 +100,7 @@ export default function AdminDashboard() {
 
   const handleSendAnnouncement = async () => {
     if (!announcementTitle.trim() || !announcementMessage.trim()) {
-      Alert.alert(t('home.adminDashboard.requiredFieldsTitle'), t('home.adminDashboard.requiredFieldsMessage'));
+      alert(t('home.adminDashboard.requiredFieldsTitle'), t('home.adminDashboard.requiredFieldsMessage'));
       return;
     }
     setSendingAnnouncement(true);
@@ -108,7 +109,7 @@ export default function AdminDashboard() {
         { title: announcementTitle.trim(), message: announcementMessage.trim(), audience: 'all' },
         token!
       );
-      Alert.alert(
+      alert(
         t('home.adminDashboard.announcementSentTitle'),
         t('home.adminDashboard.announcementSentMessage', { count: result.data?.recipientCount ?? 0 }),
       );
@@ -116,7 +117,7 @@ export default function AdminDashboard() {
       setAnnouncementTitle('');
       setAnnouncementMessage('');
     } catch (err: any) {
-      Alert.alert(t('common.error'), err?.message || t('home.adminDashboard.announcementSendFailed'));
+      alert(t('common.error'), err?.message || t('home.adminDashboard.announcementSendFailed'));
     } finally {
       setSendingAnnouncement(false);
     }
@@ -126,6 +127,7 @@ export default function AdminDashboard() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.brand} />
+        {AlertComponent}
       </View>
     );
   }
@@ -377,6 +379,7 @@ export default function AdminDashboard() {
           </View>
         </View>
       </Modal>
+      {AlertComponent}
     </ScrollView>
   );
 }

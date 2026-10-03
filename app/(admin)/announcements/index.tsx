@@ -10,7 +10,6 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -21,6 +20,7 @@ import { useUser } from '@/contexts/UserContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { sendSuperAdminAnnouncement, sendSuperAdminEmail } from '@/services/api';
 import { getFriendlyErrorMessage } from '@/utils/errorMessages';
+import { useAlert } from '@/hooks/useAlert';
 
 type Audience = 'all' | 'students' | 'tutors' | 'org_admins';
 type Channel = 'in_app' | 'email';
@@ -35,6 +35,7 @@ const AUDIENCES: { value: Audience; label: string }[] = [
 export default function AnnouncementsScreen() {
   const { token } = useUser();
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const [channel, setChannel] = useState<Channel>('in_app');
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
@@ -45,12 +46,12 @@ export default function AnnouncementsScreen() {
 
   const handleSend = async () => {
     if (!title.trim() || !message.trim()) {
-      Alert.alert('Required', `Please enter both a ${isEmail ? 'subject' : 'title'} and a message.`);
+      alert('Required', `Please enter both a ${isEmail ? 'subject' : 'title'} and a message.`);
       return;
     }
 
     const audienceLabel = AUDIENCES.find((a) => a.value === audience)?.label ?? 'Everyone';
-    Alert.alert(
+    alert(
       isEmail ? 'Send email?' : 'Post announcement?',
       `This goes out to ${audienceLabel.toLowerCase()} and can't be recalled.`,
       [
@@ -67,9 +68,9 @@ export default function AnnouncementsScreen() {
               }
               setTitle('');
               setMessage('');
-              Alert.alert('Sent', isEmail ? 'Your email is on its way.' : 'Your announcement has been posted.');
+              alert('Sent', isEmail ? 'Your email is on its way.' : 'Your announcement has been posted.');
             } catch (err: any) {
-              Alert.alert('Error', getFriendlyErrorMessage(err, 'sending that'));
+              alert('Error', getFriendlyErrorMessage(err, 'sending that'));
             } finally {
               setSending(false);
             }
@@ -177,6 +178,7 @@ export default function AnnouncementsScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+      {AlertComponent}
     </KeyboardAvoidingView>
   );
 }

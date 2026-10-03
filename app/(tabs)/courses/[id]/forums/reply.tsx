@@ -1,5 +1,5 @@
 // app/(tabs)/courses/[id]/forums/reply.tsx
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,15 +7,17 @@ import { useState } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { API_CONFIG } from '@/constants/config';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function ReplyPost() {
   const params = useLocalSearchParams();
   const { id: courseId, postId, replyId, replyTo } = params;
   // replyId = if replying to another reply (nested)
   // replyTo = name of person being replied to (for UI display)
-  
+
   const { token } = useUser();
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +26,7 @@ export default function ReplyPost() {
 
   const handlePost = async () => {
     if (!content.trim()) {
-      Alert.alert('Error', 'Please write your reply');
+      alert('Error', 'Please write your reply');
       return;
     }
 
@@ -73,18 +75,18 @@ export default function ReplyPost() {
       console.log('Reply result:', result);
 
       if (response.ok) {
-        Alert.alert('Success', 'Your reply has been posted!', [
+        alert('Success', 'Your reply has been posted!', [
           {
             text: 'OK',
             onPress: () => router.back(),
           },
         ]);
       } else {
-        Alert.alert('Error', result.message || 'Failed to post reply. Please try again.');
+        alert('Error', result.message || 'Failed to post reply. Please try again.');
       }
     } catch (error) {
       console.error('Error posting reply:', error);
-      Alert.alert('Error', 'Unable to post reply. Please check your connection and try again.');
+      alert('Error', 'Unable to post reply. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -175,6 +177,7 @@ export default function ReplyPost() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

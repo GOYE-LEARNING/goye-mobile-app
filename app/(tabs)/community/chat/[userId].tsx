@@ -7,7 +7,6 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Animated,
@@ -25,6 +24,7 @@ import {
 } from "@/services/api";
 import { getImageUri } from "@/utils/helpers";
 import { io, Socket } from "socket.io-client";
+import { useAlert } from "@/hooks/useAlert";
 
 const SOCKET_URL = "https://goye-platform-backend.onrender.com";
 
@@ -56,6 +56,7 @@ export default function ChatRoom() {
     name: string;
     avatarUri: string;
   }>();
+  const { alert, AlertComponent } = useAlert();
   const { token, user } = useUser();
   const { colors } = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -549,13 +550,13 @@ export default function ChatRoom() {
         setIsAuthenticated(false);
         setSocketReady(false);
         setAuthError(true);
-        Alert.alert(
+        alert(
           "Authentication Error",
           "Your session has expired. Please log out and log in again.",
           [{ text: "OK" }]
         );
       } else {
-        Alert.alert("Error", data.message || "Failed to send message");
+        alert("Error", data.message || "Failed to send message");
       }
     });
 
@@ -662,7 +663,7 @@ export default function ChatRoom() {
       );
 
       if (!socketReady) {
-        Alert.alert("Authenticating", "Please wait while we authenticate...", [
+        alert("Authenticating", "Please wait while we authenticate...", [
           { text: "OK" },
         ]);
         // Try to re-authenticate
@@ -676,7 +677,7 @@ export default function ChatRoom() {
           });
         }
       } else {
-        Alert.alert("Reconnecting", "Please wait a moment and try again.");
+        alert("Reconnecting", "Please wait a moment and try again.");
         if (socket) {
           socket.connect();
         }
@@ -777,7 +778,7 @@ export default function ChatRoom() {
 
   const handleDelete = () => {
     if (!selectedMsg) return;
-    Alert.alert("Delete Message", "Delete this message for everyone?", [
+    alert("Delete Message", "Delete this message for everyone?", [
       { text: "Cancel", style: "cancel", onPress: () => setMenuVisible(false) },
       {
         text: "Delete",
@@ -808,7 +809,7 @@ export default function ChatRoom() {
   };
 
   const handleClearChat = () => {
-    Alert.alert("Clear Chat", `Clear all messages with ${otherName}?`, [
+    alert("Clear Chat", `Clear all messages with ${otherName}?`, [
       { text: "Cancel", style: "cancel" },
       {
         text: "Clear",
@@ -819,7 +820,7 @@ export default function ChatRoom() {
             socketRef.current?.emit("private:clear", { receiverId: otherId });
             setMessages([]);
           } catch {
-            Alert.alert("Error", "Failed to clear chat");
+            alert("Error", "Failed to clear chat");
           }
         },
       },
@@ -1261,6 +1262,7 @@ export default function ChatRoom() {
           </View>
         </TouchableOpacity>
       )}
+      {AlertComponent}
     </SafeAreaView>
   );
 }

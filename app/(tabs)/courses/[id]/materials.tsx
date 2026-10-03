@@ -1,5 +1,5 @@
 // app/(tabs)/courses/[id]/materials.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,11 +10,13 @@ import { useState, useEffect } from 'react';
 import { API_CONFIG } from '@/constants/config';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function Materials() {
   const params = useLocalSearchParams();
   const { user, token, isInstructor } = useUser();
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState<string | null>(null);
@@ -56,7 +58,7 @@ export default function Materials() {
 
   const handleDownload = async (material: any) => {
     if (!material.material_document) {
-      Alert.alert('No Document', 'This material has no document attached');
+      alert('No Document', 'This material has no document attached');
       return;
     }
 
@@ -75,7 +77,7 @@ export default function Materials() {
         console.warn('⚠️ No FileSystem directory, attempting direct share');
         
         // Try direct sharing without saving to file
-        Alert.alert('Download', 'This material will be shared directly');
+        alert('Download', 'This material will be shared directly');
         return;
       }
       
@@ -104,13 +106,13 @@ export default function Materials() {
         });
         console.log('✅ Share dialog opened');
       } else {
-        Alert.alert('Download Complete', `Material saved to: ${filename}`);
+        alert('Download Complete', `Material saved to: ${filename}`);
       }
       console.log('======================');
     } catch (error) {
       console.error('❌ Download error:', error);
-      Alert.alert(
-        'Download Failed', 
+      alert(
+        'Download Failed',
         error instanceof Error ? error.message : 'Unable to download the material'
       );
     } finally {
@@ -126,6 +128,7 @@ export default function Materials() {
         <View style={s.loadingContainer}>
           <ActivityIndicator size="large" color={colors.brand} />
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -139,6 +142,7 @@ export default function Materials() {
             <Text style={{ color: colors.brand }}>Go Back</Text>
           </TouchableOpacity>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -309,6 +313,7 @@ export default function Materials() {
           )}
         </View>
       </ScrollView>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

@@ -1,5 +1,5 @@
 // app/(tabs)/community/[groupId]/create-event.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Platform, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,10 +7,12 @@ import { useState } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useUser } from '@/contexts/UserContext';
 import { createEvent } from '@/services/api';
+import { useAlert } from '@/hooks/useAlert';
 
 const EVENT_TYPES = ['Meeting', 'Session', 'Fellowship', 'Service'];
 
 export default function CreateEvent() {
+  const { alert, AlertComponent } = useAlert();
   const params = useLocalSearchParams();
   const { user, isInstructor,  token } = useUser();
   
@@ -52,12 +54,12 @@ export default function CreateEvent() {
 
   const handleCreate = async () => {
   if (!eventName.trim()) {
-    Alert.alert('Error', 'Please enter an event name');
+    alert('Error', 'Please enter an event name');
     return;
   }
 
   if (!description.trim()) {
-    Alert.alert('Error', 'Please enter a description');
+    alert('Error', 'Please enter a description');
     return;
   }
 
@@ -90,12 +92,12 @@ export default function CreateEvent() {
     const result = await createEvent(params.groupId as string, eventData, token);
     
     console.log('✅ Event created! Response:', result);
-    Alert.alert('Success', result.message || 'Event created successfully!', [
+    alert('Success', result.message || 'Event created successfully!', [
       { text: 'OK', onPress: () => router.back() }
     ]);
   } catch (error: any) {
     console.error('❌ Error creating event:', error);
-    Alert.alert('Error', error.message || 'Failed to create event. Please try again.');
+    alert('Error', error.message || 'Failed to create event. Please try again.');
   } finally {
     setLoading(false);
   }
@@ -279,6 +281,7 @@ export default function CreateEvent() {
           }}
         />
       )}
+      {AlertComponent}
     </SafeAreaView>
   );
 }

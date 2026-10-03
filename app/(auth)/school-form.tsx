@@ -6,8 +6,7 @@ import {
   TextInput, 
   TouchableOpacity,
   Modal,
-  ImageBackground,
-  Alert 
+  ImageBackground
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import * as DocumentPicker from 'expo-document-picker';
+import { useAlert } from '@/hooks/useAlert';
 
 // School types for dropdown
 const SCHOOL_TYPES = [
@@ -55,8 +55,9 @@ const ADMIN_ROLES = [
 
 export default function SchoolForm() {
   const router = useRouter();
+  const { alert, AlertComponent } = useAlert();
   const { organizationData, updateOrganizationData } = useOrganization();
-  
+
   const [formData, setFormData] = useState({
     schoolName: organizationData.schoolName || '',
     schoolType: organizationData.schoolType || '',
@@ -111,7 +112,7 @@ export default function SchoolForm() {
       }
     } catch (error) {
       console.error('Error picking document:', error);
-      Alert.alert('Error', 'Failed to pick document. Please try again.');
+      alert('Error', 'Failed to pick document. Please try again.');
     }
   };
 
@@ -512,6 +513,7 @@ export default function SchoolForm() {
           </View>
         </Modal>
       </View>
+      {AlertComponent}
     </ImageBackground>
   );
 }

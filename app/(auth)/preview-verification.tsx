@@ -8,7 +8,6 @@ import {
   TouchableOpacity, 
   ImageBackground,
   ActivityIndicator,
-  Alert,
   Modal,
   Clipboard
 } from 'react-native';
@@ -18,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { createOrganization } from '@/utils/organizationApi';
+import { useAlert } from '@/hooks/useAlert';
 
 type EditSection = 'organization' | 'user' | 'church' | 'school' | 'club';
 
@@ -28,6 +28,7 @@ interface InfoRowProps {
 
 export default function PreviewVerification() {
   const router = useRouter();
+  const { alert, AlertComponent } = useAlert();
   const { organizationData } = useOrganization();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -83,7 +84,7 @@ export default function PreviewVerification() {
           setShowPasswordModal(true);
         } else if (result.passwordError) {
           // Organization created but password generation failed
-          Alert.alert(
+          alert(
             'Partial Success',
             'Organization created successfully, but password generation failed. Please contact support.',
             [
@@ -95,7 +96,7 @@ export default function PreviewVerification() {
           );
         } else {
           // Organization created without password (shouldn't happen)
-          Alert.alert(
+          alert(
             'Success!',
             'Your organization has been created successfully.',
             [
@@ -107,14 +108,14 @@ export default function PreviewVerification() {
           );
         }
       } else {
-        Alert.alert(
+        alert(
           'Error',
           result.error || 'Failed to create organization. Please try again.',
           [{ text: 'OK' }]
         );
       }
     } catch (error) {
-      Alert.alert(
+      alert(
         'Error',
         'An unexpected error occurred. Please try again.',
         [{ text: 'OK' }]
@@ -434,6 +435,7 @@ export default function PreviewVerification() {
           </View>
         </View>
       </Modal>
+      {AlertComponent}
     </ImageBackground>
   );
 }

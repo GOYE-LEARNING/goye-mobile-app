@@ -1,5 +1,5 @@
 // app/(auth)/login.tsx
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,10 +8,12 @@ import { useUser } from '@/contexts/UserContext';
 import { useTheme, lightColors } from '@/contexts/ThemeContext';
 import { API_CONFIG } from '@/constants/config';
 import { getOrCreateDeviceId } from '@/utils/deviceId';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function Login() {
   const { setUser } = useUser();
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -21,11 +23,11 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      return Alert.alert('Required Fields', 'Please enter both email and password');
+      return alert('Required Fields', 'Please enter both email and password');
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return Alert.alert('Invalid Email', 'Please enter a valid email address');
+      return alert('Invalid Email', 'Please enter a valid email address');
     }
 
     setLoading(true);
@@ -51,7 +53,7 @@ export default function Login() {
 
         if (!userToken) {
           console.error('[Login] No token in response');
-          Alert.alert('Error', 'Invalid response from server');
+          alert('Error', 'Invalid response from server');
           setLoading(false);
           return;
         }
@@ -104,7 +106,7 @@ export default function Login() {
           // matches UserContext's isSuperAdmin logic. Content/user admins
           // are unaffected and can still sign in on mobile.
           if (appRole === 'admin' && (!userData.adminRole || userData.adminRole === 'super_admin')) {
-            Alert.alert(
+            alert(
               'Web Only',
               'Super Admin access is only available on the GOYE web dashboard. Please sign in from a web browser.'
             );
@@ -140,7 +142,7 @@ export default function Login() {
           }, 100);
 
         } else {
-          Alert.alert('Error', 'Invalid response from server');
+          alert('Error', 'Invalid response from server');
         }
 
       } else {
@@ -156,11 +158,11 @@ export default function Login() {
             errorMessage = result.message;
           }
         }
-        Alert.alert('Login Failed', errorMessage);
+        alert('Login Failed', errorMessage);
       }
     } catch (error) {
       console.error('=== LOGIN EXCEPTION ===', error);
-      Alert.alert('Network Error', 'Unable to connect to the server. Please check your connection and try again.');
+      alert('Network Error', 'Unable to connect to the server. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -312,6 +314,7 @@ export default function Login() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

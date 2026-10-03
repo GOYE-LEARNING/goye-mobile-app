@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,10 +14,12 @@ import { useUser } from '@/contexts/UserContext';
 import { getCourses, deleteSuperAdminCourse } from '@/services/api';
 import { getImageUri } from '@/utils/helpers';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function AdminCourses() {
   const { token, isSuperAdmin } = useUser();
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +43,7 @@ export default function AdminCourses() {
   };
 
   const handleDelete = (courseId: string, title: string) => {
-    Alert.alert('Delete Course', `Are you sure you want to delete "${title}"? This cannot be undone.`, [
+    alert('Delete Course', `Are you sure you want to delete "${title}"? This cannot be undone.`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -53,7 +54,7 @@ export default function AdminCourses() {
             await deleteSuperAdminCourse(courseId, token!);
             setCourses((prev) => prev.filter((c) => c.id !== courseId));
           } catch (err: any) {
-            Alert.alert('Error', err?.message || 'Failed to delete course');
+            alert('Error', err?.message || 'Failed to delete course');
           } finally {
             setDeletingId(null);
           }
@@ -123,6 +124,7 @@ export default function AdminCourses() {
           ListEmptyComponent={<Text style={styles.emptyText}>No courses found</Text>}
         />
       )}
+      {AlertComponent}
     </View>
   );
 }

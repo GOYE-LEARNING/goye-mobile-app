@@ -1,5 +1,5 @@
 // app/(tabs)/profile/edit-profile.tsx
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useUser } from '@/contexts/UserContext';
 import { getUserProfile, updateUser } from '@/services/api';
 import { getImageUri } from '@/utils/helpers';
+import { useAlert } from '@/hooks/useAlert';
 
 const COUNTRIES = ['Nigeria', 'United States', 'United Kingdom', 'Canada'];
 const STATES: Record<string, string[]> = {
@@ -20,6 +21,7 @@ const STATES: Record<string, string[]> = {
 
 export default function EditProfile() {
   const { token } = useUser();
+  const { alert, AlertComponent } = useAlert();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -56,7 +58,7 @@ export default function EditProfile() {
 
   const handleSave = async () => {
     if (!firstName.trim() || !lastName.trim()) {
-      Alert.alert('Validation', 'First and last name are required.');
+      alert('Validation', 'First and last name are required.');
       return;
     }
 
@@ -69,11 +71,11 @@ export default function EditProfile() {
         country,
         state,
       });
-      Alert.alert('Success', result.message ?? 'Profile updated successfully!', [
+      alert('Success', result.message ?? 'Profile updated successfully!', [
         { text: 'OK', onPress: () => router.back() },
       ]);
     } catch (err: any) {
-      Alert.alert('Error', err?.message ?? 'Failed to update profile. Please try again.');
+      alert('Error', err?.message ?? 'Failed to update profile. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -85,6 +87,7 @@ export default function EditProfile() {
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color="#3F1F22" />
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -208,6 +211,7 @@ export default function EditProfile() {
           )}
         </TouchableOpacity>
       </View>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

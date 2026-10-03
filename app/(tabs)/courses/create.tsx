@@ -1,5 +1,5 @@
 // app/(tabs)/courses/create.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { useUser } from '@/contexts/UserContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { API_CONFIG } from '@/constants/config';
 import * as FileSystem from 'expo-file-system';
+import { useAlert } from '@/hooks/useAlert';
 
 // Import step components
 import CourseInformation from '@/components/course-creation/CourseInformation';
@@ -26,6 +27,7 @@ const STEPS = [
 ];
 
 export default function CreateCourse() {
+  const { alert, AlertComponent } = useAlert();
   const { user, token, isInstructor } = useUser();
   const { colors } = useTheme();
   const [currentStep, setCurrentStep] = useState(1);
@@ -190,17 +192,17 @@ export default function CreateCourse() {
 
   const validateCourseData = () => {
     if (!courseData.title.trim()) {
-      Alert.alert('Missing Information', 'Please enter a course title');
+      alert('Missing Information', 'Please enter a course title');
       setCurrentStep(1);
       return false;
     }
     if (!courseData.description.trim()) {
-      Alert.alert('Missing Information', 'Please enter a course description');
+      alert('Missing Information', 'Please enter a course description');
       setCurrentStep(1);
       return false;
     }
     if (courseData.modules.length === 0) {
-      Alert.alert('Missing Content', 'Please add at least one module');
+      alert('Missing Content', 'Please add at least one module');
       setCurrentStep(2);
       return false;
     }
@@ -281,14 +283,14 @@ export default function CreateCourse() {
         } else if (result.error) {
           errorMessage = result.error;
         }
-        
-        Alert.alert('Creation Failed', errorMessage);
+
+        alert('Creation Failed', errorMessage);
       }
     } catch (error) {
       console.error('=== COURSE CREATION ERROR ===');
       console.error('Error:', error);
-      
-      Alert.alert(
+
+      alert(
         'Error',
         'Unable to create course. Please check your connection and try again.'
       );
@@ -405,6 +407,7 @@ export default function CreateCourse() {
           </TouchableOpacity>
         )}
       </View>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

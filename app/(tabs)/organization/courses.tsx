@@ -5,7 +5,7 @@
 // enrollment/completion stats and delete. This is org-scoped, distinct
 // from the global (tabs)/courses tab.
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,6 +13,7 @@ import { useUser } from '@/contexts/UserContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getOrgCoursesWithStats, deleteCourse } from '@/services/api';
 import { getFriendlyErrorMessage } from '@/utils/errorMessages';
+import { useAlert } from '@/hooks/useAlert';
 
 interface OrgCourse {
   id: string;
@@ -30,6 +31,7 @@ interface OrgCourse {
 export default function OrganizationCourses() {
   const { user, token } = useUser();
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const organizationId = user?.organizationId;
   const s = makeStyles(colors);
 
@@ -61,7 +63,7 @@ export default function OrganizationCourses() {
   };
 
   const handleDelete = (course: OrgCourse) => {
-    Alert.alert('Delete course?', `"${course.course_title}" and all its content will be removed. This can't be undone.`, [
+    alert('Delete course?', `"${course.course_title}" and all its content will be removed. This can't be undone.`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -72,7 +74,7 @@ export default function OrganizationCourses() {
             await deleteCourse(course.id, token!);
             setCourses((prev) => prev.filter((c) => c.id !== course.id));
           } catch (err: any) {
-            Alert.alert('Error', getFriendlyErrorMessage(err, 'deleting that course'));
+            alert('Error', getFriendlyErrorMessage(err, 'deleting that course'));
           } finally {
             setPendingId(null);
           }
@@ -139,6 +141,7 @@ export default function OrganizationCourses() {
           ListEmptyComponent={<Text style={s.empty}>No courses yet</Text>}
         />
       )}
+      {AlertComponent}
     </SafeAreaView>
   );
 }

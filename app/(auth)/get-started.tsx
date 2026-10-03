@@ -1,17 +1,19 @@
 // app/(auth)/get-started.tsx
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSignUp } from '@/contexts/SignUpContext';
 import { router } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
 import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@/contexts/UserContext';
+import { useAlert } from '@/hooks/useAlert';
 
 
 export default function GetStarted() {
   const { setField, data } = useSignUp();
   const { signInWithGoogle, loading: googleLoading } = useGoogleSignIn();
   const { isAuthenticated, isLoading } = useUser();
+  const { alert, AlertComponent } = useAlert();
   const [firstName, setFirstName] = useState(data.firstName || '');
   const [lastName, setLastName] = useState(data.lastName || '');
   const [email, setEmail] = useState(data.email || '');
@@ -49,6 +51,7 @@ export default function GetStarted() {
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#3F1F22" />
         <Text style={styles.loadingText}>Loading...</Text>
+        {AlertComponent}
       </View>
     );
   }
@@ -60,13 +63,14 @@ export default function GetStarted() {
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#3F1F22" />
         <Text style={styles.loadingText}>Redirecting...</Text>
+        {AlertComponent}
       </View>
     );
   }
 
   const handleNext = () => {
     if (!firstName || !lastName || !email) {
-      Alert.alert('Error', 'Please fill all fields');
+      alert('Error', 'Please fill all fields');
       return;
     }
     setField('firstName', firstName);
@@ -81,7 +85,7 @@ export default function GetStarted() {
       await signInWithGoogle();
       console.log('✅ [GetStarted] Google sign-in completed, waiting for navigation...');
     } catch (err) {
-      Alert.alert('Error', 'Google sign-in failed. Please try again.');
+      alert('Error', 'Google sign-in failed. Please try again.');
       console.error('❌ [GetStarted] Google sign-in error:', err);
     }
   };
@@ -151,6 +155,7 @@ export default function GetStarted() {
           </Text>
         </Text>
       </View>
+      {AlertComponent}
     </View>
   );
 }

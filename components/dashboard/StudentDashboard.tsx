@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useUser } from '@/contexts/UserContext';
 import { useState, useEffect } from 'react';
-import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Image } from 'expo-image';
 import { startGrowthJourney, getGrowthByProgressId } from '@/services/api';
 import { getStudentGroupEvents, getUserProfile } from '@/services/api';
@@ -15,6 +15,7 @@ import { useTheme, lightColors } from '@/contexts/ThemeContext';
 import { NotificationBadge } from '@/components/NotificationBadge';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useTranslation } from 'react-i18next';
+import { useAlert } from '@/hooks/useAlert';
 
 const { height } = Dimensions.get('window');
 
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const { colors } = useTheme();
   const unreadCount = useUnreadNotificationCount();
   const { t } = useTranslation();
+  const { alert, AlertComponent } = useAlert();
 
   const [journeyStarted, setJourneyStarted] = useState(false);
   const [journeyLoading, setJourneyLoading] = useState(false);
@@ -136,7 +138,7 @@ export default function Dashboard() {
     if (progressId) {
       router.push(`/(tabs)/home/growth?progressId=${progressId}` as any);
     } else {
-      Alert.alert(t('common.error'), t('home.studentDashboard.alertUnableToLoadGrowth'));
+      alert(t('common.error'), t('home.studentDashboard.alertUnableToLoadGrowth'));
     }
   };
 
@@ -149,7 +151,7 @@ export default function Dashboard() {
         setProgressId(newProgressId);
         setJourneyStarted(true);
         await fetchGrowthData(newProgressId);
-        Alert.alert(t('common.success'), t('home.studentDashboard.alertJourneyStartedMessage'));
+        alert(t('common.success'), t('home.studentDashboard.alertJourneyStartedMessage'));
       }
     } catch (err: any) {
       console.error('[Dashboard] Start journey error:', err);
@@ -158,12 +160,12 @@ export default function Dashboard() {
           setProgressId(err.data.id);
           setJourneyStarted(true);
           await fetchGrowthData(err.data.id);
-          Alert.alert(t('home.studentDashboard.alertJourneyAlreadyStartedTitle'), t('home.studentDashboard.alertJourneyAlreadyStartedMessage'));
+          alert(t('home.studentDashboard.alertJourneyAlreadyStartedTitle'), t('home.studentDashboard.alertJourneyAlreadyStartedMessage'));
         } else {
           await checkJourneyStatus();
         }
       } else {
-        Alert.alert(t('common.error'), err?.message ?? t('home.studentDashboard.alertStartJourneyErrorFallback'));
+        alert(t('common.error'), err?.message ?? t('home.studentDashboard.alertStartJourneyErrorFallback'));
       }
     } finally {
       setJourneyLoading(false);
@@ -460,6 +462,7 @@ export default function Dashboard() {
           <View style={{ height: 30 }} />
         </ScrollView>
       </View>
+      {AlertComponent}
     </View>
   );
 }

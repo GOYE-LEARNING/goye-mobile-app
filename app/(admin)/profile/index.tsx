@@ -7,7 +7,6 @@ import {
   ScrollView,
   TextInput,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,10 +15,12 @@ import * as ImagePicker from 'expo-image-picker';
 import { useUser } from '@/contexts/UserContext';
 import { getUserProfile, updateUser, uploadProfilePicture } from '@/services/api';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function AdminProfile() {
   const { token, user, isSuperAdmin, logout } = useUser();
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const styles = React.useMemo(() => makeStyles(colors), [colors]);
 
   const [loading, setLoading] = useState(true);
@@ -55,7 +56,7 @@ export default function AdminProfile() {
   const handleUploadProfilePicture = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission required', 'Please allow access to your photo library.');
+      alert('Permission required', 'Please allow access to your photo library.');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -80,7 +81,7 @@ export default function AdminProfile() {
       });
       await fetchProfile();
     } catch (err: any) {
-      Alert.alert('Error', err?.message ?? 'Failed to upload profile picture.');
+      alert('Error', err?.message ?? 'Failed to upload profile picture.');
     } finally {
       setUploadingPic(false);
     }
@@ -90,16 +91,16 @@ export default function AdminProfile() {
     setSaving(true);
     try {
       await updateUser(token!, { first_name: firstName, last_name: lastName, phone_number: phoneNumber });
-      Alert.alert('Saved', 'Profile updated successfully.');
+      alert('Saved', 'Profile updated successfully.');
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to update profile');
+      alert('Error', err?.message || 'Failed to update profile');
     } finally {
       setSaving(false);
     }
   };
 
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
+    alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Logout',
@@ -116,6 +117,7 @@ export default function AdminProfile() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.brand} />
+        {AlertComponent}
       </View>
     );
   }
@@ -169,6 +171,7 @@ export default function AdminProfile() {
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </View>
+      {AlertComponent}
     </ScrollView>
   );
 }

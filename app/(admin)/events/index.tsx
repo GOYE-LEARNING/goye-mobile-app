@@ -3,13 +3,14 @@
 // Mobile counterpart to web's dashboard/super-admin/events — every event
 // across every organization, with delete.
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useUser } from '@/contexts/UserContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getSuperAdminEvents, deleteSuperAdminEvent } from '@/services/api';
 import { getFriendlyErrorMessage } from '@/utils/errorMessages';
+import { useAlert } from '@/hooks/useAlert';
 
 interface PlatformEvent {
   id: string;
@@ -28,6 +29,7 @@ interface PlatformEvent {
 export default function EventsScreen() {
   const { token } = useUser();
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const [events, setEvents] = useState<PlatformEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export default function EventsScreen() {
   };
 
   const handleDelete = (event: PlatformEvent) => {
-    Alert.alert('Delete event?', `"${event.name}" will be removed for everyone. This can't be undone.`, [
+    alert('Delete event?', `"${event.name}" will be removed for everyone. This can't be undone.`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -63,7 +65,7 @@ export default function EventsScreen() {
             await deleteSuperAdminEvent(event.id, token!);
             setEvents((prev) => prev.filter((e) => e.id !== event.id));
           } catch (err: any) {
-            Alert.alert('Error', getFriendlyErrorMessage(err, 'deleting that event'));
+            alert('Error', getFriendlyErrorMessage(err, 'deleting that event'));
           } finally {
             setPendingId(null);
           }
@@ -141,6 +143,7 @@ export default function EventsScreen() {
           ListEmptyComponent={<Text style={[styles.empty, { color: colors.textMuted }]}>No events found</Text>}
         />
       )}
+      {AlertComponent}
     </View>
   );
 }

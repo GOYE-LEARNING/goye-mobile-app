@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +18,7 @@ import {
   getSuperAdminUserDetail,
   suspendSuperAdminUser,
 } from '@/services/api';
+import { useAlert } from '@/hooks/useAlert';
 
 interface Enrollment {
   id: string;
@@ -65,6 +65,7 @@ export default function UserDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { token, isSuperAdmin } = useUser();
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const styles = React.useMemo(() => makeStyles(colors), [colors]);
 
   const [activeTab, setActiveTab] = useState<'Courses' | 'Organizations'>('Courses');
@@ -117,7 +118,7 @@ export default function UserDetailsScreen() {
       await suspendSuperAdminUser(user.id, !user.isSuspended, token!);
       setUser({ ...user, isSuspended: !user.isSuspended });
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to update user status');
+      alert('Error', err?.message || 'Failed to update user status');
     } finally {
       setUpdatingStatus(false);
     }
@@ -127,6 +128,7 @@ export default function UserDetailsScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.brand} />
+        {AlertComponent}
       </View>
     );
   }
@@ -135,6 +137,7 @@ export default function UserDetailsScreen() {
     return (
       <View style={styles.loadingContainer}>
         <Text style={styles.emptyText}>User not found</Text>
+        {AlertComponent}
       </View>
     );
   }
@@ -313,6 +316,7 @@ export default function UserDetailsScreen() {
           )}
         </View>
       </ScrollView>
+      {AlertComponent}
     </View>
   );
 }

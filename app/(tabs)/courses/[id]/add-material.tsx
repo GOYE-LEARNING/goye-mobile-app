@@ -1,5 +1,5 @@
 // app/(tabs)/courses/[id]/add-material.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,11 +9,13 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { API_CONFIG } from '@/constants/config';
 import { useUser } from '@/contexts/UserContext';
 import { getCourse } from '@/services/api';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function AddMaterial() {
   const params = useLocalSearchParams();
   const { id: courseId } = params;
   const { token } = useUser();
+  const { alert, AlertComponent } = useAlert();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -34,7 +36,7 @@ export default function AddMaterial() {
       }
     } catch (error) {
       console.log('Error picking document:', error);
-      Alert.alert('Error', 'Failed to pick document');
+      alert('Error', 'Failed to pick document');
     }
   };
 
@@ -70,7 +72,7 @@ export default function AddMaterial() {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      Alert.alert('Validation Error', 'Material title is required');
+      alert('Validation Error', 'Material title is required');
       return;
     }
 
@@ -119,12 +121,12 @@ export default function AddMaterial() {
         }
       }
 
-      Alert.alert('Success', 'Material added successfully', [
+      alert('Success', 'Material added successfully', [
         { text: 'OK', onPress: () => router.back() },
       ]);
     } catch (error: any) {
       console.error('Error adding material:', error);
-      Alert.alert('Error', error.message || 'Failed to add material. Please try again.');
+      alert('Error', error.message || 'Failed to add material. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -203,6 +205,7 @@ export default function AddMaterial() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

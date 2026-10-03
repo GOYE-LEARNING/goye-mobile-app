@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,8 +9,10 @@ import * as FileSystem from 'expo-file-system';
 import { useUser } from '@/contexts/UserContext';
 import { useTheme, lightColors } from '@/contexts/ThemeContext';
 import { createGroup } from '@/services/api';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function CreateGroup() {
+  const { alert, AlertComponent } = useAlert();
   const { user, token, isInstructor } = useUser();
   const { colors } = useTheme();
   
@@ -61,33 +63,33 @@ export default function CreateGroup() {
 
   const handleCreate = async () => {
     if (!groupTitle.trim()) {
-      Alert.alert('Error', 'Please enter a group title');
+      alert('Error', 'Please enter a group title');
       return;
     }
 
     if (!shortDescription.trim()) {
-      Alert.alert('Error', 'Please enter a short description');
+      alert('Error', 'Please enter a short description');
       return;
     }
 
     if (!description.trim()) {
-      Alert.alert('Error', 'Please enter a description');
+      alert('Error', 'Please enter a description');
       return;
     }
 
     if (!thumbnail) {
-      Alert.alert('Error', 'Please upload a group thumbnail');
+      alert('Error', 'Please upload a group thumbnail');
       return;
     }
 
     try {
       setLoading(true);
-      
+
       console.log(' Converting thumbnail to base64...');
       const thumbnailBase64 = await fileToBase64(thumbnail);
-      
+
       if (!thumbnailBase64) {
-        Alert.alert('Error', 'Failed to process image. Please try another image.');
+        alert('Error', 'Failed to process image. Please try another image.');
         return;
       }
 
@@ -100,14 +102,14 @@ export default function CreateGroup() {
 
       console.log('📤 Creating group...');
       const result = await createGroup(groupData, token);
-      
+
       console.log(' Group created successfully!');
-      Alert.alert('Success', result.message || 'Group created successfully!', [
+      alert('Success', result.message || 'Group created successfully!', [
         { text: 'OK', onPress: () => router.back() }
       ]);
     } catch (error) {
       console.error(' Error creating group:', error);
-      Alert.alert('Error', 'Failed to create group. Please try again.');
+      alert('Error', 'Failed to create group. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -230,6 +232,7 @@ export default function CreateGroup() {
           <Text style={s.cancelButtonText}>Cancel</Text>
         </TouchableOpacity>
       </View>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

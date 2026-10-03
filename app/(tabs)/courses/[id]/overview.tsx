@@ -6,7 +6,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert, ActivityIndicator } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView, VideoViewRef } from 'expo-video';
 import { Menu, MenuOption, MenuOptions, MenuProvider, MenuTrigger } from 'react-native-popup-menu';
@@ -21,12 +21,14 @@ import {
 } from '@/services/api';
 import { getImageUri, getVideoUri } from '@/utils/helpers';
 import { useTranslation } from 'react-i18next';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function CourseOverview() {
   const params = useLocalSearchParams();
   const { user, token, isInstructor } = useUser();
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const { alert, AlertComponent } = useAlert();
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -288,7 +290,7 @@ export default function CourseOverview() {
         setCompletedLessons((prev) => new Set(prev).add(lessonId));
         console.log('[Lesson] ✅ Lesson completed successfully');
 
-        Alert.alert(
+        alert(
           t('courses.lessonCompleteTitle'),
           t('courses.lessonCompleteMessage'),
           [{ text: t('courses.ok') }]
@@ -343,7 +345,7 @@ export default function CourseOverview() {
         console.log('[Certificate] Generation result:', certResult);
 
         if (certResult?.success !== false) {
-          Alert.alert(
+          alert(
             t('courses.certificateReadyTitle'),
             t('courses.certificateReadyMessage'),
             [
@@ -355,7 +357,7 @@ export default function CourseOverview() {
             ]
           );
         } else {
-          Alert.alert(
+          alert(
             t('courses.courseCompleteTitle'),
             t('courses.courseCompleteMessage'),
             [{ text: t('courses.ok') }]
@@ -363,7 +365,7 @@ export default function CourseOverview() {
         }
       } catch (error: any) {
         console.error('[Certificate] Generation error:', error);
-        Alert.alert(
+        alert(
           t('courses.courseCompleteTitle'),
           t('courses.courseCompleteMessagePendingCert'),
           [{ text: t('courses.ok') }]
@@ -449,7 +451,7 @@ export default function CourseOverview() {
   const handleEdit = () => router.push(`/(tabs)/courses/${params.id}/edit` as any);
 
   const handleDelete = () => {
-    Alert.alert(t('courses.deleteCourseTitle'), t('courses.deleteCourseMessage'), [
+    alert(t('courses.deleteCourseTitle'), t('courses.deleteCourseMessage'), [
       { text: t('courses.cancel'), style: 'cancel' },
       {
         text: t('courses.delete'),
@@ -465,14 +467,14 @@ export default function CourseOverview() {
             );
             const result = await response.json();
             if (response.ok) {
-              Alert.alert(t('courses.success'), result.message || t('courses.courseDeletedSuccess'), [
+              alert(t('courses.success'), result.message || t('courses.courseDeletedSuccess'), [
                 { text: t('courses.ok'), onPress: () => router.back() },
               ]);
             } else {
-              Alert.alert(t('courses.error'), result.message || t('courses.failedToDeleteCourse'));
+              alert(t('courses.error'), result.message || t('courses.failedToDeleteCourse'));
             }
           } catch {
-            Alert.alert(t('courses.error'), t('courses.failedToDeleteCourse'));
+            alert(t('courses.error'), t('courses.failedToDeleteCourse'));
           }
         },
       },
@@ -490,6 +492,7 @@ export default function CourseOverview() {
           <ActivityIndicator size="large" color={colors.brand} />
           <Text style={s.loadingText}>{t('courses.loadingCourse')}</Text>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -507,6 +510,7 @@ export default function CourseOverview() {
             <Text style={s.backButtonText}>{t('courses.goBack')}</Text>
           </TouchableOpacity>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -691,6 +695,7 @@ export default function CourseOverview() {
             )}
           </View>
         </ScrollView>
+        {AlertComponent}
       </SafeAreaView>
     </MenuProvider>
   );

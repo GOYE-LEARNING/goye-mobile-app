@@ -1,6 +1,6 @@
 // app/(tabs)/courses/[id]/edit.tsx
 import { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Text, Alert, ActivityIndicator } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import { useUser } from '@/contexts/UserContext';
 import { useTheme, lightColors } from '@/contexts/ThemeContext';
 import { getCourse, updateCourse } from '@/services/api';
 import { transformApiToFormData, transformFormToApiData } from '@/utils/courseTransformers';
+import { useAlert } from '@/hooks/useAlert';
 
 // Import your existing components
 import CourseInformation from '@/components/course-creation/CourseInformation';
@@ -21,6 +22,7 @@ export default function EditCourse() {
   const params = useLocalSearchParams();
   const { token } = useUser();
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -65,12 +67,12 @@ export default function EditCourse() {
         const formData = transformApiToFormData(result.data);
         setCourseData(formData);
       } else {
-        Alert.alert('Error', 'Failed to load course data');
+        alert('Error', 'Failed to load course data');
         router.back();
       }
     } catch (error) {
       console.error('Error loading course:', error);
-      Alert.alert('Error', 'Unable to load course data');
+      alert('Error', 'Unable to load course data');
       router.back();
     } finally {
       setLoading(false);
@@ -119,12 +121,12 @@ export default function EditCourse() {
       } else {
         // ❌ Show error message
         const errorMessage = result?.message || 'Failed to update course';
-        Alert.alert('Error', errorMessage);
+        alert('Error', errorMessage);
       }
     } catch (error: any) {
       console.error('❌ Error updating course:', error);
       const errorMessage = error?.message || 'Failed to update course. Please try again.';
-      Alert.alert('Error', errorMessage);
+      alert('Error', errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -142,12 +144,18 @@ export default function EditCourse() {
           <ActivityIndicator size="large" color={colors.brand} />
           <Text style={s.loadingText}>Loading course...</Text>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
 
   if (showSuccess) {
-    return <SuccessScreen courseName={courseData.title} onDone={handleDone} />;
+    return (
+      <>
+        <SuccessScreen courseName={courseData.title} onDone={handleDone} />
+        {AlertComponent}
+      </>
+    );
   }
 
   const CurrentStepComponent = steps[activeStep].component;
@@ -222,6 +230,7 @@ export default function EditCourse() {
           </TouchableOpacity>
         )}
       </View>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

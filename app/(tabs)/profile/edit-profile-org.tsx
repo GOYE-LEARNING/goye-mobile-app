@@ -1,6 +1,6 @@
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
-  ScrollView, ActivityIndicator, Alert,
+  ScrollView, ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useUser } from '@/contexts/UserContext';
 import { getOrganizationProfile, updateOrganizationProfile } from '@/services/api';
 import { getImageUri } from '@/utils/helpers';
+import { useAlert } from '@/hooks/useAlert';
 
 const COUNTRIES = ['Nigeria', 'United States', 'United Kingdom', 'Canada'];
 const STATES: Record<string, string[]> = {
@@ -27,6 +28,7 @@ const ORG_TYPES = [
 
 export default function EditProfileOrg() {
   const { user, token } = useUser();
+  const { alert, AlertComponent } = useAlert();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -135,7 +137,7 @@ export default function EditProfileOrg() {
       }
     } catch (err) {
       console.error('❌ Error fetching org profile:', err);
-      Alert.alert('Error', 'Failed to load organization profile');
+      alert('Error', 'Failed to load organization profile');
     } finally {
       setLoading(false);
     }
@@ -211,11 +213,11 @@ export default function EditProfileOrg() {
     const result = await updateOrganizationProfile(token, user?.organizationId || user?.id, payload);
     console.log('📥 Response:', result);
 
-    Alert.alert('Success', 'Profile updated successfully');
+    alert('Success', 'Profile updated successfully');
     router.back();
   } catch (err: any) {
     console.error('❌ Error updating org profile:', err);
-    Alert.alert('Error', err.message || 'Failed to update profile.');
+    alert('Error', err.message || 'Failed to update profile.');
   } finally {
     setSaving(false);
   }
@@ -235,6 +237,7 @@ export default function EditProfileOrg() {
           <ActivityIndicator size="large" color="#3F1F22" />
           <Text style={styles.loadingText}>Loading profile...</Text>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -388,6 +391,7 @@ export default function EditProfileOrg() {
           )}
         </TouchableOpacity>
       </View>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

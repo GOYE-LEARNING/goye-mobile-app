@@ -1,5 +1,5 @@
 // app/(tabs)/profile/notifications.tsx - Notification Settings
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { useFocusEffect } from 'expo-router';
 import { useUser } from '@/contexts/UserContext';
 import { useTheme, lightColors } from '@/contexts/ThemeContext';
 import { getSettings, updateNotificationSettings } from '@/services/api';
+import { useAlert } from '@/hooks/useAlert';
 
 interface NotificationSetting {
   id: 'enable_push_notification' | 'course_updates' | 'event' | 'achievement' | 'daily_reminders' | 'group_activity' | 'email_notification';
@@ -41,7 +42,8 @@ const DEFAULT_SETTINGS: SettingsState = {
 export default function NotificationSettings() {
   const { token } = useUser();
   const { colors } = useTheme();
-  
+  const { alert, AlertComponent } = useAlert();
+
   const [settings, setSettings] = useState<SettingsState>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -70,7 +72,7 @@ export default function NotificationSettings() {
 
   const toggleSetting = async (id: NotificationSetting['id']) => {
     if (!settings.id) {
-      Alert.alert('Unavailable', 'Notification settings are not set up for this account yet.');
+      alert('Unavailable', 'Notification settings are not set up for this account yet.');
       return;
     }
     const updated = { ...settings, [id]: !settings[id] };
@@ -90,7 +92,7 @@ export default function NotificationSettings() {
     } catch (err: any) {
       // Revert on failure
       setSettings(settings);
-      Alert.alert('Error', err?.message || 'Failed to update notification settings');
+      alert('Error', err?.message || 'Failed to update notification settings');
     } finally {
       setSaving(false);
     }
@@ -142,6 +144,7 @@ export default function NotificationSettings() {
           </View>
         )}
       </ScrollView>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

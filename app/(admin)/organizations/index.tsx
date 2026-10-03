@@ -7,13 +7,13 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useUser } from '@/contexts/UserContext';
 import { getSuperAdminOrganizations, suspendSuperAdminOrganization } from '@/services/api';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAlert } from '@/hooks/useAlert';
 
 type StatusFilter = 'all' | 'active' | 'suspended';
 
@@ -34,6 +34,7 @@ interface Organization {
 export default function OrganizationsScreen() {
   const { token } = useUser();
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const styles = React.useMemo(() => makeStyles(colors), [colors]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +59,7 @@ export default function OrganizationsScreen() {
   };
 
   const handleToggleSuspend = (org: Organization) => {
-    Alert.alert(
+    alert(
       org.isSuspended ? 'Reactivate organization?' : 'Suspend organization?',
       org.isSuspended
         ? `"${org.name}" and its members will regain access.`
@@ -76,7 +77,7 @@ export default function OrganizationsScreen() {
                 prev.map((o) => (o.id === org.id ? { ...o, isSuspended: !o.isSuspended } : o)),
               );
             } catch (err: any) {
-              Alert.alert('Error', err.message || 'Failed to update organization status');
+              alert('Error', err.message || 'Failed to update organization status');
             } finally {
               setPendingId(null);
             }
@@ -186,6 +187,7 @@ export default function OrganizationsScreen() {
           }
         />
       )}
+      {AlertComponent}
     </View>
   );
 }

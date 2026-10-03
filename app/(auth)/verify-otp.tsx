@@ -1,10 +1,12 @@
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useState, useRef } from 'react';
 import { useSignUp } from '@/contexts/SignUpContext';
 import { router } from 'expo-router';
 import { API_CONFIG } from '@/constants/config';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function VerifyOtp() {
+  const { alert, AlertComponent } = useAlert();
   const {data, setField } = useSignUp();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
    const [loading, setLoading] = useState(false);
@@ -35,7 +37,7 @@ export default function VerifyOtp() {
   const handleNext = async () => {
   const otpValue = otp.join('');
   if (otpValue.length !== 6) {
-    return Alert.alert('Invalid OTP', 'Please enter a valid 6-digit OTP');
+    return alert('Invalid OTP', 'Please enter a valid 6-digit OTP');
   }
 
   setLoading(true);
@@ -62,7 +64,7 @@ export default function VerifyOtp() {
       router.replace('/(tabs)/home');
     } else {
       console.error('❌ OTP verification failed');
-      Alert.alert(
+      alert(
         'Verification Failed',
         result.message || 'Invalid OTP. Please try again.'
       );
@@ -71,7 +73,7 @@ export default function VerifyOtp() {
     }
   } catch (error) {
     console.error('❌ OTP verification error:', error);
-    Alert.alert('Error', 'Unable to verify OTP. Please try again.');
+    alert('Error', 'Unable to verify OTP. Please try again.');
   } finally {
     setLoading(false);
   }
@@ -118,6 +120,7 @@ export default function VerifyOtp() {
           )}
         </TouchableOpacity>
       </View>
+      {AlertComponent}
     </View>
   );
 }

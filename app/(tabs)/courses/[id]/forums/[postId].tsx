@@ -7,10 +7,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Menu, MenuOption, MenuOptions, MenuProvider, MenuTrigger } from 'react-native-popup-menu';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAlert } from '@/hooks/useAlert';
 
 interface Reply {
   id: string;
@@ -52,6 +53,7 @@ export default function PostDetail() {
   const { id: courseId, postId } = params;
   const { token, user } = useUser();
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
 
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,7 +112,7 @@ export default function PostDetail() {
 
   // Delete Post
   const handleDeletePost = () => {
-    Alert.alert(
+    alert(
       'Delete Post',
       'Are you sure you want to delete this post? This action cannot be undone.',
       [
@@ -131,15 +133,15 @@ export default function PostDetail() {
               const result = await response.json();
 
               if (response.ok) {
-                Alert.alert('Success', 'Post deleted successfully', [
+                alert('Success', 'Post deleted successfully', [
                   { text: 'OK', onPress: () => router.back() }
                 ]);
               } else {
-                Alert.alert('Error', result.message || 'Failed to delete post');
+                alert('Error', result.message || 'Failed to delete post');
               }
             } catch (error) {
               console.error('Error deleting post:', error);
-              Alert.alert('Error', 'Failed to delete post. Please try again.');
+              alert('Error', 'Failed to delete post. Please try again.');
             }
           },
         },
@@ -149,7 +151,7 @@ export default function PostDetail() {
 
   // Delete Reply
   const handleDeleteReply = (replyId: string) => {
-    Alert.alert(
+    alert(
       'Delete Reply',
       'Are you sure you want to delete this reply? This action cannot be undone.',
       [
@@ -170,15 +172,15 @@ export default function PostDetail() {
               const result = await response.json();
 
               if (response.ok) {
-                Alert.alert('Success', 'Reply deleted successfully');
+                alert('Success', 'Reply deleted successfully');
                 // Refresh the post to show updated replies
                 fetchPostWithReplies();
               } else {
-                Alert.alert('Error', result.message || 'Failed to delete reply');
+                alert('Error', result.message || 'Failed to delete reply');
               }
             } catch (error) {
               console.error('Error deleting reply:', error);
-              Alert.alert('Error', 'Failed to delete reply. Please try again.');
+              alert('Error', 'Failed to delete reply. Please try again.');
             }
           },
         },
@@ -517,6 +519,7 @@ export default function PostDetail() {
         <View style={s.loadingContainer}>
           <ActivityIndicator size="large" color={colors.brand} />
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -538,6 +541,7 @@ export default function PostDetail() {
             <Text style={s.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -671,6 +675,7 @@ export default function PostDetail() {
 
           <View style={{ height: 40 }} />
         </ScrollView>
+        {AlertComponent}
       </SafeAreaView>
     </MenuProvider>
   );

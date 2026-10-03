@@ -1,5 +1,5 @@
 // app/(auth)/tell-us-more.tsx
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, ActivityIndicator } from 'react-native';
 import { useSignUp } from '@/contexts/SignUpContext';
 import { useUser } from '@/contexts/UserContext';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '@/constants/config';
 import { completeProfile } from '@/services/api';
+import { useAlert } from '@/hooks/useAlert';
 
 const COUNTRIES = [
   'United States',
@@ -44,6 +45,7 @@ const COUNTRY_CODES = [
 ];
 
 export default function TellUsMore() {
+  const { alert, AlertComponent } = useAlert();
   const { data, setField } = useSignUp();
   const { setUser } = useUser();
   const { t } = useTranslation();
@@ -221,7 +223,7 @@ export default function TellUsMore() {
             errorMessage = result.message || result.messgae;
           }
 
-          Alert.alert('Sign Up Failed', errorMessage);
+          alert('Sign Up Failed', errorMessage);
         }
       }
     } catch (error) {
@@ -229,7 +231,7 @@ export default function TellUsMore() {
       console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
       console.error('Error message:', error instanceof Error ? error.message : String(error));
 
-      Alert.alert(
+      alert(
         'Network Error',
         `Unable to connect to the server. Error: ${error instanceof Error ? error.message : String(error)}`
       );
@@ -240,13 +242,13 @@ export default function TellUsMore() {
 
   const handleNext = () => {
     if (step === 0 && (!country || !state || !phone)) {
-      return Alert.alert('Required Fields', 'Please fill all fields');
+      return alert('Required Fields', 'Please fill all fields');
     }
     if (step === 1 && !role) {
-      return Alert.alert('Role Required', 'Please select your role');
+      return alert('Role Required', 'Please select your role');
     }
     if (step === 2 && !level) {
-      return Alert.alert('Level Required', 'Please select your level');
+      return alert('Level Required', 'Please select your level');
     }
 
     if (step < 2) {
@@ -532,6 +534,7 @@ export default function TellUsMore() {
           </ScrollView>
         </SafeAreaView>
       </Modal>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

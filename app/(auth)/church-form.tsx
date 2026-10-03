@@ -5,7 +5,6 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Alert,
   Modal,
   ImageBackground
 } from 'react-native';
@@ -16,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import * as ImagePicker from 'expo-image-picker';
+import { useAlert } from '@/hooks/useAlert';
 
 // Church leadership roles
 const LEADERSHIP_ROLES = [
@@ -52,7 +52,8 @@ const SERVICE_SCHEDULES = [
 export default function ChurchForm() {
   const router = useRouter();
   const { organizationData, updateOrganizationData } = useOrganization();
-  
+  const { alert, AlertComponent } = useAlert();
+
   const [formData, setFormData] = useState({
     ministryName: organizationData.ministryName || '',
     leadPastor: organizationData.leadPastor || '',
@@ -95,7 +96,7 @@ export default function ChurchForm() {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
       if (permissionResult.granted === false) {
-        Alert.alert('Permission Required', 'Permission to access camera roll is required!');
+        alert('Permission Required', 'Permission to access camera roll is required!');
         return;
       }
 
@@ -111,7 +112,7 @@ export default function ChurchForm() {
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
+      alert('Error', 'Failed to pick image. Please try again.');
     }
   };
 
@@ -508,6 +509,7 @@ export default function ChurchForm() {
             </View>
           </View>
         </Modal>
+        {AlertComponent}
       </View>
     </ImageBackground>
   );

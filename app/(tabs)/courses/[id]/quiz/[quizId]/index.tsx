@@ -1,16 +1,18 @@
 // app/(tabs)/courses/[id]/quiz/[quizId]/index.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useRef } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { API_CONFIG } from '@/constants/config';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function QuizTaking() {
   const params = useLocalSearchParams();
   const { id: courseId, quizId } = params;
   const { token } = useUser();
+  const { alert, AlertComponent } = useAlert();
 
   const [quiz, setQuiz] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -48,7 +50,7 @@ export default function QuizTaking() {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          Alert.alert(
+          alert(
             "Time's Up!",
             'The quiz time has expired. Your answers will be submitted.',
             [{ text: 'OK', onPress: () => handleSubmit(true) }]
@@ -91,14 +93,14 @@ export default function QuizTaking() {
           setTimeRemaining(foundQuiz.duration * 60);
         } else {
           console.error('❌ Quiz not found');
-          Alert.alert('Error', 'Quiz not found', [
+          alert('Error', 'Quiz not found', [
             { text: 'Go Back', onPress: () => router.back() },
           ]);
         }
       }
     } catch (err) {
       console.error('❌ Error fetching quiz:', err);
-      Alert.alert('Error', 'Failed to load quiz', [
+      alert('Error', 'Failed to load quiz', [
         { text: 'Go Back', onPress: () => router.back() },
       ]);
     } finally {
@@ -189,7 +191,7 @@ export default function QuizTaking() {
 
       if (!response.ok) {
         console.error('❌ Submission failed:', result);
-        Alert.alert('Submission Failed', result.message ?? 'Please try again.');
+        alert('Submission Failed', result.message ?? 'Please try again.');
         setSubmitting(false);
         return;
       }
@@ -212,7 +214,7 @@ export default function QuizTaking() {
       } as any);
     } catch (err) {
       console.error('❌ Network error submitting quiz:', err);
-      Alert.alert('Error', 'Failed to submit quiz. Please check your connection.');
+      alert('Error', 'Failed to submit quiz. Please check your connection.');
       setSubmitting(false);
     }
   };
@@ -230,6 +232,7 @@ export default function QuizTaking() {
           <ActivityIndicator size="large" color="#3F1F22" />
           <Text style={styles.loadingText}>Loading quiz...</Text>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -244,6 +247,7 @@ export default function QuizTaking() {
             <Text style={styles.backButtonText}>Go Back</Text>
           </TouchableOpacity>
         </View>
+        {AlertComponent}
       </SafeAreaView>
     );
   }
@@ -258,7 +262,7 @@ export default function QuizTaking() {
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => {
-            Alert.alert(
+            alert(
               'Exit Quiz?',
               'Your progress will be lost. Are you sure you want to exit?',
               [
@@ -398,7 +402,7 @@ export default function QuizTaking() {
           ]}
           onPress={() => {
             if (answeredCount === totalQuestions && !submitting) {
-              Alert.alert(
+              alert(
                 'Submit Quiz?',
                 `You have answered all ${totalQuestions} questions. Submit now?`,
                 [
@@ -420,6 +424,7 @@ export default function QuizTaking() {
           )}
         </TouchableOpacity>
       </View>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

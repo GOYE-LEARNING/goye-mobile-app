@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   Modal,
   ScrollView,
-  Alert,
   Platform,
 } from 'react-native';
 import { router } from 'expo-router';
@@ -20,10 +19,12 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useUser } from '@/contexts/UserContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { createOrgEvent, getOrgEvents, updateOrgEvent, deleteOrgEvent } from '@/services/api';
+import { useAlert } from '@/hooks/useAlert';
 
 export default function OrganizationEvents() {
   const { user, token } = useUser();
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const organizationId = user?.organizationId;
 
   const [events, setEvents] = useState<any[]>([]);
@@ -93,7 +94,7 @@ export default function OrganizationEvents() {
 
   const handleSave = async () => {
     if (!name.trim() || !time.trim()) {
-      Alert.alert('Validation Error', 'Event name and time are required');
+      alert('Validation Error', 'Event name and time are required');
       return;
     }
     if (!organizationId) return;
@@ -120,14 +121,14 @@ export default function OrganizationEvents() {
       resetForm();
       fetchEvents();
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to save event');
+      alert('Error', err?.message || 'Failed to save event');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = (event: any) => {
-    Alert.alert('Delete Event', `Delete "${event.name}"? This cannot be undone.`, [
+    alert('Delete Event', `Delete "${event.name}"? This cannot be undone.`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -138,7 +139,7 @@ export default function OrganizationEvents() {
             await deleteOrgEvent(organizationId, event.id, token!);
             setEvents((prev) => prev.filter((e) => e.id !== event.id));
           } catch (err: any) {
-            Alert.alert('Error', err?.message || 'Failed to delete event');
+            alert('Error', err?.message || 'Failed to delete event');
           }
         },
       },
@@ -248,6 +249,7 @@ export default function OrganizationEvents() {
           </View>
         </View>
       </Modal>
+      {AlertComponent}
     </SafeAreaView>
   );
 }

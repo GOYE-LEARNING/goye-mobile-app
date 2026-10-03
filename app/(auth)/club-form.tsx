@@ -1,13 +1,12 @@
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TextInput, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
   TouchableOpacity,
   Modal,
-  ImageBackground,
-  Alert 
+  ImageBackground
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import * as DocumentPicker from 'expo-document-picker';
+import { useAlert } from '@/hooks/useAlert';
 
 // Club types for dropdown
 const CLUB_TYPES = [
@@ -71,7 +71,8 @@ const MEETING_FREQUENCIES = [
 export default function ClubForm() {
   const router = useRouter();
   const { organizationData, updateOrganizationData } = useOrganization();
-  
+  const { alert, AlertComponent } = useAlert();
+
   const [formData, setFormData] = useState({
     clubName: organizationData.clubName || '',
     clubType: organizationData.clubType || '',
@@ -139,7 +140,7 @@ export default function ClubForm() {
       }
     } catch (error) {
       console.error('Error picking document:', error);
-      Alert.alert('Error', 'Failed to pick document. Please try again.');
+      alert('Error', 'Failed to pick document. Please try again.');
     }
   };
 
@@ -601,6 +602,7 @@ export default function ClubForm() {
             </View>
           </View>
         </Modal>
+        {AlertComponent}
       </View>
     </ImageBackground>
   );

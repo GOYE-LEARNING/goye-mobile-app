@@ -7,7 +7,6 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,12 +14,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUser } from '@/contexts/UserContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getInvitedUsers, resendInvitation } from '@/services/api';
+import { useAlert } from '@/hooks/useAlert';
 
 type TabKey = 'pending' | 'expired' | 'accepted';
 
 export default function OrganizationInvitedUsers() {
   const { user, token } = useUser();
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const organizationId = user?.organizationId;
 
   const [data, setData] = useState<{ pending: any[]; expired: any[]; accepted: any[] }>({ pending: [], expired: [], accepted: [] });
@@ -54,10 +55,10 @@ export default function OrganizationInvitedUsers() {
     setResendingId(invitationId);
     try {
       await resendInvitation(invitationId, token!);
-      Alert.alert('Success', 'Invitation resent successfully');
+      alert('Success', 'Invitation resent successfully');
       fetchInvited();
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to resend invitation');
+      alert('Error', err?.message || 'Failed to resend invitation');
     } finally {
       setResendingId(null);
     }
@@ -135,6 +136,7 @@ export default function OrganizationInvitedUsers() {
           ListEmptyComponent={<Text style={s.emptyText}>No {tab} invitations</Text>}
         />
       )}
+      {AlertComponent}
     </SafeAreaView>
   );
 }

@@ -1,8 +1,9 @@
 // components/course-creation/CourseQuizzes.tsx
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAlert } from '@/hooks/useAlert';
 
 
 interface Option {
@@ -35,6 +36,7 @@ interface Props {
 
 export default function CourseQuizzes({ data, onChange }: Props) {
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const [quizzes, setQuizzes] = useState<Quiz[]>(data.quizzes || []);
   const [expandedQuiz, setExpandedQuiz] = useState<string | null>(null);
 
@@ -63,7 +65,7 @@ export default function CourseQuizzes({ data, onChange }: Props) {
   };
 
   const deleteQuiz = (quizId: string) => {
-    Alert.alert(
+    alert(
       'Delete Quiz',
       'Are you sure you want to delete this quiz?',
       [
@@ -361,6 +363,7 @@ export default function CourseQuizzes({ data, onChange }: Props) {
           <Text style={[s.emptySubtext, { color: colors.textMuted }]}>Click "Quiz" to add a quiz</Text>
         </View>
       )}
+      {AlertComponent}
     </View>
   );
 }

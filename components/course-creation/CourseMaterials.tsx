@@ -1,9 +1,10 @@
 // components/course-creation/CourseMaterials.tsx
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import * as DocumentPicker from 'expo-document-picker';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAlert } from '@/hooks/useAlert';
 
 interface Material {
   id: string;
@@ -21,6 +22,7 @@ interface Props {
 
 export default function CourseMaterials({ data, onChange }: Props) {
   const { colors } = useTheme();
+  const { alert, AlertComponent } = useAlert();
   const [materials, setMaterials] = useState<Material[]>(data.materials || []);
   const [expandedMaterial, setExpandedMaterial] = useState<string | null>(null);
 
@@ -48,7 +50,7 @@ export default function CourseMaterials({ data, onChange }: Props) {
   };
 
   const deleteMaterial = (materialId: string) => {
-    Alert.alert(
+    alert(
       'Delete Material',
       'Are you sure you want to delete this material?',
       [
@@ -214,6 +216,7 @@ export default function CourseMaterials({ data, onChange }: Props) {
           <Text style={[s.emptySubtext, { color: colors.textMuted }]}>Click "Add Material" to get started</Text>
         </View>
       )}
+      {AlertComponent}
     </View>
   );
 }

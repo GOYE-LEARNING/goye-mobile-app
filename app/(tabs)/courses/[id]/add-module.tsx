@@ -1,5 +1,5 @@
 // app/(tabs)/courses/[id]/add-module.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,6 +7,7 @@ import { useState } from 'react';
 import * as DocumentPicker from 'expo-document-picker';
 import { API_CONFIG } from '@/constants/config';
 import { useUser } from '@/contexts/UserContext';
+import { useAlert } from '@/hooks/useAlert';
 
 interface Lesson {
   id: string;
@@ -27,7 +28,8 @@ export default function AddModule() {
   const params = useLocalSearchParams();
   const { id: courseId } = params;
   const { token } = useUser();
-  
+  const { alert, AlertComponent } = useAlert();
+
   const [modules, setModules] = useState<Module[]>([
     {
       id: '1',
@@ -58,7 +60,7 @@ export default function AddModule() {
 
   const deleteModule = (moduleId: string) => {
     if (modules.length === 1) {
-      Alert.alert('Error', 'You must have at least one module');
+      alert('Error', 'You must have at least one module');
       return;
     }
     setModules(modules.filter(m => m.id !== moduleId));
@@ -122,7 +124,7 @@ export default function AddModule() {
       }
     } catch (error) {
       console.log('Error picking video:', error);
-      Alert.alert('Error', 'Failed to pick video file');
+      alert('Error', 'Failed to pick video file');
     }
   };
 
@@ -171,18 +173,18 @@ export default function AddModule() {
 
   const validateModule = (module: Module): boolean => {
     if (!module.module_title.trim()) {
-      Alert.alert('Validation Error', 'Module title is required');
+      alert('Validation Error', 'Module title is required');
       return false;
     }
     if (!module.module_duration.trim()) {
-      Alert.alert('Validation Error', 'Module duration is required');
+      alert('Validation Error', 'Module duration is required');
       return false;
     }
-    
+
     // Validate lessons
     for (const lesson of module.lesson) {
       if (!lesson.lesson_title.trim()) {
-        Alert.alert('Validation Error', 'All lessons must have a title');
+        alert('Validation Error', 'All lessons must have a title');
         return false;
       }
     }
@@ -250,7 +252,7 @@ export default function AddModule() {
         results.push(result);
       }
 
-      Alert.alert('Success', 'Modules created successfully', [
+      alert('Success', 'Modules created successfully', [
         {
           text: 'OK',
           onPress: () => router.back()
@@ -259,7 +261,7 @@ export default function AddModule() {
 
     } catch (error: any) {
       console.error('Error saving modules:', error);
-      Alert.alert('Error', error.message || 'Failed to save modules. Please try again.');
+      alert('Error', error.message || 'Failed to save modules. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -437,6 +439,7 @@ export default function AddModule() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+      {AlertComponent}
     </SafeAreaView>
   );
 }
