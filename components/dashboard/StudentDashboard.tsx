@@ -179,14 +179,18 @@ export default function Dashboard() {
 
   const levelName = levelProgress?.name || userData?.currentLevel?.replace(/_/g, ' ') || t('home.studentDashboard.defaultLevelSeeker');
   const currentLevelNumber = levelProgress?.level || userData?.levelNumber || 1;
-  const totalPoints = userData?.totalXP || stats?.totalPoints || 0;
+  const totalPoints = Math.round(userData?.totalXP || stats?.totalPoints || 0);
   const totalBadges = stats?.totalBadges || badges.length;
   const totalAchievements = stats?.totalAchievements || 0;
   const completedCourses = stats?.completedCourses || 0;
 
-  const nextLevelXP = userData?.nextLevelXP || levelProgress?.nextLevelXP || 460;
-  const progressToNext = userData?.progressToNextLevel || levelProgress?.progressToNext || 0;
-  const progressPercentage = nextLevelXP > 0 ? (progressToNext / nextLevelXP) * 100 : 0;
+  // currentLevelXP/xpForCurrentLevel are raw XP counts (how far into this
+  // level the user is, and how wide the level's XP band is); progressToNext
+  // is already a 0-100 percentage from the backend, not an XP amount — it
+  // must not be divided again, only used directly for the bar fill.
+  const currentLevelXP = Math.round(userData?.currentLevelXP ?? levelProgress?.currentLevelXP ?? 0);
+  const xpForCurrentLevel = Math.round(userData?.xpForCurrentLevel ?? levelProgress?.xpForCurrentLevel ?? 0);
+  const progressPercentage = Math.round(userData?.progressToNextLevel ?? levelProgress?.progressToNext ?? 0);
 
   const journey = growthData?.journey || {};
   const journeyProgressBar = journey?.progressBar || 0;
@@ -346,7 +350,7 @@ export default function Dashboard() {
                   />
                 </View>
                 <Text style={s.levelProgress}>
-                  {t('home.studentDashboard.xpToNextLevel', { progress: progressToNext, max: nextLevelXP })}
+                  {t('home.studentDashboard.xpToNextLevel', { progress: currentLevelXP, max: xpForCurrentLevel })}
                 </Text>
                 <View style={s.statsGrid}>
                   {[

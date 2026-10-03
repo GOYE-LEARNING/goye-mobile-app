@@ -117,11 +117,14 @@ export default function SpiritualGrowth() {
   
   const levelName = levelProgress?.name || user?.currentLevel?.replace(/_/g, ' ') || t('home.studentDashboard.defaultLevelSeeker');
   const currentLevel = levelProgress?.level || user?.levelNumber || 1;
-  const nextLevelXP = levelProgress?.nextLevelXP || user?.nextLevelXP || 460;
-  const progressToNext = levelProgress?.progressToNext || user?.progressToNextLevel || 0;
-  const progressPct = Math.min((progressToNext / nextLevelXP) * 100, 100);
-  
-  const totalPoints = user?.totalXP || stats?.totalPoints || 0;
+  // currentLevelXP/xpForCurrentLevel are raw XP counts; progressToNext is
+  // already a 0-100 percentage from the backend, not an XP amount — it
+  // must not be divided again, only used directly for the bar fill.
+  const currentLevelXP = Math.round(levelProgress?.currentLevelXP ?? user?.currentLevelXP ?? 0);
+  const xpForCurrentLevel = Math.round(levelProgress?.xpForCurrentLevel ?? user?.xpForCurrentLevel ?? 0);
+  const progressPct = Math.min(Math.round(levelProgress?.progressToNext ?? user?.progressToNextLevel ?? 0), 100);
+
+  const totalPoints = Math.round(user?.totalXP || stats?.totalPoints || 0);
   const totalBadges = stats?.totalBadges || badges.length;
   const totalAchievements = stats?.totalAchievements || 0;
   const completedCourses = stats?.completedCourses || 0;
@@ -207,7 +210,7 @@ export default function SpiritualGrowth() {
             <View style={[s.progressFill, { width: `${progressPct}%` }]} />
           </View>
           <Text style={s.progressInfo}>
-            {t('home.studentDashboard.xpToNextLevel', { progress: progressToNext, max: nextLevelXP })}
+            {t('home.studentDashboard.xpToNextLevel', { progress: currentLevelXP, max: xpForCurrentLevel })}
           </Text>
 
           {/* Stats Grid */}

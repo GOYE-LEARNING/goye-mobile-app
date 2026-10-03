@@ -13,7 +13,6 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { NetworkProvider } from '@/contexts/NetworkContext';
 import { OrganizationProvider } from '@/contexts/OrganizationContext'; // ✅ ADD THIS
 import { OfflineBanner } from '@/components/OfflineBanner';
-import { ShekiAIFab } from '@/components/ShekiAIFab';
 import { initI18n } from '@/lib/i18n';
 import Toast from 'react-native-toast-message';
 import { useUser } from '@/contexts/UserContext';
@@ -150,11 +149,9 @@ export default function RootLayout() {
                 <Stack.Screen name="index" />
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="ai-assistant" options={{ presentation: 'modal' }} />
               </Stack>
               <StatusBar style="auto" />
               <OfflineBanner />
-              <ShekiAIFab />
               <Toast />
             </NetworkProvider>
           </ThemeProvider>
