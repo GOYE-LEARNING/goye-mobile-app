@@ -19,7 +19,8 @@ export interface OrganizationData {
   userState: string;
   userRole: string;
   userFormType: string;
-  
+  googleIdToken?: string;
+
   // Church fields
   ministryName?: string;
   leadPastor?: string;
@@ -53,7 +54,9 @@ export interface OrganizationData {
 }
 
 export const formatOrganizationDataForAPI = (data: OrganizationData) => {
+  const isGoogleSignup = !!data.googleIdToken;
   const payload: any = {
+    ...(isGoogleSignup ? { idToken: data.googleIdToken } : {}),
     organization_name: data.organizationName,
     organization_type: data.organizationType,
     organization_email: data.email,
@@ -63,15 +66,20 @@ export const formatOrganizationDataForAPI = (data: OrganizationData) => {
     organization_description: data.description,
     organization_role: data.userRole || 'admin',
     organization_year: data.yearEstablished,
-    
-    user_first_name: data.userFirstName,
-    user_last_name: data.userLastName,
-    user_email_address: data.userEmail,
+
+    // A Google signup derives the owner's name/email from the verified
+    // Google token server-side instead of these form fields (which are
+    // only pre-filled/read-only display in that case).
+    ...(!isGoogleSignup && {
+      user_first_name: data.userFirstName,
+      user_last_name: data.userLastName,
+      user_email_address: data.userEmail,
+      user_role: data.userRole || 'admin',
+      user_form_type: data.userFormType || 'organization',
+    }),
     user_country: data.userCountry,
     user_state: data.userState,
-    user_role: data.userRole || 'admin',
     user_phone_number: data.userPhone,
-    user_form_type: data.userFormType || 'organization',
   };
 
   // Church object - ALWAYS present
@@ -162,13 +170,17 @@ export const createOrganization = async (data: OrganizationData) => {
       await convertFileToBase64IfNeeded(payload, data.churchLogo, 'church_logo');
     }
     
-    const response = await fetch(`${API_CONFIG.BASE_URL}/organizations/auth/create-organization`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const isGoogleSignup = !!data.googleIdToken;
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}/organizations/auth/${isGoogleSignup ? 'create-organization-google' : 'create-organization'}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       },
-      body: JSON.stringify(payload),
-    });
+    );
 
     console.log('Response status:', response.status);
 
@@ -196,6 +208,16 @@ export const createOrganization = async (data: OrganizationData) => {
       return {
         success: true,
         data: responseData,
+      };
+    }
+
+    // A Google-authed owner has no password - create-organization-google
+    // already issued real session tokens, so there's nothing to generate.
+    if (isGoogleSignup) {
+      return {
+        success: true,
+        data: responseData,
+        isGoogleSignup: true,
       };
     }
 

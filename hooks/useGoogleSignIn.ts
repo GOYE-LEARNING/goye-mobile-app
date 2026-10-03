@@ -27,7 +27,7 @@ const firebaseConfig = {
 
 const app =
   getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const auth = getAuth(app);
+export const auth = getAuth(app);
 
 GoogleSignin.configure({
   webClientId: '202109054723-djcegt0ctvgcqdqou19gbf32gdqc6acd.apps.googleusercontent.com',

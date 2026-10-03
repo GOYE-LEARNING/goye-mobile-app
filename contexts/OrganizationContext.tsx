@@ -25,6 +25,10 @@ export function OrganizationProvider({ children }) {
     userState: '',
     userRole: 'admin',
     userFormType: 'organization',
+    // Set once the owner authenticates via Google instead of typing a
+    // first/last name + email manually - carries the verified Google ID
+    // token through to the final submit, same as web's org signup flow.
+    googleIdToken: '',
     
     // Church Info
     ministryName: '',

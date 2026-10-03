@@ -18,6 +18,7 @@ import { useState } from 'react';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { createOrganization } from '@/utils/organizationApi';
 import { useAlert } from '@/hooks/useAlert';
+import { useUser } from '@/contexts/UserContext';
 
 type EditSection = 'organization' | 'user' | 'church' | 'school' | 'club';
 
@@ -30,6 +31,7 @@ export default function PreviewVerification() {
   const router = useRouter();
   const { alert, AlertComponent } = useAlert();
   const { organizationData } = useOrganization();
+  const { setUser } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState('');
@@ -76,8 +78,16 @@ export default function PreviewVerification() {
     
     try {
       const result = await createOrganization(organizationData);
-      
+
       if (result.success) {
+        // A Google-authed owner has no password to see/copy - the backend
+        // already issued real session tokens, so sign them straight in
+        // instead of showing the (non-existent) generated-password modal.
+        if (result.isGoogleSignup) {
+          await setUser(result.data.user, result.data.accessToken, result.data.refreshToken);
+          router.replace('/(tabs)/home');
+          return;
+        }
         // Check if password was generated
         if (result.data.generatedPassword) {
           setGeneratedPassword(result.data.generatedPassword);

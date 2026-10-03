@@ -8,13 +8,17 @@ import {
   TextInput,  
   TouchableOpacity, 
   Modal,
-  ImageBackground 
+  ImageBackground,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { useOrganization } from '@/contexts/OrganizationContext';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { auth } from '@/hooks/useGoogleSignIn';
 
 
 const COUNTRIES = [
@@ -86,12 +90,55 @@ export default function UserProfileForm() {
     userState: organizationData.userState || '',
     userRole: 'Administrator',
     userFormType: 'organization',
+    googleIdToken: organizationData.googleIdToken || '',
   });
 
   const [showCountryModal, setShowCountryModal] = useState(false);
   const [showStateModal, setShowStateModal] = useState(false);
   const [searchCountry, setSearchCountry] = useState('');
   const [searchState, setSearchState] = useState('');
+  const [googleSigningIn, setGoogleSigningIn] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
+  const useGoogleIdentity = !!(organizationData.googleIdToken || formData.googleIdToken);
+
+  const handleGoogleSignIn = async () => {
+    setGoogleError(null);
+    setGoogleSigningIn(true);
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      const { idToken } = userInfo.data?.idToken ? userInfo.data : await GoogleSignin.getTokens();
+      if (!idToken) throw new Error('No ID token received');
+
+      const credential = GoogleAuthProvider.credential(idToken);
+      const firebaseResult = await signInWithCredential(auth, credential);
+      const firebaseIdToken = await firebaseResult.user.getIdToken();
+      const nameParts = (firebaseResult.user.displayName || '').trim().split(' ');
+
+      const googleFields = {
+        googleIdToken: firebaseIdToken,
+        userFirstName: nameParts[0] || '',
+        userLastName: nameParts.slice(1).join(' ') || '',
+        userEmail: firebaseResult.user.email || '',
+      };
+      setFormData({ ...formData, ...googleFields });
+      updateOrganizationData(googleFields);
+    } catch (err: any) {
+      if (err.code === statusCodes.SIGN_IN_CANCELLED) {
+        // User closed the sign-in sheet themselves - not an error.
+      } else {
+        setGoogleError(err.message || 'Google sign-in failed. Please try again.');
+      }
+    } finally {
+      setGoogleSigningIn(false);
+    }
+  };
+
+  const clearGoogleIdentity = () => {
+    const resetFields = { googleIdToken: '', userFirstName: '', userLastName: '', userEmail: '' };
+    setFormData({ ...formData, ...resetFields });
+    updateOrganizationData(resetFields);
+  };
 
   // Filter countries based on search
   const filteredCountries = COUNTRIES.filter(country =>
@@ -197,6 +244,36 @@ export default function UserProfileForm() {
             <Text style={styles.orgTypeText}>{getOrgTypeDisplay()} Admin</Text>
           </View>
 
+          {useGoogleIdentity ? (
+            <View style={styles.googleBanner}>
+              <Ionicons name="logo-google" size={18} color="#3F1F22" />
+              <Text style={styles.googleBannerText} numberOfLines={1}>
+                Signed in as {formData.userEmail}
+              </Text>
+              <TouchableOpacity onPress={clearGoogleIdentity}>
+                <Text style={styles.googleBannerAction}>Change</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={{ marginBottom: 20 }}>
+              {googleError && <Text style={styles.googleErrorText}>{googleError}</Text>}
+              <TouchableOpacity
+                style={styles.googleButton}
+                onPress={handleGoogleSignIn}
+                disabled={googleSigningIn}
+              >
+                {googleSigningIn ? (
+                  <ActivityIndicator color="#3F1F22" />
+                ) : (
+                  <>
+                    <Ionicons name="logo-google" size={20} color="#3F1F22" />
+                    <Text style={styles.googleButtonText}>Fill in with Google instead</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+
           <View style={styles.formSection}>
             {/* First Name & Last Name Row */}
             <View style={styles.row}>
@@ -206,11 +283,12 @@ export default function UserProfileForm() {
                   <Text style={styles.required}>*</Text>
                 </View>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, useGoogleIdentity && styles.inputDisabled]}
                   value={formData.userFirstName}
                   onChangeText={(text) => setFormData({ ...formData, userFirstName: text })}
                   placeholder="First name"
                   placeholderTextColor="#999"
+                  editable={!useGoogleIdentity}
                 />
               </View>
 
@@ -220,11 +298,12 @@ export default function UserProfileForm() {
                   <Text style={styles.required}>*</Text>
                 </View>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, useGoogleIdentity && styles.inputDisabled]}
                   value={formData.userLastName}
                   onChangeText={(text) => setFormData({ ...formData, userLastName: text })}
                   placeholder="Last name"
                   placeholderTextColor="#999"
+                  editable={!useGoogleIdentity}
                 />
               </View>
             </View>
@@ -235,13 +314,14 @@ export default function UserProfileForm() {
                 <Text style={styles.required}>*</Text>
               </View>
               <TextInput
-                style={styles.input}
+                style={[styles.input, useGoogleIdentity && styles.inputDisabled]}
                 value={formData.userEmail}
                 onChangeText={(text) => setFormData({ ...formData, userEmail: text })}
                 placeholder="your.email@example.com"
                 placeholderTextColor="#999"
                 keyboardType="email-address"
                 autoCapitalize="none"
+                editable={!useGoogleIdentity}
               />
             </View>
 
@@ -610,6 +690,55 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#FAFAFA',
     color: '#333',
+  },
+  inputDisabled: {
+    backgroundColor: '#F0F0F0',
+    color: '#888',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    borderWidth: 1.5,
+    borderColor: '#E8E8E8',
+    borderRadius: 12,
+    paddingVertical: 14,
+    backgroundColor: 'white',
+  },
+  googleButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#3F1F22',
+  },
+  googleErrorText: {
+    color: '#D64545',
+    fontSize: 13,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  googleBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FFF5F5',
+    borderWidth: 1,
+    borderColor: '#FFE5E5',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 20,
+  },
+  googleBannerText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#3F1F22',
+  },
+  googleBannerAction: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#3F1F22',
+    textDecorationLine: 'underline',
   },
   roleContainer: {
     borderWidth: 0,
