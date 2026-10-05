@@ -14,7 +14,7 @@ const googleSigninPlugin: [string, { iosUrlScheme: string }] | string = process
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "goye-mobile-app",
+  name: "Goye",
   slug: "goye-mobile-app",
   owner: "temzy",
   version: "1.0.0",
@@ -31,17 +31,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     googleServicesFile: "./GoogleService-Info.plist",
   },
   android: {
-  package: "com.goye.app",
-  googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
-  adaptiveIcon: {
-    backgroundColor: "#000000",
-    foregroundImage: "./assets/images/adaptive-icon-foreground.png",
-    backgroundImage: "./assets/images/adaptive-icon-background.png",
-    monochromeImage: "./assets/images/adaptive-icon-monochrome.png",
+    package: "com.goye.app",
+    googleServicesFile:
+      process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
+    adaptiveIcon: {
+      backgroundColor: "#000000",
+      foregroundImage: "./assets/images/adaptive-icon-foreground.png",
+      backgroundImage: "./assets/images/adaptive-icon-background.png",
+      monochromeImage: "./assets/images/adaptive-icon-monochrome.png",
+    },
+    edgeToEdgeEnabled: true,
+    predictiveBackGestureEnabled: false,
   },
-  edgeToEdgeEnabled: true,
-  predictiveBackGestureEnabled: false,
-},
   web: {
     output: "static",
     favicon: "./assets/images/favicon.png",
