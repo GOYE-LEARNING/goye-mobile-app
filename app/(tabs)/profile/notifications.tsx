@@ -41,7 +41,7 @@ const DEFAULT_SETTINGS: SettingsState = {
 
 export default function NotificationSettings() {
   const { token } = useUser();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { alert, AlertComponent } = useAlert();
 
   const [settings, setSettings] = useState<SettingsState>(DEFAULT_SETTINGS);
@@ -62,9 +62,12 @@ export default function NotificationSettings() {
       const result = await getSettings(token!);
       if (result.settings) {
         setSettings({ ...DEFAULT_SETTINGS, ...result.settings });
+      } else {
+        setSettings(DEFAULT_SETTINGS);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('[NotificationSettings] Error fetching settings:', err);
+      alert('Could not load settings', err?.message || 'Your saved notification settings could not be loaded. The toggles shown are defaults and cannot be changed until this loads — please try again.');
     } finally {
       setLoading(false);
     }
@@ -87,7 +90,7 @@ export default function NotificationSettings() {
         daily_reminders: updated.daily_reminders,
         group_activity: updated.group_activity,
         email_notification: updated.email_notification,
-        darkMode: !!updated.darkMode,
+        darkMode: isDark,
       }, token!);
     } catch (err: any) {
       // Revert on failure

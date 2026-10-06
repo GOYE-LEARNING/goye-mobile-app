@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
 import { submitFeedback } from '@/services/api';
+import { useAlert } from '@/hooks/useAlert';
 
 type FeedbackType = 'COURSE' | 'GROUP' | 'OTHER';
 
@@ -15,6 +16,7 @@ export default function FeedbackScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { token } = useUser();
+  const { alert, AlertComponent } = useAlert();
   const s = makeStyles(colors);
 
   const [type, setType] = useState<FeedbackType>('OTHER');
@@ -30,7 +32,7 @@ export default function FeedbackScreen() {
 
   const handleSubmit = async () => {
     if (!message.trim()) {
-      // You could add a toast here instead
+      alert('Message required', 'Please write your feedback before submitting.');
       return;
     }
     setSubmitting(true);
@@ -38,7 +40,7 @@ export default function FeedbackScreen() {
       await submitFeedback({ message: message.trim(), type }, token!);
       setShowSuccess(true);
     } catch (err: any) {
-      // You could add a toast here instead
+      alert('Could not send feedback', err?.message || 'Something went wrong. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -51,6 +53,7 @@ export default function FeedbackScreen() {
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
+      {AlertComponent}
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} style={s.backButton}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
