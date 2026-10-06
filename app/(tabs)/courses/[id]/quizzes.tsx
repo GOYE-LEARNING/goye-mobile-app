@@ -8,6 +8,7 @@ import { useUser } from '@/contexts/UserContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useState, useEffect } from 'react';
 import { API_CONFIG } from '@/constants/config';
+import { getImageUri } from '@/utils/helpers';
 
 export default function Quizzes() {
   const params = useLocalSearchParams();
@@ -108,9 +109,9 @@ export default function Quizzes() {
         )}
 
         {/* Image */}
-        {course.course_image ? (
+         {course.course_image ? (
           <Image 
-            source={{ uri: `data:image/jpeg;base64,${course.course_image}` }}
+            source={{ uri: getImageUri(course.course_image) ?? undefined }}
             style={s.imagePlaceholder}
             contentFit="cover"
           />

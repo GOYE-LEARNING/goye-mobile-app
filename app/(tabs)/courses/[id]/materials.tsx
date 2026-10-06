@@ -11,6 +11,7 @@ import { API_CONFIG } from '@/constants/config';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { useAlert } from '@/hooks/useAlert';
+import { getImageUri } from '@/utils/helpers';
 
 export default function Materials() {
   const params = useLocalSearchParams();
@@ -180,17 +181,17 @@ export default function Materials() {
         )}
 
         {/* Course Image */}
-        {course.course_image ? (
-          <Image 
-            source={{ uri: `data:image/jpeg;base64,${course.course_image}` }}
-            style={s.courseImage}
-            contentFit="cover"
-          />
-        ) : (
-          <View style={[s.courseImage, { backgroundColor: colors.backgroundMuted, justifyContent: 'center', alignItems: 'center' }]}>
-            <Ionicons name="book-outline" size={48} color={colors.textMuted} />
-          </View>
-        )}
+       {course.course_image ? (
+  <Image 
+    source={{ uri: getImageUri(course.course_image) ?? undefined }}
+    style={s.courseImage}
+    contentFit="cover"
+  />
+) : (
+  <View style={[s.courseImage, { backgroundColor: colors.backgroundMuted, justifyContent: 'center', alignItems: 'center' }]}>
+    <Ionicons name="book-outline" size={48} color={colors.textMuted} />
+  </View>
+)}
 
         {/* Tabs */}
         <View style={s.tabs}>

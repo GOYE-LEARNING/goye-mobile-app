@@ -15,6 +15,7 @@ import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from 'react-i18next';
 import { useAlert } from '@/hooks/useAlert';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LANGUAGE_NAMES: { [code: string]: string } = {
   en: 'English',
@@ -26,7 +27,7 @@ const LANGUAGE_NAMES: { [code: string]: string } = {
 };
 
 export default function Profile() {
-  const { token, logout, isOrganizationAdmin, user, clearUserData } = useUser();
+  const { token, logout, isOrganizationAdmin, user, clearUserData, setUser  } = useUser();
   const { reset } = useSignUp();
   const { signOutGoogle } = useGoogleSignIn();
   const { colors, isDark, toggleTheme } = useTheme();
@@ -42,7 +43,7 @@ export default function Profile() {
     useCallback(() => { fetchProfileData(); }, [])
   );
 
-  const fetchProfileData = async () => {
+    const fetchProfileData = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -51,7 +52,16 @@ export default function Profile() {
       if (isOrganizationAdmin) {
         try {
           result = await getOrganizationProfile(token);
-          setProfileData(result.organization || result.data || result);
+          
+          // ✅ Override with locally-saved org pic if one was uploaded
+          const orgData = result.organization || result.data || result;
+          const locallySavedPic = await AsyncStorage.getItem(`user_pic_${user?.id}`);
+          if (locallySavedPic && orgData) {
+            console.log('💾 Using locally saved org pic instead of API pic');
+            orgData.organization_logo = locallySavedPic;
+          }
+          
+          setProfileData(orgData);
           console.log('✅ Organization profile loaded from API');
         } catch (apiErr: any) {
           console.log('⚠️ Organization API failed:', apiErr.message);
@@ -65,12 +75,13 @@ export default function Profile() {
           
           // ✅ Fallback to cached user data
           if (user) {
+            const locallySavedPic = await AsyncStorage.getItem(`user_pic_${user?.id}`);
             setProfileData({
               organization_name: user.first_name || 'Organization',
               organization_email: user.email_address || '',
               organization_phone_number: user.phone_number || '',
               organization_state: user.state || '',
-              organization_logo: user.user_pic || null,
+              organization_logo: locallySavedPic || user.user_pic || null,
               user_first_name: user.first_name || '',
               user_last_name: user.last_name || '',
             });
@@ -89,6 +100,16 @@ export default function Profile() {
         try {
           result = await getUserProfile(token);
           const freshData = result.user || result.data || result;
+          console.log('📸 Profile API returned user_pic:', freshData?.user_pic);
+          
+          // ✅ Override with locally-saved pic if the user uploaded one
+          // This bypasses the backend bug that returns the Google OAuth picture
+          const locallySavedPic = await AsyncStorage.getItem(`user_pic_${user?.id}`);
+          if (locallySavedPic && freshData) {
+            console.log('💾 Using locally saved pic:', locallySavedPic);
+            freshData.user_pic = locallySavedPic;
+          }
+          
           setProfileData(freshData);
           console.log('✅ Profile loaded from API');
         } catch (apiErr: any) {
@@ -103,6 +124,7 @@ export default function Profile() {
           
           // ✅ If API fails, use cached data from UserContext
           if (user) {
+            const locallySavedPic = await AsyncStorage.getItem(`user_pic_${user?.id}`);
             const cachedData = {
               first_name: user.first_name || '',
               last_name: user.last_name || '',
@@ -110,7 +132,7 @@ export default function Profile() {
               phone_number: user.phone_number || '',
               state: user.state || '',
               country: user.country || '',
-              user_pic: user.user_pic || null,
+              user_pic: locallySavedPic || user.user_pic || null,
               level: user.level || '',
             };
             setProfileData(cachedData);
@@ -149,7 +171,7 @@ export default function Profile() {
     }
   };
 
-  const handleUploadProfilePicture = async () => {
+        const handleUploadProfilePicture = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       alert(t('profile.permissionRequiredTitle'), t('profile.permissionRequiredMessage'));
@@ -170,19 +192,57 @@ export default function Profile() {
     try {
       const mimeType = asset.mimeType ?? 'image/jpeg';
       const extension = mimeType.split('/')[1] ?? 'jpg';
-      await uploadProfilePicture(token!, {
+
+      const uploadResult = await uploadProfilePicture(token!, {
         mimeType,
         fileName: asset.fileName ?? `profile_${Date.now()}.${extension}`,
         file: asset.base64,
       });
+
+      console.log('📸 Upload response:', JSON.stringify(uploadResult, null, 2));
+
+      // ✅ Extract the URL — your backend returns it at uploadResult.user.user_pic
+      const newPicUrl =
+        uploadResult?.user?.user_pic ||
+        uploadResult?.data?.user_pic ||
+        uploadResult?.data?.url ||
+        uploadResult?.data?.profile_picture ||
+        uploadResult?.user_pic ||
+        uploadResult?.url ||
+        uploadResult?.profile_picture ||
+        null;
+
+      console.log('📸 New pic URL:', newPicUrl);
+
+      if (newPicUrl) {
+        // ✅ Save to AsyncStorage so it survives the stale API response
+        await AsyncStorage.setItem(`user_pic_${user?.id}`, newPicUrl);
+        console.log('💾 Saved uploaded pic to local storage');
+
+        // ✅ Update local profile state immediately
+        setProfileData((prev: any) => ({
+          ...prev,
+          user_pic: newPicUrl,
+        }));
+
+        // ✅ Update UserContext so other screens see the new pic
+        if (user) {
+          await setUser({ ...user, user_pic: newPicUrl }, token || undefined);
+        }
+      }
+
       alert(t('common.success'), t('profile.profilePicUpdated'));
-      await fetchProfileData();
+
+      // ❌ REMOVED: the setTimeout(fetchProfileData) block
+      // That was overwriting the new URL with the stale Google picture from the API
     } catch (err: any) {
+      console.error('❌ Upload error:', err);
       alert(t('common.error'), err?.message ?? t('profile.failedUploadPic'));
     } finally {
       setUploadingPic(false);
     }
   };
+
 
   const handleLogout = () => {
     alert(t('profile.logoutConfirmTitle'), t('profile.logoutConfirmMessage'), [
@@ -237,6 +297,7 @@ export default function Profile() {
     );
   }
 
+
   const sharedProps = {
     profileData,
     onLogout: handleLogout,
@@ -250,6 +311,7 @@ export default function Profile() {
     t,
   };
 
+  
   if (isOrganizationAdmin) {
     return (
       <>
