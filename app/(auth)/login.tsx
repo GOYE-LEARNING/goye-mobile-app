@@ -9,6 +9,7 @@ import { useTheme, lightColors } from '@/contexts/ThemeContext';
 import { API_CONFIG } from '@/constants/config';
 import { getOrCreateDeviceId } from '@/utils/deviceId';
 import { useAlert } from '@/hooks/useAlert';
+import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
 
 export default function Login() {
   const { setUser } = useUser();
@@ -18,8 +19,17 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { signInWithGoogle, loading: googleLoading } = useGoogleSignIn();
 
   const s = makeStyles(colors);
+
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (err: any) {
+      alert('Google Sign-In Failed', err?.message || 'Google sign-in failed. Please try again.');
+    }
+  };
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -302,6 +312,23 @@ export default function Login() {
               )}
             </TouchableOpacity>
 
+            <View style={s.dividerContainer}>
+              <View style={s.dividerLine} />
+              <Text style={s.dividerText}>or</Text>
+              <View style={s.dividerLine} />
+            </View>
+
+            <TouchableOpacity
+              style={[s.googleButton, (loading || googleLoading) && s.loginButtonDisabled]}
+              onPress={handleGoogleLogin}
+              disabled={loading || googleLoading}
+            >
+              <Ionicons name="logo-google" size={20} color={colors.text} style={{ marginRight: 10 }} />
+              <Text style={s.googleButtonText}>
+                {googleLoading ? 'Signing in...' : 'Continue with Google'}
+              </Text>
+            </TouchableOpacity>
+
             <View style={s.signupContainer}>
               <Text style={s.signupText}>Don't have an account? </Text>
               <TouchableOpacity
@@ -408,6 +435,20 @@ function makeStyles(c: typeof lightColors) {
       fontSize: 16, 
       fontWeight: '600' 
     },
+    dividerContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+    dividerLine: { flex: 1, height: 1, backgroundColor: c.border },
+    dividerText: { marginHorizontal: 12, fontSize: 14, color: c.textSecondary },
+    googleButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 16,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: c.border,
+      marginBottom: 20,
+    },
+    googleButtonText: { color: c.text, fontSize: 16, fontWeight: '600' },
     signupContainer: { 
       flexDirection: 'row', 
       justifyContent: 'center', 
