@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { useUser } from '@/contexts/UserContext';
+import { fetchWithAuth } from '@/services/apiClient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { API_CONFIG } from '@/constants/config';
 import { useAlert } from '@/hooks/useAlert';
@@ -40,25 +41,25 @@ export default function ReplyPost() {
         // Try different URL patterns - uncomment the one that works:
         
         // Option 1: Original
-        // url = `${API_CONFIG.BASE_URL}/socials/reply-other-reply/${replyId}/${postId}`;
+        // url = `/socials/reply-other-reply/${replyId}/${postId}`;
         
         // Option 2: Swapped parameters
-        // url = `${API_CONFIG.BASE_URL}/socials/reply-other-reply/${postId}/${replyId}`;
+        // url = `/socials/reply-other-reply/${postId}/${replyId}`;
         
         // Option 3: Different endpoint name
-        // url = `${API_CONFIG.BASE_URL}/socials/reply-to-reply/${replyId}/${postId}`;
+        // url = `/socials/reply-to-reply/${replyId}/${postId}`;
         
         // Option 4: Use parentId in body instead (fallback to direct reply endpoint)
         // For now, use direct reply and include parentId in body
-        url = `${API_CONFIG.BASE_URL}/socials/create-reply/${postId}`;
+        url = `/socials/create-reply/${postId}`;
       } else {
         // Reply directly to post
-        url = `${API_CONFIG.BASE_URL}/socials/create-reply/${postId}`;
+        url = `/socials/create-reply/${postId}`;
       }
 
       console.log('Posting reply to:', url);
 
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

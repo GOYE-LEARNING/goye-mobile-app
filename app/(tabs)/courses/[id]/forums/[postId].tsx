@@ -1,6 +1,7 @@
 // app/(tabs)/courses/[id]/forums/[postId].tsx
 import { API_CONFIG } from '@/constants/config';
 import { useUser } from '@/contexts/UserContext';
+import { fetchWithAuth } from '@/services/apiClient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getImageUri } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
@@ -91,8 +92,8 @@ export default function PostDetail() {
   // Check if current user has liked the post
   const checkPostLikeStatus = async () => {
     try {
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}/socials/check-like?postId=${postId}`,
+      const response = await fetchWithAuth(
+        `/socials/check-like?postId=${postId}`,
         {
           method: 'GET',
           headers: {
@@ -122,7 +123,7 @@ export default function PostDetail() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const response = await fetch(`${API_CONFIG.BASE_URL}/socials/delete-post/${postId}`, {
+              const response = await fetchWithAuth(`/socials/delete-post/${postId}`, {
                 method: 'DELETE',
                 headers: {
                   'Authorization': `Bearer ${token}`,
@@ -161,7 +162,7 @@ export default function PostDetail() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const response = await fetch(`${API_CONFIG.BASE_URL}/socials/delete-reply/${replyId}`, {
+              const response = await fetchWithAuth(`/socials/delete-reply/${replyId}`, {
                 method: 'DELETE',
                 headers: {
                   'Authorization': `Bearer ${token}`,
@@ -198,12 +199,12 @@ export default function PostDetail() {
       setLikingInProgress(prev => new Set(prev).add(id));
       
       const url = isCurrentlyLiked
-        ? `${API_CONFIG.BASE_URL}/socials/unlike-post/${id}`
-        : `${API_CONFIG.BASE_URL}/socials/like-post/${id}`;
+        ? `/socials/unlike-post/${id}`
+        : `/socials/like-post/${id}`;
       
       const method = isCurrentlyLiked ? 'DELETE' : 'POST';
       
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method,
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -247,12 +248,12 @@ export default function PostDetail() {
       setLikingInProgress(prev => new Set(prev).add(replyId));
       
       const url = isCurrentlyLiked
-        ? `${API_CONFIG.BASE_URL}/socials/unlike-reply/${replyId}`
-        : `${API_CONFIG.BASE_URL}/socials/like-reply/${replyId}`;
+        ? `/socials/unlike-reply/${replyId}`
+        : `/socials/like-reply/${replyId}`;
       
       const method = isCurrentlyLiked ? 'DELETE' : 'POST';
       
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method,
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -290,8 +291,8 @@ export default function PostDetail() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}/socials/get-post-with-replies/${postId}`,
+      const response = await fetchWithAuth(
+        `/socials/get-post-with-replies/${postId}`,
         {
           method: 'GET',
           headers: {
@@ -319,8 +320,8 @@ export default function PostDetail() {
     try {
       setLoadingChildren(prev => new Set(prev).add(replyId));
       
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}/socials/get-replies-from-replies/${replyId}`,
+      const response = await fetchWithAuth(
+        `/socials/get-replies-from-replies/${replyId}`,
         {
           method: 'GET',
           headers: {

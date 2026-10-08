@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useUser } from '@/contexts/UserContext';
+import { fetchWithAuth } from '@/services/apiClient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { API_CONFIG } from '@/constants/config';
 import { getCourse } from '@/services/api';
@@ -79,7 +80,7 @@ export default function Forums() {
   const fetchPosts = async () => {
     try {
       setPostsLoading(true);
-      const response = await fetch(`${API_CONFIG.BASE_URL}/socials/get-all-posts`, {
+      const response = await fetchWithAuth(`/socials/get-all-posts`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -154,12 +155,12 @@ export default function Forums() {
       
       // Use different endpoint for like vs unlike
       const url = isCurrentlyLiked
-        ? `${API_CONFIG.BASE_URL}/socials/unlike-post/${postId}`
-        : `${API_CONFIG.BASE_URL}/socials/like-post/${postId}`;
+        ? `/socials/unlike-post/${postId}`
+        : `/socials/like-post/${postId}`;
       
       const method = isCurrentlyLiked ? 'DELETE' : 'POST';
       
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method,
         headers: {
           'Authorization': `Bearer ${token}`,

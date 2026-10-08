@@ -87,7 +87,7 @@ export default function NewPost() {
     } catch (error: any) {
       console.error('Error creating post:', error);
 
-      let errorMessage = 'Failed to create post. Please try again.';
+      let errorMessage = error?.message?.trim() || 'Failed to create post. Please try again.';
 
       if (error.message.includes('404')) {
         errorMessage = 'API endpoint not found. Please check the server configuration.';
