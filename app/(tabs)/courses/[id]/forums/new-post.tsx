@@ -73,10 +73,17 @@ export default function NewPost() {
 
       console.log('Post created successfully:', result);
 
+      // New posts are reviewed before they appear; the server says which outcome applied.
+      const moderationStatus = (result as any)?.moderation?.status;
       setAlert({
         visible: true,
-        type: 'success',
-        title: 'Post created!',
+        type: moderationStatus === 'REJECTED' ? 'error' : moderationStatus === 'PUBLISHED' || !moderationStatus ? 'success' : 'info',
+        title:
+          moderationStatus === 'REJECTED'
+            ? 'Post not published'
+            : moderationStatus === 'PUBLISHED' || !moderationStatus
+              ? 'Post created!'
+              : 'Post submitted',
         message: result.message || 'Your post is now live in the forum.',
         primaryLabel: 'Back to forum',
         onPrimary: () => {

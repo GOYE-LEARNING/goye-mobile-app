@@ -22,14 +22,30 @@ interface AlertState {
   type: AlertType;
 }
 
+// Most call sites are `alert('Error', ...)` with no explicit type, which used to
+// fall through to the blue "info" style. Infer the type from the title so errors
+// are red, warnings yellow and confirmations green. An explicit `type` argument
+// always wins.
+const ERROR_TITLE =
+  /\b(error|failed|failure|invalid|unable|could not|couldn't|can't|cannot|denied|incorrect|wrong|unsuccessful|not found|expired|rejected)\b/i;
+const WARNING_TITLE =
+  /\b(warning|required|missing|unavailable|attention|caution|confirm|are you sure|delete|remove|sign out|log out|logout|web only|not allowed|limit|incomplete|permission|discard|cancel)\b/i;
+const SUCCESS_TITLE = /\b(success|successful|sent|saved|created|updated|posted|done|complete|completed|welcome|thank you|submitted)\b/i;
+
+function inferAlertType(title: string, buttons: AlertButton[]): AlertType {
+  if (ERROR_TITLE.test(title)) return 'error';
+  if (buttons.some((b) => b.style === 'destructive') || WARNING_TITLE.test(title)) return 'warning';
+  if (SUCCESS_TITLE.test(title)) return 'success';
+  return 'info';
+}
+
 export function useAlert() {
   const [state, setState] = useState<AlertState | null>(null);
 
   const alert = useCallback(
     (title: string, message?: string, buttons?: AlertButton[], type?: AlertType) => {
       const resolvedButtons = buttons && buttons.length > 0 ? buttons : [{ text: 'OK' }];
-      const inferredType: AlertType =
-        type ?? (resolvedButtons.some((b) => b.style === 'destructive') ? 'warning' : 'info');
+      const inferredType: AlertType = type ?? inferAlertType(title, resolvedButtons);
       setState({ title, message: message ?? '', buttons: resolvedButtons, type: inferredType });
     },
     [],

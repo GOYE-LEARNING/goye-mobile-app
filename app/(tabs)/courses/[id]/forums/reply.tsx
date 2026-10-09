@@ -76,7 +76,12 @@ export default function ReplyPost() {
       console.log('Reply result:', result);
 
       if (response.ok) {
-        alert('Success', 'Your reply has been posted!', [
+        const moderationStatus = result?.moderation?.status;
+        const live = moderationStatus === 'PUBLISHED' || !moderationStatus;
+        alert(
+          live ? 'Success' : moderationStatus === 'REJECTED' ? 'Reply not published' : 'Reply submitted',
+          result.message || 'Your reply has been posted!',
+          [
           {
             text: 'OK',
             onPress: () => router.back(),

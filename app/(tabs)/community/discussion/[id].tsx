@@ -163,15 +163,21 @@ export default function DiscussionDetail() {
       console.log('📱 Reply response:', result);
       
       setReplyContent('');
-      
+
+      // Replies are reviewed before they appear; only a published one shows up in the thread.
+      const moderationStatus = (result as any)?.moderation?.status;
+      const live = moderationStatus === 'PUBLISHED' || !moderationStatus;
+
       // Reset to page 1 and fetch comments again
       setCommentsPage(1);
       await fetchComments(1, false);
-      
-      // Update total comments count
-      setTotalComments(prev => prev + 1);
-      
-      alert('Success', 'Reply posted!');
+
+      if (live) setTotalComments(prev => prev + 1);
+
+      alert(
+        live ? 'Success' : moderationStatus === 'REJECTED' ? 'Reply not published' : 'Reply submitted',
+        (result as any)?.message || 'Reply posted!',
+      );
     } catch (error: any) {
       console.error('Reply error:', error);
       alert('Error', error.message || 'Failed to post reply');

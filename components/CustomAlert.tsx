@@ -17,11 +17,12 @@ interface CustomAlertProps {
   onSecondary?: () => void;
 }
 
-const CONFIG: Record<AlertType, { icon: string; bg: string; ring: string }> = {
-  success:  { icon: 'checkmark',      bg: '#1D9E75', ring: '#E1F5EE' },
-  error:    { icon: 'close',          bg: '#E24B4A', ring: '#FCEBEB' },
-  info:     { icon: 'information',    bg: '#378ADD', ring: '#E6F1FB' },
-  warning:  { icon: 'warning-outline', bg: '#EF9F27', ring: '#FAEEDA' },
+const CONFIG: Record<AlertType, { icon: string; bg: string; ring: string; text: string }> = {
+  success:  { icon: 'checkmark',       bg: '#1D9E75', ring: '#E1F5EE', text: '#fff' },
+  error:    { icon: 'close',           bg: '#E53935', ring: '#FDECEA', text: '#fff' },
+  info:     { icon: 'information',     bg: '#378ADD', ring: '#E6F1FB', text: '#fff' },
+  // True yellow; dark text on the button because white on yellow is unreadable.
+  warning:  { icon: 'warning-outline', bg: '#F5B400', ring: '#FFF6D6', text: '#3D2C00' },
 };
 
 export function CustomAlert({
@@ -58,7 +59,7 @@ export function CustomAlert({
           {/* Icon ring */}
           <View style={[s.ringOuter, { backgroundColor: cfg.ring }]}>
             <View style={[s.ringInner, { backgroundColor: cfg.bg }]}>
-              <Ionicons name={cfg.icon as any} size={30} color="#fff" />
+              <Ionicons name={cfg.icon as any} size={30} color={cfg.text} />
             </View>
           </View>
 
@@ -66,7 +67,7 @@ export function CustomAlert({
           <Text style={[s.message, { color: colors.textMuted }]}>{message}</Text>
 
           <TouchableOpacity style={[s.primaryBtn, { backgroundColor: cfg.bg }]} onPress={onPrimary} activeOpacity={0.85}>
-            <Text style={s.primaryBtnText}>{primaryLabel}</Text>
+            <Text style={[s.primaryBtnText, { color: cfg.text }]}>{primaryLabel}</Text>
           </TouchableOpacity>
 
           {secondaryLabel && onSecondary && (
