@@ -11,16 +11,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const SLIDES = [
   {
-    title: 'Begin your discipleship journey',
-    body: 'Join a community of believers growing in faith together.',
+    title: 'Believers connected around the world',
+    body: 'GOYE brings disciples from every nation together to learn, pray and grow in Christ.',
   },
   {
-    title: 'Learn at your own pace',
-    body: 'Courses, discussion groups and mentors, all in one place.',
+    title: 'Disciple training, made simple',
+    body: 'Courses, mentors and study groups to help you grow in your walk with Christ.',
   },
   {
-    title: 'Grow together',
-    body: 'Share, pray and encourage one another, wherever you are.',
+    title: 'A community that walks with you',
+    body: 'Join discussions, share testimonies and encourage one another every day.',
   },
 ];
 
@@ -134,7 +134,7 @@ export default function GetStarted() {
     }
 
     // === Create Canvas Sprite for Text ===
-    function createTextSprite(text, color, bgColor = 'white') {
+    function createTextSprite(text, color, bgColor = 'white', role = 'Member') {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
@@ -197,7 +197,7 @@ export default function GetStarted() {
       ctx.font = '12px Arial';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText('Member', 70, 48);
+      ctx.fillText(role, 70, 48);
       
       const texture = new THREE.CanvasTexture(canvas);
       texture.needsUpdate = true;
@@ -322,7 +322,7 @@ export default function GetStarted() {
       { city: "New York", lat: 40.7128, lon: -74.006, name: "Sofia", color: "#45B7D1" },
       { city: "Nairobi", lat: -1.2921, lon: 36.8219, name: "Kwame", color: "#96CEB4" },
       { city: "Manila", lat: 14.5995, lon: 120.9842, name: "Yuki", color: "#FF6B6B" },
-      { city: "São Paulo", lat: -23.5505, lon: -46.6333, name: "Mateus", color: "#FFEAA7" },
+      { city: "Sao Paulo", lat: -23.5505, lon: -46.6333, name: "Mateus", color: "#FFEAA7" },
       { city: "Accra", lat: 5.6037, lon: -0.187, name: "Aisha", color: "#DDA0DD" },
       { city: "Tokyo", lat: 35.6762, lon: 139.6503, name: "Wei", color: "#98D8C8" },
       { city: "Cairo", lat: 30.0444, lon: 31.2357, name: "Fatima", color: "#F7DC6F" },
@@ -345,6 +345,9 @@ export default function GetStarted() {
       sizeAttenuation: true,
     });
 
+    const labels = [];
+    const ROLES = ['Praying', 'Studying the Word', 'Sharing testimony', 'Mentoring', 'Worshipping', 'Serving'];
+
     cities.forEach((city, index) => {
       const pos = latLonToVector3(city.lat, city.lon, RADIUS * 1.05);
       
@@ -356,7 +359,7 @@ export default function GetStarted() {
       group.add(marker);
 
       // Create name label as sprite
-      const texture = createTextSprite(city.name, city.color);
+      const texture = createTextSprite(city.name, city.color, 'white', ROLES[index % ROLES.length]);
       const material = new THREE.SpriteMaterial({
         map: texture,
         transparent: true,
@@ -367,8 +370,64 @@ export default function GetStarted() {
       const sprite = new THREE.Sprite(material);
       sprite.position.copy(pos);
       sprite.position.multiplyScalar(1.15); // Move slightly outward
-      sprite.scale.set(0.8, 0.2, 1);
+      sprite.scale.set(0.74, 0.185, 1);
       group.add(sprite);
+      labels.push({ sprite: sprite, marker: marker });
+    });
+
+    // === Connections: believers linked across nations ===
+    const CONNECTIONS = [
+      ['Lagos', 'London'], ['Lagos', 'New York'], ['Lagos', 'Nairobi'], ['Accra', 'Sao Paulo'],
+      ['London', 'Berlin'], ['Cairo', 'Istanbul'], ['Nairobi', 'Mumbai'], ['Mumbai', 'Manila'],
+      ['Manila', 'Tokyo'], ['Seoul', 'Sydney'], ['Toronto', 'New York'], ['Abuja', 'Cairo'],
+      ['Kampala', 'Accra'], ['Shanghai', 'Seoul'], ['London', 'Toronto'], ['Istanbul', 'Mumbai'],
+    ];
+
+    function cityPos(name, radius) {
+      const c = cities.find((x) => x.city === name);
+      return latLonToVector3(c.lat, c.lon, radius);
+    }
+
+    const arcPulses = [];
+    CONNECTIONS.forEach((pair, i) => {
+      const a = cityPos(pair[0], 1).normalize();
+      const b = cityPos(pair[1], 1).normalize();
+      const angle = a.angleTo(b);
+      const lift = 0.12 + angle * 0.32;
+      const points = [];
+      const SEGMENTS = 48;
+      for (let k = 0; k <= SEGMENTS; k++) {
+        const t = k / SEGMENTS;
+        const v = new THREE.Vector3().lerpVectors(a, b, t).normalize();
+        const r = RADIUS * 1.05 + Math.sin(Math.PI * t) * lift;
+        points.push(v.multiplyScalar(r));
+      }
+      const arcGeometry = new THREE.BufferGeometry().setFromPoints(points);
+      const arc = new THREE.Line(arcGeometry, new THREE.LineBasicMaterial({
+        color: '#FFA500', transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      group.add(arc);
+
+      const pulseGeometry = new THREE.BufferGeometry();
+      pulseGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(3), 3));
+      const pulse = new THREE.Points(pulseGeometry, new THREE.PointsMaterial({
+        map: dotSprite, color: '#FFE2B0', size: 0.16, sizeAttenuation: true, transparent: true,
+        opacity: 1, depthWrite: false, blending: THREE.AdditiveBlending,
+      }));
+      group.add(pulse);
+      arcPulses.push({ pulse: pulse, points: points, speed: 0.18 + (i % 5) * 0.04, offset: i * 0.37 });
+    });
+
+    // Soft pulsing halo on every city so the network feels alive
+    const halos = [];
+    cities.forEach((city, i) => {
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: dotSprite, color: '#FFA500', transparent: true, opacity: 0.6,
+        depthWrite: false, blending: THREE.AdditiveBlending,
+      }));
+      halo.position.copy(latLonToVector3(city.lat, city.lon, RADIUS * 1.05));
+      group.add(halo);
+      halos.push({ sprite: halo, offset: i * 0.55 });
     });
 
     // === Stars ===
@@ -397,9 +456,52 @@ export default function GetStarted() {
     scene.add(stars);
 
     // === Animation ===
+    const worldTmp = new THREE.Vector3();
+    const MAX_TAGS = 5;
     function animate() {
       requestAnimationFrame(animate);
       group.rotation.y += 0.002;
+
+      const now = performance.now() / 1000;
+      arcPulses.forEach((ap) => {
+        const t = (now * ap.speed + ap.offset) % 1;
+        const idx = Math.min(ap.points.length - 1, Math.floor(t * (ap.points.length - 1)));
+        const p = ap.points[idx];
+        const pos = ap.pulse.geometry.attributes.position;
+        pos.setXYZ(0, p.x, p.y, p.z);
+        pos.needsUpdate = true;
+        ap.pulse.material.opacity = Math.sin(Math.PI * t);
+      });
+      halos.forEach((h) => {
+        const k = (now * 0.8 + h.offset) % 1;
+        const size = 0.12 + k * 0.3;
+        h.sprite.scale.set(size, size, 1);
+        h.sprite.material.opacity = 0.55 * (1 - k);
+      });
+
+      // Only the few members facing the viewer get a name tag; tags on the far
+      // side showed through the globe and overlapped into clutter.
+      const camDir = camera.position.clone().normalize();
+      const scored = labels.map((l) => {
+        l.marker.getWorldPosition(worldTmp);
+        return { l: l, facing: worldTmp.clone().normalize().dot(camDir) };
+      });
+      scored.sort((a, b) => b.facing - a.facing);
+      const placed = [];
+      scored.forEach((entry) => {
+        let show = entry.facing > 0.3 && placed.length < MAX_TAGS;
+        if (show) {
+          // Greedy: a tag only appears if it will not sit on top of one already shown.
+          entry.l.marker.getWorldPosition(worldTmp);
+          const ndc = worldTmp.clone().project(camera);
+          show = placed.every((q) => Math.abs(q.x - ndc.x) > 0.42 || Math.abs(q.y - ndc.y) > 0.13);
+          if (show) placed.push(ndc);
+        }
+        entry.l.sprite.visible = show;
+        entry.l.marker.visible = entry.facing > 0;
+        if (show) entry.l.sprite.material.opacity = Math.min(1, (entry.facing - 0.3) / 0.25) * 0.95;
+      });
+
       renderer.render(scene, camera);
     }
     animate();
@@ -447,6 +549,7 @@ export default function GetStarted() {
             style={styles.logo}
             resizeMode="contain"
           />
+          <Text style={styles.tagline}>DISCIPLE TRAINING  ·  FAITH COMMUNITY</Text>
         </View>
 
         <View style={styles.textBlock}>
@@ -536,6 +639,13 @@ const styles = StyleSheet.create({
   logo: {
     width: 120,
     height: 44,
+  },
+  tagline: {
+    marginTop: 2,
+    color: '#FFA500',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.6,
   },
   textBlock: {
     flex: 1,
