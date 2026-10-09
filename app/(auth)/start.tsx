@@ -1,223 +1,613 @@
-// File: app/(auth)/start.tsx
-// First screen new users see: circle collage, big headline, and a dark Sign Up button.
+// File: app/(auth)/get-started.tsx
 
-import { useEffect, useRef } from 'react';
-import {
-  Animated,
-  Dimensions,
-  Easing,
-  Image,
-  ImageSourcePropType,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { WebView } from 'react-native-webview';
+import { useEffect, useRef, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const { width: W } = Dimensions.get('window');
 
-const AVATARS: ImageSourcePropType[] = [
-  require('@/assets/images/avatars/avatar-1.png'),
-  require('@/assets/images/avatars/avatar-2.png'),
-  require('@/assets/images/avatars/avatar-3.png'),
-  require('@/assets/images/avatars/avatar-4.png'),
-  require('@/assets/images/avatars/avatar-5.png'),
-  require('@/assets/images/avatars/avatar-6.png'),
-  require('@/assets/images/avatars/avatar-7.png'),
+
+const SLIDES = [
+  {
+    title: 'Begin your discipleship journey',
+    body: 'Join a community of believers growing in faith together.',
+  },
+  {
+    title: 'Learn at your own pace',
+    body: 'Courses, discussion groups and mentors, all in one place.',
+  },
+  {
+    title: 'Grow together',
+    body: 'Share, pray and encourage one another, wherever you are.',
+  },
 ];
 
-const PINK = '#F9B3C6';
-const BLUE = '#2F3CE0';
-const GREEN = '#18B58F';
-const YELLOW = '#F6C21A';
-const INK = '#16161A';
-
-interface Bubble {
-  avatar: number;
-  size: number;
-  x: number;
-  y: number;
-  ring: string;
-  ringWidth: number;
-}
-
-// Positions are fractions of the screen width so the collage scales on any device.
-const BUBBLES: Bubble[] = [
-  { avatar: 2, size: 0.4, x: 0.28, y: 0.26, ring: PINK, ringWidth: 8 },
-  { avatar: 0, size: 0.24, x: -0.05, y: 0.1, ring: '#E3E8F2', ringWidth: 4 },
-  { avatar: 4, size: 0.1, x: 0.5, y: 0.04, ring: YELLOW, ringWidth: 3 },
-  { avatar: 3, size: 0.22, x: 0.78, y: 0.05, ring: BLUE, ringWidth: 6 },
-  { avatar: 1, size: 0.26, x: -0.07, y: 0.5, ring: GREEN, ringWidth: 7 },
-  { avatar: 6, size: 0.1, x: 0.44, y: 0.74, ring: BLUE, ringWidth: 3 },
-  { avatar: 5, size: 0.26, x: 0.74, y: 0.6, ring: YELLOW, ringWidth: 7 },
-];
-
-export default function Start() {
+export default function GetStarted() {
   const router = useRouter();
-  const scales = useRef(BUBBLES.map(() => new Animated.Value(0.6))).current;
-  const fades = useRef(BUBBLES.map(() => new Animated.Value(0))).current;
+  const webViewRef = useRef(null);
+  const insets = useSafeAreaInsets();
+  const { width: screenW, height: screenH } = useWindowDimensions();
+  const [index, setIndex] = useState(0);
+  const fade = useRef(new Animated.Value(1)).current;
 
+  const goTo = (next: number) => {
+    if (next < 0 || next >= SLIDES.length) return;
+    Animated.timing(fade, { toValue: 0, duration: 120, useNativeDriver: true }).start(() => {
+      setIndex(next);
+      Animated.timing(fade, { toValue: 1, duration: 220, useNativeDriver: true }).start();
+    });
+  };
+
+  // Advance on its own so the screen feels alive; any manual tap resets the clock.
   useEffect(() => {
-    Animated.stagger(
-      90,
-      BUBBLES.map((_, i) =>
-        Animated.parallel([
-          Animated.spring(scales[i], { toValue: 1, damping: 12, stiffness: 140, useNativeDriver: true }),
-          Animated.timing(fades[i], { toValue: 1, duration: 350, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        ]),
-      ),
-    ).start();
-  }, []);
+    const t = setTimeout(() => goTo(index + 1), 5000);
+    return () => clearTimeout(t);
+  }, [index]);
+
+  const isLast = index === SLIDES.length - 1;
+  const titleSize = Math.max(24, Math.min(32, screenW * 0.08));
+
+  const globeHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      overflow: hidden; 
+      background: #0a0a0f; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+    }
+    #root { 
+      width: 100vw; 
+      height: 100vh; 
+      background: #0a0a0f; 
+      position: relative; 
+    }
+    #globe-container { 
+      width: 100%; 
+      height: 100%; 
+      position: relative; 
+      background: #0a0a0f;
+    }
+    canvas { 
+      display: block; 
+      width: 100% !important; 
+      height: 100% !important; 
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div id="globe-container">
+      <canvas id="globe-canvas"></canvas>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <script>
+    // === Three.js Globe Implementation ===
+    const container = document.getElementById('globe-container');
+    const canvas = document.getElementById('globe-canvas');
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+
+    // Scene setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#0a0a0f');
+
+    const camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
+    camera.position.set(0, 0.2, 6.0);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ 
+      canvas: canvas,
+      antialias: true, 
+      alpha: false 
+    });
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x0a0a0f, 1);
+
+    // === Globe Group - Centered ===
+    const group = new THREE.Group();
+    group.position.set(0, 0.1, 0);
+    group.rotation.set(0.1, 0.3, 0.05);
+    scene.add(group);
+
+    const RADIUS = 1.6;
+    const ACCENT = '#FFA500';
+
+    // === Helper: Lat/Lon to Vector3 ===
+    function latLonToVector3(lat, lon, radius) {
+      const phi = (90 - lat) * Math.PI / 180;
+      const theta = (lon + 180) * Math.PI / 180;
+      return new THREE.Vector3(
+        -radius * Math.sin(phi) * Math.cos(theta),
+        radius * Math.cos(phi),
+        radius * Math.sin(phi) * Math.sin(theta)
+      );
+    }
+
+    // === Create Canvas Sprite for Text ===
+    function createTextSprite(text, color, bgColor = 'white') {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Set canvas size
+      canvas.width = 256;
+      canvas.height = 64;
+      
+      // Background with rounded corners
+      const radius = 20;
+      const x = 0;
+      const y = 0;
+      const width = canvas.width;
+      const height = canvas.height;
+      
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+      
+      ctx.fillStyle = bgColor;
+      ctx.fill();
+      ctx.shadowColor = 'rgba(0,0,0,0.3)';
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 2;
+      
+      // Avatar circle
+      const avatarX = 40;
+      const avatarY = 32;
+      const avatarRadius = 20;
+      ctx.shadowColor = 'transparent';
+      ctx.beginPath();
+      ctx.arc(avatarX, avatarY, avatarRadius, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      
+      // Avatar initial
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 20px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text[0], avatarX, avatarY);
+      
+      // Name text
+      ctx.fillStyle = '#1a1a1a';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 70, 28);
+      
+      // Role text
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Member', 70, 48);
+      
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+      return texture;
+    }
+
+    // === Create Dot Sprite ===
+    function createDotSprite() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gradient.addColorStop(0, 'rgba(255,255,255,1)');
+      gradient.addColorStop(0.4, 'rgba(255,255,255,0.9)');
+      gradient.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 64, 64);
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    // === Generate Land Dots ===
+    function generateLandDots(count = 5000) {
+      const positions = [];
+      const golden = Math.PI * (3 - Math.sqrt(5));
+      
+      for (let i = 0; i < count; i++) {
+        const y = 1 - (i / (count - 1)) * 2;
+        const r = Math.sqrt(1 - y * y);
+        const theta = golden * i;
+        const x = Math.cos(theta) * r;
+        const z = Math.sin(theta) * r;
+        
+        const lat = Math.asin(y) * 180 / Math.PI;
+        const lon = Math.atan2(z, x) * 180 / Math.PI;
+        
+        const isLand = 
+          (lat > -60 && lat < 80) && 
+          !(lat > 20 && lat < 40 && lon > -130 && lon < -100) &&
+          !(lat < -20 && lon > 80 && lon < 160) &&
+          !(lat > 50 && lon > -180 && lon < -120);
+        
+        if (isLand) {
+          positions.push(x * RADIUS, y * RADIUS, z * RADIUS);
+        }
+      }
+      
+      return new Float32Array(positions);
+    }
+
+    // === Create Land Dots ===
+    const dotSprite = createDotSprite();
+    const dotPositions = generateLandDots();
+    
+    const dotGeometry = new THREE.BufferGeometry();
+    dotGeometry.setAttribute('position', new THREE.BufferAttribute(dotPositions, 3));
+    
+    const dotMaterial = new THREE.PointsMaterial({
+      map: dotSprite,
+      color: '#FFA500',
+      size: 0.045,
+      sizeAttenuation: true,
+      transparent: true,
+      opacity: 0.95,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    
+    const dots = new THREE.Points(dotGeometry, dotMaterial);
+    group.add(dots);
+
+    // === Ocean Sphere ===
+    const sphereGeometry = new THREE.SphereGeometry(RADIUS * 0.99, 64, 64);
+    const sphereMaterial = new THREE.MeshBasicMaterial({
+      color: '#14161d'
+    });
+    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    group.add(sphere);
+
+    // === Atmosphere ===
+    const atmosphereMaterial = new THREE.ShaderMaterial({
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      side: THREE.BackSide,
+      depthWrite: false,
+      uniforms: { 
+        uColor: { value: new THREE.Color(ACCENT) }
+      },
+      vertexShader: \`
+        varying vec3 vNormal;
+        varying vec3 vPos;
+        void main() {
+          vNormal = normalize(normalMatrix * normal);
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          vPos = mv.xyz;
+          gl_Position = projectionMatrix * mv;
+        }
+      \`,
+      fragmentShader: \`
+        uniform vec3 uColor;
+        varying vec3 vNormal;
+        varying vec3 vPos;
+        void main() {
+          vec3 viewDir = normalize(-vPos);
+          float rim = 1.0 - abs(dot(vNormal, viewDir));
+          float intensity = pow(rim, 4.2) * 0.8;
+          gl_FragColor = vec4(uColor, intensity);
+        }
+      \`
+    });
+    
+    const atmosphereMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(RADIUS * 1.12, 64, 64),
+      atmosphereMaterial
+    );
+    group.add(atmosphereMesh);
+
+    // === City Data with Names ===
+    const cities = [
+      { city: "Lagos", lat: 6.5244, lon: 3.3792, name: "Amara", color: "#FF6B35" },
+      { city: "London", lat: 51.5072, lon: -0.1276, name: "James", color: "#4ECDC4" },
+      { city: "New York", lat: 40.7128, lon: -74.006, name: "Sofia", color: "#45B7D1" },
+      { city: "Nairobi", lat: -1.2921, lon: 36.8219, name: "Kwame", color: "#96CEB4" },
+      { city: "Manila", lat: 14.5995, lon: 120.9842, name: "Yuki", color: "#FF6B6B" },
+      { city: "São Paulo", lat: -23.5505, lon: -46.6333, name: "Mateus", color: "#FFEAA7" },
+      { city: "Accra", lat: 5.6037, lon: -0.187, name: "Aisha", color: "#DDA0DD" },
+      { city: "Tokyo", lat: 35.6762, lon: 139.6503, name: "Wei", color: "#98D8C8" },
+      { city: "Cairo", lat: 30.0444, lon: 31.2357, name: "Fatima", color: "#F7DC6F" },
+      { city: "Toronto", lat: 43.6532, lon: -79.3832, name: "Liam", color: "#85C1E9" },
+      { city: "Kampala", lat: 0.3476, lon: 32.5825, name: "Naledi", color: "#82E0AA" },
+      { city: "Sydney", lat: -33.8688, lon: 151.2093, name: "Chloe", color: "#F1948A" },
+      { city: "Seoul", lat: 37.5665, lon: 126.978, name: "Hana", color: "#BB8FCE" },
+      { city: "Berlin", lat: 52.52, lon: 13.405, name: "Ingrid", color: "#F8C471" },
+      { city: "Mumbai", lat: 19.076, lon: 72.8777, name: "Ravi", color: "#73C6B6" },
+      { city: "Shanghai", lat: 31.2304, lon: 121.4737, name: "Anya", color: "#E59866" },
+      { city: "Istanbul", lat: 41.0082, lon: 28.9784, name: "Elif", color: "#AF7AC5" },
+      { city: "Abuja", lat: 9.0765, lon: 7.3986, name: "Tunde", color: "#5DADE2" },
+    ];
+
+    // === Create City Markers and Name Labels ===
+    const spriteMaterial = new THREE.SpriteMaterial({
+      map: createTextSprite('Test Name', '#FF6B35'),
+      transparent: true,
+      depthTest: false,
+      sizeAttenuation: true,
+    });
+
+    cities.forEach((city, index) => {
+      const pos = latLonToVector3(city.lat, city.lon, RADIUS * 1.05);
+      
+      // 3D marker (small circle)
+      const sphereGeo = new THREE.SphereGeometry(0.04, 8, 8);
+      const sphereMat = new THREE.MeshBasicMaterial({ color: city.color });
+      const marker = new THREE.Mesh(sphereGeo, sphereMat);
+      marker.position.copy(pos);
+      group.add(marker);
+
+      // Create name label as sprite
+      const texture = createTextSprite(city.name, city.color);
+      const material = new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true,
+        depthTest: false,
+        sizeAttenuation: true,
+        opacity: 0.9,
+      });
+      const sprite = new THREE.Sprite(material);
+      sprite.position.copy(pos);
+      sprite.position.multiplyScalar(1.15); // Move slightly outward
+      sprite.scale.set(0.8, 0.2, 1);
+      group.add(sprite);
+    });
+
+    // === Stars ===
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsCount = 200;
+    const starsPositions = new Float32Array(starsCount * 3);
+    for (let i = 0; i < starsCount; i++) {
+      const v = new THREE.Vector3(
+        Math.random() - 0.5,
+        Math.random() - 0.5,
+        Math.random() - 0.5
+      ).normalize().multiplyScalar(5 + Math.random() * 5);
+      starsPositions[i * 3] = v.x;
+      starsPositions[i * 3 + 1] = v.y;
+      starsPositions[i * 3 + 2] = v.z;
+    }
+    starsGeometry.setAttribute('position', new THREE.BufferAttribute(starsPositions, 3));
+    const starsMaterial = new THREE.PointsMaterial({
+      size: 0.02,
+      color: '#ffffff',
+      transparent: true,
+      opacity: 0.4,
+      sizeAttenuation: true
+    });
+    const stars = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(stars);
+
+    // === Animation ===
+    function animate() {
+      requestAnimationFrame(animate);
+      group.rotation.y += 0.002;
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // === Resize Handler ===
+    window.addEventListener('resize', () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    });
+  </script>
+</body>
+</html>
+  `;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <View style={styles.backdrop} pointerEvents="none" />
-
-      <View style={styles.header}>
-        <View style={styles.brand}>
-          <Image source={require('@/assets/images/icon.png')} style={styles.brandMark} />
-          <Text style={styles.brandName}>GOYE</Text>
+    <View style={styles.container}>
+      <View style={styles.hero}>
+        <View style={[styles.globeContainer, { height: screenH * 0.5 }]}>
+          <WebView
+            ref={webViewRef}
+            source={{ html: globeHTML }}
+            style={styles.webview}
+            scrollEnabled={false}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+            scalesPageToFit={false}
+            containerStyle={styles.webviewContainer}
+          />
         </View>
-        <TouchableOpacity onPress={() => router.push('/(auth)/login')} hitSlop={12} accessibilityRole="button">
-          <Text style={styles.loginLink}>LOGIN</Text>
-        </TouchableOpacity>
-      </View>
 
-      <View style={styles.collage} pointerEvents="none">
-        {BUBBLES.map((b, i) => {
-          const d = b.size * W;
-          return (
-            <Animated.View
-              key={i}
-              style={[
-                styles.bubble,
-                {
-                  width: d,
-                  height: d,
-                  borderRadius: d / 2,
-                  left: b.x * W,
-                  top: b.y * W,
-                  borderColor: b.ring,
-                  borderWidth: b.ringWidth,
-                  opacity: fades[i],
-                  transform: [{ scale: scales[i] }],
-                },
-              ]}
+        <LinearGradient
+          colors={['rgba(10,10,15,0)', 'rgba(10,10,15,0.9)', '#0a0a0f']}
+          locations={[0, 0.55, 1]}
+          style={[styles.fade, { height: screenH * 0.34 }]}
+          pointerEvents="none"
+        />
+
+        <View style={[styles.logoRow, { paddingTop: insets.top + 12 }]}>
+          <Image
+            source={require('@/assets/images/goye_final_logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+
+        <View style={styles.textBlock}>
+          <Animated.View style={{ opacity: fade }}>
+            <Text style={[styles.title, { fontSize: titleSize, lineHeight: titleSize * 1.2 }]}>
+              {SLIDES[index].title}
+            </Text>
+            <Text style={styles.subtitle}>{SLIDES[index].body}</Text>
+          </Animated.View>
+
+          <View style={styles.controls}>
+            <TouchableOpacity
+              onPress={() => goTo(isLast ? index - 1 : index + 1)}
+              hitSlop={12}
+              accessibilityRole="button"
             >
-              <Image source={AVATARS[b.avatar]} style={styles.avatar} />
-            </Animated.View>
-          );
-        })}
+              <Text style={styles.controlText}>{isLast ? 'Previous' : 'Next'}</Text>
+            </TouchableOpacity>
+            <View style={styles.dots}>
+              {SLIDES.map((_, i) => (
+                <TouchableOpacity key={i} onPress={() => goTo(i)} hitSlop={8}>
+                  <View style={[styles.dot, i === index && styles.dotActive]} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
       </View>
 
-      <View style={styles.body}>
-        <Text style={styles.title}>{"Let's Get\nStarted"}</Text>
-        <Text style={styles.subtitle}>Grow in faith, together.</Text>
-      </View>
-
-      <View style={styles.footer}>
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
         <TouchableOpacity
-          style={styles.button}
+          style={[styles.barButton, styles.registerButton]}
           onPress={() => router.push('/(auth)/account-type')}
-          activeOpacity={0.9}
+          activeOpacity={0.85}
           accessibilityRole="button"
         >
-          <Text style={styles.buttonText}>SIGN UP</Text>
+          <Text style={[styles.barButtonText, styles.registerText]}>REGISTER</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.barButton, styles.loginButton]}
+          onPress={() => router.push('/(auth)/login')}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+        >
+          <Text style={[styles.barButtonText, styles.loginText]}>LOGIN</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
   },
-  backdrop: {
+  hero: {
+    flex: 1,
+    backgroundColor: '#0a0a0f',
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
+    overflow: 'hidden',
+  },
+  globeContainer: {
     position: 'absolute',
-    width: W * 1.3,
-    height: W * 1.3,
-    borderRadius: W * 0.65,
-    backgroundColor: '#F1F4F9',
-    right: -W * 0.45,
-    top: -W * 0.1,
+    top: 0,
+    left: 0,
+    right: 0,
   },
-  header: {
+  webview: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  webviewContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  fade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  logoRow: {
+    alignItems: 'center',
+  },
+  logo: {
+    width: 120,
+    height: 44,
+  },
+  textBlock: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 28,
+    paddingBottom: 26,
+  },
+  title: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  subtitle: {
+    marginTop: 12,
+    color: 'rgba(255,255,255,0.78)',
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  controls: {
+    marginTop: 26,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 8,
   },
-  brand: {
+  controlText: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 13,
+  },
+  dots: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 7,
   },
-  brandMark: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.3)',
   },
-  brandName: {
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: 1,
-    color: INK,
+  dotActive: {
+    backgroundColor: '#FFA500',
+    width: 20,
   },
-  loginLink: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.4,
-    color: INK,
+  bottomBar: {
+    backgroundColor: '#ffffff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingTop: 16,
+    paddingHorizontal: 20,
   },
-  collage: {
-    height: W * 1.0,
-    marginTop: 4,
-  },
-  bubble: {
-    position: 'absolute',
-    overflow: 'hidden',
-    backgroundColor: '#fff',
-  },
-  avatar: {
-    width: '100%',
-    height: '100%',
-  },
-  body: {
+  barButton: {
     flex: 1,
-    paddingHorizontal: 28,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 42,
-    lineHeight: 48,
-    fontWeight: '700',
-    color: INK,
-  },
-  subtitle: {
-    marginTop: 10,
-    fontSize: 14,
-    color: '#8A8F9C',
-  },
-  footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 12,
-  },
-  button: {
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: INK,
+    height: 52,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonText: {
-    color: '#fff',
+  registerButton: {
+    backgroundColor: '#FFA500',
+  },
+  loginButton: {
+    backgroundColor: '#3F1F22',
+  },
+  barButtonText: {
     fontSize: 13,
     fontWeight: '700',
-    letterSpacing: 1.6,
+    letterSpacing: 1.4,
+  },
+  registerText: {
+    color: '#2A1500',
+  },
+  loginText: {
+    color: '#ffffff',
   },
 });
