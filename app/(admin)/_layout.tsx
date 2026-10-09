@@ -3,6 +3,7 @@ import { Tabs, Redirect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@/contexts/UserContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import FloatingTabBar from '@/components/FloatingTabBar';
 import { useAlert } from '@/hooks/useAlert';
 
 export default function AdminLayout() {
@@ -42,6 +43,7 @@ export default function AdminLayout() {
 
   return (
     <Tabs
+      tabBar={(props) => <FloatingTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.brand,
