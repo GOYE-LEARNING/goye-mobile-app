@@ -1962,10 +1962,11 @@ export const refreshAccessToken = async (refreshToken: string): Promise<any> => 
  * Send a one-time password to the given email (change/forgot password flow)
  * POST /user/sendOtp
  */
-export const sendOtp = async (email: string): Promise<any> => {
+export const sendOtp = async (email: string, purpose?: 'signup' | 'reset'): Promise<any> => {
   const response = await apiCall('/user/sendOtp', {
     method: 'POST',
-    body: JSON.stringify({ email }),
+    // "signup" lets the server verify an email that has no account yet.
+    body: JSON.stringify(purpose === 'signup' ? { email, purpose } : { email }),
   });
   const result = await response.json();
   if (!response.ok) throw new Error(result.message || 'Failed to send OTP');
@@ -2027,6 +2028,12 @@ export const completeProfile = async (
     role: string;
     level: string;
     password?: string;
+    language?: string;
+    languageCode?: string;
+    bio?: string;
+    church_name?: string;
+    church_role?: string;
+    social_media?: string;
   }
 ): Promise<any> => {
   const response = await fetchWithAuth('/user/complete-profile', {

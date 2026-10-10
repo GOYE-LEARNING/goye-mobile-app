@@ -1,17 +1,47 @@
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useSignUp } from '@/contexts/SignUpContext';
 import { router } from 'expo-router';
 import { API_CONFIG } from '@/constants/config';
 import { useAlert } from '@/hooks/useAlert';
+import { sendOtp } from '@/services/api';
+
+const OTP_WINDOW_SECONDS = 300;
 
 export default function VerifyOtp() {
   const { alert, AlertComponent } = useAlert();
   const {data, setField } = useSignUp();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
    const [loading, setLoading] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(OTP_WINDOW_SECONDS);
+  const [resending, setResending] = useState(false);
   const inputRefs = useRef<Array<TextInput | null>>([]);
 
+
+  useEffect(() => {
+    if (secondsLeft <= 0) return;
+    const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [secondsLeft]);
+
+  const formatTime = (total: number) =>
+    `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+
+  const handleResend = async () => {
+    setResending(true);
+    try {
+      const result = await sendOtp(data.email, 'signup');
+      setField('otpSessionToken', result.sessionToken);
+      setOtp(['', '', '', '', '', '']);
+      setSecondsLeft(OTP_WINDOW_SECONDS);
+      inputRefs.current[0]?.focus();
+      alert('Code sent', 'A new verification code is on its way.');
+    } catch (err: any) {
+      alert('Could not resend', err?.message || 'Please try again in a moment.');
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleChangeText = (text: string, index: number) => {
     // Only allow numbers
@@ -61,7 +91,8 @@ export default function VerifyOtp() {
     if (response.ok) {
       console.log('✅ OTP verified successfully');
       setField('otp', otpValue);
-      router.replace('/(tabs)/home');
+      // Verified: on to choosing a password, as on the web.
+      router.replace('/(auth)/create-password');
     } else {
       console.error('❌ OTP verification failed');
       alert(
@@ -104,9 +135,18 @@ export default function VerifyOtp() {
           ))}
         </View>
 
-        <Text style={styles.resendText}>
-          Resend OTP in <Text style={styles.timer}>2:39</Text>
-        </Text>
+        {secondsLeft > 0 ? (
+          <Text style={styles.resendText}>
+            Code expires in <Text style={styles.timer}>{formatTime(secondsLeft)}</Text>
+          </Text>
+        ) : (
+          <Text style={styles.resendText}>Your code has expired.</Text>
+        )}
+        <TouchableOpacity onPress={handleResend} disabled={resending || loading}>
+          <Text style={[styles.timer, { marginBottom: 8 }]}>
+            {resending ? 'Sending...' : 'Resend code'}
+          </Text>
+        </TouchableOpacity>
 
         <TouchableOpacity 
           style={[styles.button, loading && styles.buttonDisabled]} 

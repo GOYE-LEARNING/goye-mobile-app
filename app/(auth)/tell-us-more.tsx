@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '@/constants/config';
 import { completeProfile } from '@/services/api';
+import { getOrCreateDeviceId } from '@/utils/deviceId';
 import { useAlert } from '@/hooks/useAlert';
 
 const COUNTRIES = [
@@ -44,6 +45,9 @@ const COUNTRY_CODES = [
   { code: '+55', country: 'Brazil', flag: '🇧🇷' },
 ];
 
+// The web stores these exact values; keep mobile identical so accounts are consistent.
+const LEVEL_API: Record<string, string> = { beginner: 'Beginners', intermediate: 'Intermediate' };
+
 export default function TellUsMore() {
   const { alert, AlertComponent } = useAlert();
   const { data, setField } = useSignUp();
@@ -57,9 +61,31 @@ export default function TellUsMore() {
   const [level, setLevel] = useState<'beginner' | 'intermediate' | ''>('');
   const [countryCode, setCountryCode] = useState('+1');
   const [showCountryCodeModal, setShowCountryCodeModal] = useState(false);
+  const [bio, setBio] = useState('');
+  const [churchName, setChurchName] = useState('');
+  const [churchRole, setChurchRole] = useState('');
+  const [socialMedia, setSocialMedia] = useState('');
   const [loading, setLoading] = useState(false);
   const [showCountryModal, setShowCountryModal] = useState(false);
   const [showStateModal, setShowStateModal] = useState(false);
+
+  const isTutor = role === 'instructor';
+  const lastStep = isTutor ? 3 : 2;
+
+  const selectCountryCode = (code: string) => {
+    setCountryCode(code);
+    setShowCountryCodeModal(false);
+  };
+
+  const tutorFields = () =>
+    isTutor
+      ? {
+          bio: bio.trim(),
+          church_name: churchName.trim(),
+          church_role: churchRole.trim(),
+          ...(socialMedia.trim() ? { social_media: socialMedia.trim() } : {}),
+        }
+      : {};
 
   // ─── Helper to get language from storage if context is empty ──────────────
   const getLanguageFromStorage = async () => {
@@ -122,17 +148,15 @@ export default function TellUsMore() {
           country,
           state,
           role,
-          level,
+          level: LEVEL_API[level] || level,
           language: finalLanguage,
           languageCode: finalLanguageCode,
+          ...tutorFields(),
         });
 
-        console.log('=== COMPLETE PROFILE RESPONSE ===');
-        console.log(JSON.stringify(result, null, 2));
-
-        if (result.data && result.token) {
-          await setUser(result.data, result.token);
-          console.log('✅ Google user profile completed');
+        // The server answers { accessToken, refreshToken, data: { user } }.
+        if (result.accessToken && result.data?.user) {
+          await setUser(result.data.user, result.accessToken, result.refreshToken);
         }
 
         router.push('/(auth)/success');
@@ -148,33 +172,28 @@ export default function TellUsMore() {
           state,
           phone_number: `${countryCode}${phone}`,
           role,
-          level,
+          level: LEVEL_API[level] || level,
           language: finalLanguage,
           languageCode: finalLanguageCode,
+          ...tutorFields(),
         };
 
-        console.log('=== SIGNUP REQUEST ===');
-        console.log('URL:', `${API_CONFIG.BASE_URL}/user/signup`);
-        console.log('Payload:', JSON.stringify(signUpPayload, null, 2));
+        // A stable per-device id, like login sends, so the session is keyed to this phone.
+        const deviceId = await getOrCreateDeviceId();
 
         const response = await fetch(`${API_CONFIG.BASE_URL}/user/signup`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-device-id': deviceId },
           body: JSON.stringify(signUpPayload),
         });
 
         const result = await response.json();
 
-        console.log('=== SIGNUP RESPONSE ===');
-        console.log('Status:', response.status);
-        console.log('Response Body:', JSON.stringify(result, null, 2));
-
         if (response.ok) {
-          console.log('✅ Signup successful!');
-
-          if (result.data && result.token) {
-            await setUser(result.data, result.token);
-            console.log('✅ User data saved successfully');
+          // The server answers { accessToken, refreshToken, user }. The old code looked for
+          // result.token / result.data, so the login was never saved after signing up.
+          if (result.accessToken && result.user) {
+            await setUser(result.user, result.accessToken, result.refreshToken);
           }
 
           setField('country', country);
@@ -182,29 +201,6 @@ export default function TellUsMore() {
           setField('phone', `${countryCode}${phone}`);
           setField('role', role);
           setField('level', level);
-
-          // Send OTP
-          try {
-            console.log('📧 Sending OTP to:', data.email);
-            const otpResponse = await fetch(`${API_CONFIG.BASE_URL}/user/sendOtp`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: data.email }),
-            });
-
-            const otpResult = await otpResponse.json();
-
-            if (otpResponse.ok) {
-              console.log('✅ OTP sent successfully');
-              if (otpResult.sessionToken) {
-                setField('otpSessionToken', otpResult.sessionToken);
-              }
-            } else {
-              console.error('❌ Failed to send OTP:', otpResult.message);
-            }
-          } catch (otpError) {
-            console.error('❌ OTP sending error:', otpError);
-          }
 
           router.push('/(auth)/success');
 
@@ -241,7 +237,7 @@ export default function TellUsMore() {
   };
 
   const handleNext = () => {
-    if (step === 0 && (!country || !state || !phone)) {
+    if (step === 0 && (!country || !state.trim() || !phone)) {
       return alert('Required Fields', 'Please fill all fields');
     }
     if (step === 1 && !role) {
@@ -250,8 +246,11 @@ export default function TellUsMore() {
     if (step === 2 && !level) {
       return alert('Level Required', 'Please select your level');
     }
+    if (step === 3 && (!bio.trim() || !churchName.trim() || !churchRole.trim())) {
+      return alert('Required Fields', 'Please describe yourself and tell us your church and role.');
+    }
 
-    if (step < 2) {
+    if (step < lastStep) {
       setStep(step + 1);
     } else {
       handleSignUp();
@@ -293,6 +292,11 @@ export default function TellUsMore() {
           title: 'What\'s Your Level?',
           subtitle: 'Tell us about your experience level',
         };
+      case 3:
+        return {
+          title: 'About Your Ministry',
+          subtitle: 'Help students know who is teaching them',
+        };
       default:
         return { title: '', subtitle: '' };
     }
@@ -300,7 +304,7 @@ export default function TellUsMore() {
 
   const renderProgressBar = () => (
     <View style={styles.progressContainer}>
-      {[0, 1, 2].map((index) => (
+      {Array.from({ length: lastStep + 1 }, (_, index) => index).map((index) => (
         <View
           key={index}
           style={[
@@ -343,16 +347,27 @@ export default function TellUsMore() {
                 <Ionicons name="chevron-down" size={16} color="#666" />
               </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={styles.pickerContainer} 
-                onPress={() => setShowStateModal(true)}
-                disabled={!country}
-              >
-                <Text style={[styles.pickerText, !state && styles.placeholderText]}>
-                  {state || 'Select State'}
-                </Text>
-                <Ionicons name="chevron-down" size={16} color="#666" />
-              </TouchableOpacity>
+              {country && availableStates.length === 0 ? (
+                <TextInput
+                  placeholder="State / Region"
+                  placeholderTextColor="#999"
+                  style={styles.textField}
+                  value={state}
+                  onChangeText={setStateVal}
+                  editable={!loading}
+                />
+              ) : (
+                <TouchableOpacity
+                  style={styles.pickerContainer}
+                  onPress={() => setShowStateModal(true)}
+                  disabled={!country}
+                >
+                  <Text style={[styles.pickerText, !state && styles.placeholderText]}>
+                    {state || 'Select State'}
+                  </Text>
+                  <Ionicons name="chevron-down" size={16} color="#666" />
+                </TouchableOpacity>
+              )}
 
               <View style={styles.phoneContainer}>
                 <TouchableOpacity 
@@ -437,6 +452,49 @@ export default function TellUsMore() {
               </TouchableOpacity>
             </View>
           )}
+
+          {step === 3 && (
+            <View>
+              <TextInput
+                placeholder="Describe yourself"
+                placeholderTextColor="#999"
+                style={[styles.textField, styles.textArea]}
+                value={bio}
+                onChangeText={setBio}
+                multiline
+                maxLength={2000}
+                editable={!loading}
+              />
+              <TextInput
+                placeholder="Church name"
+                placeholderTextColor="#999"
+                style={styles.textField}
+                value={churchName}
+                onChangeText={setChurchName}
+                maxLength={200}
+                editable={!loading}
+              />
+              <TextInput
+                placeholder="Your role in the church"
+                placeholderTextColor="#999"
+                style={styles.textField}
+                value={churchRole}
+                onChangeText={setChurchRole}
+                maxLength={100}
+                editable={!loading}
+              />
+              <TextInput
+                placeholder="Social media link (optional)"
+                placeholderTextColor="#999"
+                style={styles.textField}
+                value={socialMedia}
+                onChangeText={setSocialMedia}
+                autoCapitalize="none"
+                maxLength={300}
+                editable={!loading}
+              />
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -448,7 +506,7 @@ export default function TellUsMore() {
         {loading ? (
           <ActivityIndicator color="white" />
         ) : (
-          <Text style={styles.buttonText}>{step < 2 ? 'Next' : 'Finish'}</Text>
+          <Text style={styles.buttonText}>{step < lastStep ? 'Next' : 'Finish'}</Text>
         )}
       </TouchableOpacity>
 
@@ -601,6 +659,20 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     color: '#999',
+  },
+  textField: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    fontSize: 15,
+    marginBottom: 14,
+    color: '#111',
+  },
+  textArea: {
+    minHeight: 110,
+    textAlignVertical: 'top',
   },
   phoneContainer: {
     flexDirection: 'row',

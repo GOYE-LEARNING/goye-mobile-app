@@ -12,13 +12,10 @@ export default function Success() {
   const { data } = useSignUp();
   const { setUser } = useUser();
 
+  // The email was verified before the account was created, so this always goes home.
   const handleContinue = () => {
-  if (data.isGoogleAuth) {
     router.replace('/(tabs)/home');
-  } else {
-    router.replace('/(auth)/verify-otp');
-  }
-};
+  };
 
   return (
     <View style={styles.wrapper}>

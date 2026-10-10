@@ -7,6 +7,7 @@ import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@/contexts/UserContext';
 import { useAlert } from '@/hooks/useAlert';
+import { sendOtp } from '@/services/api';
 
 
 export default function GetStarted() {
@@ -18,6 +19,7 @@ export default function GetStarted() {
   const [lastName, setLastName] = useState(data.lastName || '');
   const [email, setEmail] = useState(data.email || '');
   const hasNavigated = useRef(false);
+  const [sending, setSending] = useState(false);
 
   // ✅ Handle navigation when authenticated - MORE RELIABLE
   useEffect(() => {
@@ -68,15 +70,31 @@ export default function GetStarted() {
     );
   }
 
-  const handleNext = () => {
-    if (!firstName || !lastName || !email) {
-      alert('Error', 'Please fill all fields');
+  // Same order as the web: details, then verify the email, then the password.
+  const handleNext = async () => {
+    const cleanEmail = email.trim();
+    if (!firstName.trim() || !lastName.trim() || !cleanEmail) {
+      alert('Required Fields', 'Please fill all fields');
       return;
     }
-    setField('firstName', firstName);
-    setField('lastName', lastName);
-    setField('email', email);
-    router.push('/(auth)/create-password');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      alert('Invalid Email', 'Please enter a valid email address');
+      return;
+    }
+
+    setSending(true);
+    try {
+      const result = await sendOtp(cleanEmail, 'signup');
+      setField('firstName', firstName.trim());
+      setField('lastName', lastName.trim());
+      setField('email', cleanEmail);
+      setField('otpSessionToken', result.sessionToken);
+      router.push('/(auth)/verify-otp');
+    } catch (err: any) {
+      alert('Could not send code', err?.message || 'Please check your connection and try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleGoogleSignUp = async () => {
@@ -125,8 +143,8 @@ export default function GetStarted() {
           autoCapitalize="none"
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleNext}>
-          <Text style={styles.buttonText}>Next</Text>
+        <TouchableOpacity style={[styles.button, sending && { opacity: 0.7 }]} onPress={handleNext} disabled={sending}>
+          {sending ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Next</Text>}
         </TouchableOpacity>
 
         <View style={styles.dividerContainer}>
