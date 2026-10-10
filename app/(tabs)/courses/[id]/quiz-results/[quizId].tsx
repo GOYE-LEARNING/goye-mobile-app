@@ -61,7 +61,7 @@ export default function QuizResults() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3F1F22" />
+          <ActivityIndicator size="large" color="#FFA500" />
           <Text style={styles.loadingText}>Loading quiz...</Text>
         </View>
       </SafeAreaView>
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   backButtonText: {
-    color: '#3F1F22',
+    color: '#B45F00',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -377,14 +377,14 @@ const styles = StyleSheet.create({
   doneButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#3F1F22',
+    borderColor: '#FFA500',
     paddingVertical: 16,
     alignItems: 'center',
     borderRadius: 8,
     marginTop: 8,
   },
   doneButtonText: {
-    color: '#3F1F22',
+    color: '#B45F00',
     fontSize: 16,
     fontWeight: '600',
   },

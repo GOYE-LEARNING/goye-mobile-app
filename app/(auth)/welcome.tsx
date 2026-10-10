@@ -90,13 +90,13 @@ const styles = StyleSheet.create({
     alignSelf: 'center'
   },
   continueButton: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 18,
     alignItems: 'center',
     width: '100%',
   },
   continueButtonText: {
-    color: 'white',
+    color: '#2A1500',
     fontSize: 17,
     fontWeight: '600',
   },

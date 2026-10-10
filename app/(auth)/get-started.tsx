@@ -51,7 +51,7 @@ export default function GetStarted() {
     console.log('⏳ [GetStarted] Loading...');
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3F1F22" />
+        <ActivityIndicator size="large" color="#FFA500" />
         <Text style={styles.loadingText}>Loading...</Text>
         {AlertComponent}
       </View>
@@ -63,7 +63,7 @@ export default function GetStarted() {
     console.log('🔄 [GetStarted] Authenticated, waiting for navigation...');
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3F1F22" />
+        <ActivityIndicator size="large" color="#FFA500" />
         <Text style={styles.loadingText}>Redirecting...</Text>
         {AlertComponent}
       </View>
@@ -158,7 +158,7 @@ export default function GetStarted() {
           onPress={handleGoogleSignUp}
           disabled={googleLoading}
         >
-          <Ionicons name="logo-google" size={20} color="#3F1F22" style={styles.googleIcon} />
+          <Ionicons name="logo-google" size={20} color="#FFA500" style={styles.googleIcon} />
           <Text style={styles.googleButtonText}>
             {googleLoading ? 'Signing in...' : 'Continue with Google'}
           </Text>
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   content: {
     flex: 1,
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 16,
     alignItems: 'center',
     width: '100%',
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buttonText: {
-    color: 'white',
+    color: '#2A1500',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   googleButtonText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   bottomSection: {
     alignItems: 'center',
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   signInText: {
-    color: '#3F1F22',
+    color: '#B45F00',
     fontWeight: '600',
   },
 });

@@ -55,7 +55,7 @@ export default function AccountType() {
                 <Ionicons 
                   name="person-circle" 
                   size={40} 
-                  color={selectedType === 'individual' ? '#FFFFFF' : '#3F1F22'} 
+                  color={selectedType === 'individual' ? '#2A1500' : '#FFA500'} 
                 />
               </View>
               <Text style={styles.optionTitle}>Individual</Text>
@@ -65,7 +65,7 @@ export default function AccountType() {
               
               {selectedType === 'individual' && (
                 <View style={styles.selectionIndicator}>
-                  <Ionicons name="checkmark-circle" size={24} color="#3F1F22" />
+                  <Ionicons name="checkmark-circle" size={24} color="#FFA500" />
                 </View>
               )}
             </View>
@@ -87,7 +87,7 @@ export default function AccountType() {
                 <Ionicons 
                   name="business" 
                   size={40} 
-                  color={selectedType === 'organization' ? '#FFFFFF' : '#3F1F22'} 
+                  color={selectedType === 'organization' ? '#2A1500' : '#FFA500'} 
                 />
               </View>
               <Text style={styles.optionTitle}>Organization</Text>
@@ -97,7 +97,7 @@ export default function AccountType() {
               
               {selectedType === 'organization' && (
                 <View style={styles.selectionIndicator}>
-                  <Ionicons name="checkmark-circle" size={24} color="#3F1F22" />
+                  <Ionicons name="checkmark-circle" size={24} color="#FFA500" />
                 </View>
               )}
             </View>
@@ -191,9 +191,9 @@ const styles = StyleSheet.create({
     minHeight: 140,
   },
   optionCardSelected: {
-    borderColor: '#3F1F22',
+    borderColor: '#FFA500',
     backgroundColor: '#FFF5F5',
-    shadowColor: '#3F1F22',
+    shadowColor: '#FFA500',
     shadowOpacity: 0.1,
     transform: [{ scale: 1.02 }],
   },
@@ -213,13 +213,13 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   iconCircleSelected: {
-    backgroundColor: '#3F1F22',
-    borderColor: '#3F1F22',
+    backgroundColor: '#FFA500',
+    borderColor: '#FFA500',
   },
   optionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginBottom: 6,
   },
   optionDescription: {
@@ -248,13 +248,13 @@ const styles = StyleSheet.create({
     textShadowRadius: 3,
   },
   continueButton: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    shadowColor: '#3F1F22',
+    shadowColor: '#FFA500',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,

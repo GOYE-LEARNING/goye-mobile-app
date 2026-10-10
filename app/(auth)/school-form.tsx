@@ -152,7 +152,7 @@ export default function SchoolForm() {
             onPress={() => router.back()}
             style={styles.backButton}
           >
-            <Ionicons name="chevron-back" size={28} color="#3F1F22" />
+            <Ionicons name="chevron-back" size={28} color="#FFA500" />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.headerTitle}>School Information</Text>
@@ -321,7 +321,7 @@ export default function SchoolForm() {
                 <View style={styles.documentPreviewContainer}>
                   <View style={styles.documentHeader}>
                     <View style={styles.documentIconContainer}>
-                      <Ionicons name="document-text" size={32} color="#3F1F22" />
+                      <Ionicons name="document-text" size={32} color="#FFA500" />
                     </View>
                     <View style={styles.documentInfo}>
                       <Text style={styles.documentName} numberOfLines={1}>
@@ -337,7 +337,7 @@ export default function SchoolForm() {
                       style={[styles.actionButton, styles.changeButton]}
                       onPress={pickDocument}
                     >
-                      <Ionicons name="refresh" size={16} color="#3F1F22" />
+                      <Ionicons name="refresh" size={16} color="#FFA500" />
                       <Text style={styles.changeButtonText}>Change Document</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
@@ -355,7 +355,7 @@ export default function SchoolForm() {
                   onPress={pickDocument}
                 >
                   <View style={styles.uploadIconContainer}>
-                    <Ionicons name="document-attach-outline" size={32} color="#3F1F22" />
+                    <Ionicons name="document-attach-outline" size={32} color="#FFA500" />
                   </View>
                   <Text style={styles.uploadText}>Upload Official Document</Text>
                   <Text style={styles.uploadSubtext}>
@@ -407,7 +407,7 @@ export default function SchoolForm() {
                     setSearchSchoolType('');
                   }}
                 >
-                  <Ionicons name="close" size={24} color="#3F1F22" />
+                  <Ionicons name="close" size={24} color="#FFA500" />
                 </TouchableOpacity>
               </View>
               
@@ -434,7 +434,7 @@ export default function SchoolForm() {
                     onPress={() => handleSelectSchoolType(type)}
                   >
                     <View style={styles.modalItemContent}>
-                      <Ionicons name="school-outline" size={20} color="#3F1F22" style={styles.modalItemIcon} />
+                      <Ionicons name="school-outline" size={20} color="#FFA500" style={styles.modalItemIcon} />
                       <Text style={[
                         styles.modalItemText,
                         formData.schoolType === type && styles.modalItemTextSelected
@@ -443,7 +443,7 @@ export default function SchoolForm() {
                       </Text>
                     </View>
                     {formData.schoolType === type && (
-                      <Ionicons name="checkmark" size={20} color="#3F1F22" />
+                      <Ionicons name="checkmark" size={20} color="#FFA500" />
                     )}
                   </TouchableOpacity>
                 ))}
@@ -468,7 +468,7 @@ export default function SchoolForm() {
                     setSearchAdminRole('');
                   }}
                 >
-                  <Ionicons name="close" size={24} color="#3F1F22" />
+                  <Ionicons name="close" size={24} color="#FFA500" />
                 </TouchableOpacity>
               </View>
               
@@ -495,7 +495,7 @@ export default function SchoolForm() {
                     onPress={() => handleSelectAdminRole(role)}
                   >
                     <View style={styles.modalItemContent}>
-                      <Ionicons name="person-circle-outline" size={20} color="#3F1F22" style={styles.modalItemIcon} />
+                      <Ionicons name="person-circle-outline" size={20} color="#FFA500" style={styles.modalItemIcon} />
                       <Text style={[
                         styles.modalItemText,
                         formData.adminRole === role && styles.modalItemTextSelected
@@ -504,7 +504,7 @@ export default function SchoolForm() {
                       </Text>
                     </View>
                     {formData.adminRole === role && (
-                      <Ionicons name="checkmark" size={20} color="#3F1F22" />
+                      <Ionicons name="checkmark" size={20} color="#FFA500" />
                     )}
                   </TouchableOpacity>
                 ))}
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   headerSubtitle: {
     fontSize: 12,
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginRight: 4,
   },
   required: {
@@ -719,7 +719,7 @@ const styles = StyleSheet.create({
   documentName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginBottom: 4,
   },
   documentStatus: {
@@ -742,12 +742,12 @@ const styles = StyleSheet.create({
   },
   changeButton: {
     backgroundColor: 'white',
-    borderColor: '#3F1F22',
+    borderColor: '#FFA500',
   },
   changeButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   removeButton: {
     backgroundColor: 'white',
@@ -782,7 +782,7 @@ const styles = StyleSheet.create({
   uploadText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginBottom: 4,
     textAlign: 'center',
   },
@@ -808,13 +808,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   continueButton: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 18,
     borderRadius: 12,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    shadowColor: '#3F1F22',
+    shadowColor: '#FFA500',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -865,7 +865,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -912,7 +912,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   modalItemTextSelected: {
-    color: '#3F1F22',
+    color: '#B45F00',
     fontWeight: '500',
   },
 });

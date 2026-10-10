@@ -29,7 +29,7 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#3F1F22" />
+      <ActivityIndicator size="large" color="#FFA500" />
       <Text style={styles.loadingText}>Loading...</Text>
     </View>
   );
@@ -45,6 +45,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#3F1F22',
+    color: '#B45F00',
   },
 });

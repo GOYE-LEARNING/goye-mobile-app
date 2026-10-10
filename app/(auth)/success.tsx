@@ -99,18 +99,18 @@ const styles = StyleSheet.create({
   },
   detail: { 
     fontSize: 18, 
-    color: '#3F1F22', 
+    color: '#B45F00', 
     fontWeight: '600',
   },
   doneButton: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 18,
     alignItems: 'center',
     width: '100%',
     borderRadius: 10,
   },
   doneButtonText: {
-    color: 'white',
+    color: '#2A1500',
     fontSize: 17,
     fontWeight: '600',
   },

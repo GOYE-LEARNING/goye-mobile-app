@@ -85,7 +85,7 @@ export default function EditProfile() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#3F1F22" />
+          <ActivityIndicator size="large" color="#FFA500" />
         </View>
         {AlertComponent}
       </SafeAreaView>
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   pickerContainer: { borderWidth: 1, borderColor: '#E0E0E0', overflow: 'hidden' },
   picker: { height: 50 },
   footer: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f0f0f0' },
-  saveButton: { backgroundColor: '#3F1F22', paddingVertical: 16, borderRadius: 8, alignItems: 'center' },
+  saveButton: { backgroundColor: '#FFA500', paddingVertical: 16, borderRadius: 8, alignItems: 'center' },
   saveButtonDisabled: { opacity: 0.6 },
-  saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  saveButtonText: { color: '#2A1500', fontSize: 16, fontWeight: '600' },
 });

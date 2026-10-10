@@ -201,7 +201,7 @@ export default function CreateEvent() {
                     {type}
                   </Text>
                   {type === eventType && (
-                    <Ionicons name="checkmark" size={20} color="#3F1F22" />
+                    <Ionicons name="checkmark" size={20} color="#FFA500" />
                   )}
                 </TouchableOpacity>
               ))}
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemTextActive: {
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   footer: {
     padding: 20,
@@ -385,12 +385,12 @@ const styles = StyleSheet.create({
     borderTopColor: '#f0f0f0',
   },
   createButton: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 16,
     alignItems: 'center',
   },
   createButtonText: {
-    color: 'white',
+    color: '#2A1500',
     fontSize: 16,
     fontWeight: '600',
   },

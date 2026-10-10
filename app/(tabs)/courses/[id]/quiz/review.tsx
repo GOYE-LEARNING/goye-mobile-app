@@ -423,13 +423,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   detailsButton: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
   },
   detailsButtonText: {
-    color: '#fff',
+    color: '#2A1500',
     fontSize: 16,
     fontWeight: '600',
   },

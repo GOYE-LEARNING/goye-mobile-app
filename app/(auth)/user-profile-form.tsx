@@ -217,7 +217,7 @@ export default function UserProfileForm() {
             onPress={() => router.back()}
             style={styles.backButton}
           >
-            <Ionicons name="chevron-back" size={28} color="#3F1F22" />
+            <Ionicons name="chevron-back" size={28} color="#FFA500" />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.headerTitle}>Your Profile</Text>
@@ -240,13 +240,13 @@ export default function UserProfileForm() {
 
           {/* Organization Type Badge */}
           <View style={styles.orgTypeBadge}>
-            <Ionicons name="person-circle" size={16} color="#3F1F22" />
+            <Ionicons name="person-circle" size={16} color="#FFA500" />
             <Text style={styles.orgTypeText}>{getOrgTypeDisplay()} Admin</Text>
           </View>
 
           {useGoogleIdentity ? (
             <View style={styles.googleBanner}>
-              <Ionicons name="logo-google" size={18} color="#3F1F22" />
+              <Ionicons name="logo-google" size={18} color="#FFA500" />
               <Text style={styles.googleBannerText} numberOfLines={1}>
                 Signed in as {formData.userEmail}
               </Text>
@@ -263,10 +263,10 @@ export default function UserProfileForm() {
                 disabled={googleSigningIn}
               >
                 {googleSigningIn ? (
-                  <ActivityIndicator color="#3F1F22" />
+                  <ActivityIndicator color="#FFA500" />
                 ) : (
                   <>
-                    <Ionicons name="logo-google" size={20} color="#3F1F22" />
+                    <Ionicons name="logo-google" size={20} color="#FFA500" />
                     <Text style={styles.googleButtonText}>Fill in with Google instead</Text>
                   </>
                 )}
@@ -389,7 +389,7 @@ export default function UserProfileForm() {
               </View>
               <View style={[styles.input, styles.roleContainer]}>
                 <View style={styles.roleContent}>
-                  <Ionicons name="shield-checkmark" size={20} color="#3F1F22" />
+                  <Ionicons name="shield-checkmark" size={20} color="#FFA500" />
                   <Text style={styles.roleText}>Organization Administrator</Text>
                 </View>
                 <Text style={styles.roleHelperText}>
@@ -434,7 +434,7 @@ export default function UserProfileForm() {
                     setSearchCountry('');
                   }}
                 >
-                  <Ionicons name="close" size={24} color="#3F1F22" />
+                  <Ionicons name="close" size={24} color="#FFA500" />
                 </TouchableOpacity>
               </View>
               
@@ -467,7 +467,7 @@ export default function UserProfileForm() {
                       {country}
                     </Text>
                     {formData.userCountry === country && (
-                      <Ionicons name="checkmark" size={20} color="#3F1F22" />
+                      <Ionicons name="checkmark" size={20} color="#FFA500" />
                     )}
                   </TouchableOpacity>
                 ))}
@@ -492,7 +492,7 @@ export default function UserProfileForm() {
                     setSearchState('');
                   }}
                 >
-                  <Ionicons name="close" size={24} color="#3F1F22" />
+                  <Ionicons name="close" size={24} color="#FFA500" />
                 </TouchableOpacity>
               </View>
               
@@ -526,7 +526,7 @@ export default function UserProfileForm() {
                         {state}
                       </Text>
                       {formData.userState === state && (
-                        <Ionicons name="checkmark" size={20} color="#3F1F22" />
+                        <Ionicons name="checkmark" size={20} color="#FFA500" />
                       )}
                     </TouchableOpacity>
                   ))
@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   headerSubtitle: {
     fontSize: 12,
@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -641,7 +641,7 @@ const styles = StyleSheet.create({
   orgTypeText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginLeft: 8,
   },
   formSection: {
@@ -674,7 +674,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginRight: 4,
   },
   required: {
@@ -709,7 +709,7 @@ const styles = StyleSheet.create({
   googleButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   googleErrorText: {
     color: '#D64545',
@@ -732,12 +732,12 @@ const styles = StyleSheet.create({
   googleBannerText: {
     flex: 1,
     fontSize: 13,
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   googleBannerAction: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
     textDecorationLine: 'underline',
   },
   roleContainer: {
@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
   },
   roleText: {
     fontSize: 16,
-    color: '#3F1F22',
+    color: '#B45F00',
     fontWeight: '600',
     marginLeft: 12,
   },
@@ -792,13 +792,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   continueButton: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 18,
     borderRadius: 12,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    shadowColor: '#3F1F22',
+    shadowColor: '#FFA500',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -849,7 +849,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -887,7 +887,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   modalItemTextSelected: {
-    color: '#3F1F22',
+    color: '#B45F00',
     fontWeight: '500',
   },
   emptyState: {

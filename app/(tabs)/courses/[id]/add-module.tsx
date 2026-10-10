@@ -277,7 +277,7 @@ export default function AddModule() {
         <Text style={styles.headerTitle}>Add Module</Text>
         <TouchableOpacity onPress={handleSave} disabled={loading}>
           {loading ? (
-            <ActivityIndicator size="small" color="#3F1F22" />
+            <ActivityIndicator size="small" color="#FFA500" />
           ) : (
             <Text style={styles.saveButton}>Save</Text>
           )}
@@ -293,7 +293,7 @@ export default function AddModule() {
             onPress={addModule}
             disabled={loading}
           >
-            <Ionicons name="add-circle-outline" size={18} color="#3F1F22" />
+            <Ionicons name="add-circle-outline" size={18} color="#FFA500" />
             <Text style={styles.addButtonText}>Add Module</Text>
           </TouchableOpacity>
         </View>
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   saveButton: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   content: {
     flex: 1,
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   moduleCard: {
     backgroundColor: '#F8F8F8',

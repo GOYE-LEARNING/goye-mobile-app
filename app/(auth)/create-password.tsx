@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 16,
     alignItems: 'center',
     width: '100%',
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
   },
   buttonText: {
-    color: 'white',
+    color: '#2A1500',
     fontSize: 16,
     fontWeight: '600',
   },

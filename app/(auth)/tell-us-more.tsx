@@ -538,7 +538,7 @@ export default function TellUsMore() {
                   <Text style={styles.countryName}>{item.country}</Text>
                   <Text style={styles.countryCode}>{item.code}</Text>
                 </View>
-                {countryCode === item.code && <Ionicons name="checkmark" size={20} color="#3F1F22" />}
+                {countryCode === item.code && <Ionicons name="checkmark" size={20} color="#FFA500" />}
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -562,7 +562,7 @@ export default function TellUsMore() {
                 onPress={() => { handleCountryChange(c); setShowCountryModal(false); }}
               >
                 <Text style={styles.countryName}>{c}</Text>
-                {country === c && <Ionicons name="checkmark" size={20} color="#3F1F22" />}
+                {country === c && <Ionicons name="checkmark" size={20} color="#FFA500" />}
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -586,7 +586,7 @@ export default function TellUsMore() {
                 onPress={() => { setStateVal(s); setShowStateModal(false); }}
               >
                 <Text style={styles.countryName}>{s}</Text>
-                {state === s && <Ionicons name="checkmark" size={20} color="#3F1F22" />}
+                {state === s && <Ionicons name="checkmark" size={20} color="#FFA500" />}
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   progressBarActive: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
   },
   headerSection: {
     marginBottom: 30,
@@ -716,7 +716,7 @@ const styles = StyleSheet.create({
   },
   activeOption: {
     backgroundColor: '#FDF5F5',
-    borderColor: '#3F1F22',
+    borderColor: '#FFA500',
   },
   optionText: {
     fontSize: 18,
@@ -725,14 +725,14 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   activeOptionText: {
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   optionDescription: {
     fontSize: 14,
     color: '#999',
   },
   button: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 16,
     alignItems: 'center',
     marginHorizontal: 20,
@@ -744,7 +744,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   buttonText: {
-    color: 'white',
+    color: '#2A1500',
     fontSize: 16,
     fontWeight: '600',
   },

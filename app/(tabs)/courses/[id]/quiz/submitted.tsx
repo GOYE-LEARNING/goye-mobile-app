@@ -219,13 +219,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   reviewButton: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 16,
     alignItems: 'center',
     borderRadius: 8,
   },
   reviewButtonText: {
-    color: '#fff',
+    color: '#2A1500',
     fontSize: 16,
     fontWeight: '600',
   },

@@ -95,7 +95,7 @@ export default function LanguageSelectScreen() {
       <View style={styles.content}>
         {isSettingsMode && (
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={28} color="#3F1F22" />
+            <Ionicons name="chevron-back" size={28} color="#FFA500" />
           </TouchableOpacity>
         )}
         
@@ -118,7 +118,7 @@ export default function LanguageSelectScreen() {
               <Text style={styles.flag}>{lang.flag}</Text>
               <Text style={styles.languageName}>{t(lang.label)}</Text>
               {selectedLanguage === lang.code && (
-                <Ionicons name="checkmark-circle" size={24} color="#3F1F22" style={styles.checkmark} />
+                <Ionicons name="checkmark-circle" size={24} color="#FFA500" style={styles.checkmark} />
               )}
             </TouchableOpacity>
           ))}
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   selectedLanguage: {
-    borderColor: '#3F1F22',
+    borderColor: '#FFA500',
     backgroundColor: '#f0e8e9',
   },
   flag: {
@@ -195,14 +195,14 @@ const styles = StyleSheet.create({
   },
   languageName: {
     fontSize: 16,
-    color: '#3F1F22',
+    color: '#B45F00',
     flex: 1,
   },
   checkmark: {
     marginLeft: 8,
   },
   continueButton: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

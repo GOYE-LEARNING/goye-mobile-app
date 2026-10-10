@@ -229,7 +229,7 @@ export default function QuizTaking() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3F1F22" />
+          <ActivityIndicator size="large" color="#FFA500" />
           <Text style={styles.loadingText}>Loading quiz...</Text>
         </View>
         {AlertComponent}
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   backButtonText: {
-    color: '#3F1F22',
+    color: '#B45F00',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
   },
   progressInfo: {
     flexDirection: 'row',
@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#f0f0f0',
   },
   submitButton: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 16,
     alignItems: 'center',
     borderRadius: 8,
@@ -642,7 +642,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
   },
   submitButtonText: {
-    color: '#fff',
+    color: '#2A1500',
     fontSize: 16,
     fontWeight: '600',
   },

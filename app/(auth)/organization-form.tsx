@@ -167,7 +167,7 @@ export default function OrganizationForm() {
             onPress={() => router.back()}
             style={styles.backButton}
           >
-            <Ionicons name="chevron-back" size={28} color="#3F1F22" />
+            <Ionicons name="chevron-back" size={28} color="#FFA500" />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.headerTitle}>Organization Details</Text>
@@ -190,7 +190,7 @@ export default function OrganizationForm() {
 
           {/* Organization Type Badge */}
           <View style={styles.orgTypeBadge}>
-            <Ionicons name="business" size={16} color="#3F1F22" />
+            <Ionicons name="business" size={16} color="#FFA500" />
             <Text style={styles.orgTypeText}>{getOrgTypeDisplay()}</Text>
           </View>
 
@@ -351,7 +351,7 @@ export default function OrganizationForm() {
                     setSearchCountry('');
                   }}
                 >
-                  <Ionicons name="close" size={24} color="#3F1F22" />
+                  <Ionicons name="close" size={24} color="#FFA500" />
                 </TouchableOpacity>
               </View>
               
@@ -384,7 +384,7 @@ export default function OrganizationForm() {
                       {country}
                     </Text>
                     {formData.country === country && (
-                      <Ionicons name="checkmark" size={20} color="#3F1F22" />
+                      <Ionicons name="checkmark" size={20} color="#FFA500" />
                     )}
                   </TouchableOpacity>
                 ))}
@@ -409,7 +409,7 @@ export default function OrganizationForm() {
                     setSearchState('');
                   }}
                 >
-                  <Ionicons name="close" size={24} color="#3F1F22" />
+                  <Ionicons name="close" size={24} color="#FFA500" />
                 </TouchableOpacity>
               </View>
               
@@ -443,7 +443,7 @@ export default function OrganizationForm() {
                         {state}
                       </Text>
                       {formData.state === state && (
-                        <Ionicons name="checkmark" size={20} color="#3F1F22" />
+                        <Ionicons name="checkmark" size={20} color="#FFA500" />
                       )}
                     </TouchableOpacity>
                   ))
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   headerSubtitle: {
     fontSize: 12,
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
   orgTypeText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginLeft: 8,
   },
   formSection: {
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginRight: 4,
   },
   required: {
@@ -641,13 +641,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   continueButton: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 18,
     borderRadius: 12,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    shadowColor: '#3F1F22',
+    shadowColor: '#FFA500',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -736,7 +736,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   modalItemTextSelected: {
-    color: '#3F1F22',
+    color: '#B45F00',
     fontWeight: '500',
   },
   emptyState: {

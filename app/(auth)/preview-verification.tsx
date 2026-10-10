@@ -205,7 +205,7 @@ export default function PreviewVerification() {
             onPress={() => router.back()}
             style={styles.backButton}
           >
-            <Ionicons name="chevron-back" size={28} color="#3F1F22" />
+            <Ionicons name="chevron-back" size={28} color="#FFA500" />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.headerTitle}>Preview & Verify</Text>
@@ -233,14 +233,14 @@ export default function PreviewVerification() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleContainer}>
-                <Ionicons name="business" size={20} color="#3F1F22" />
+                <Ionicons name="business" size={20} color="#FFA500" />
                 <Text style={styles.sectionTitle}>Organization Information</Text>
               </View>
               <TouchableOpacity 
                 style={styles.editButton}
                 onPress={() => handleEdit('organization')}
               >
-                <Ionicons name="create-outline" size={20} color="#3F1F22" />
+                <Ionicons name="create-outline" size={20} color="#FFA500" />
                 <Text style={styles.editButtonText}>Edit</Text>
               </TouchableOpacity>
             </View>
@@ -259,14 +259,14 @@ export default function PreviewVerification() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleContainer}>
-                <Ionicons name="person" size={20} color="#3F1F22" />
+                <Ionicons name="person" size={20} color="#FFA500" />
                 <Text style={styles.sectionTitle}>Administrator Information</Text>
               </View>
               <TouchableOpacity 
                 style={styles.editButton}
                 onPress={() => handleEdit('user')}
               >
-                <Ionicons name="create-outline" size={20} color="#3F1F22" />
+                <Ionicons name="create-outline" size={20} color="#FFA500" />
                 <Text style={styles.editButtonText}>Edit</Text>
               </TouchableOpacity>
             </View>
@@ -285,14 +285,14 @@ export default function PreviewVerification() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionTitleContainer}>
-                  <Ionicons name="church" size={20} color="#3F1F22" />
+                  <Ionicons name="church" size={20} color="#FFA500" />
                   <Text style={styles.sectionTitle}>Church Information</Text>
                 </View>
                 <TouchableOpacity 
                   style={styles.editButton}
                   onPress={() => handleEdit('church')}
                 >
-                  <Ionicons name="create-outline" size={20} color="#3F1F22" />
+                  <Ionicons name="create-outline" size={20} color="#FFA500" />
                   <Text style={styles.editButtonText}>Edit</Text>
                 </TouchableOpacity>
               </View>
@@ -311,14 +311,14 @@ export default function PreviewVerification() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionTitleContainer}>
-                  <Ionicons name="school" size={20} color="#3F1F22" />
+                  <Ionicons name="school" size={20} color="#FFA500" />
                   <Text style={styles.sectionTitle}>School Information</Text>
                 </View>
                 <TouchableOpacity 
                   style={styles.editButton}
                   onPress={() => handleEdit('school')}
                 >
-                  <Ionicons name="create-outline" size={20} color="#3F1F22" />
+                  <Ionicons name="create-outline" size={20} color="#FFA500" />
                   <Text style={styles.editButtonText}>Edit</Text>
                 </TouchableOpacity>
               </View>
@@ -340,14 +340,14 @@ export default function PreviewVerification() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionTitleContainer}>
-                  <Ionicons name="people-circle" size={20} color="#3F1F22" />
+                  <Ionicons name="people-circle" size={20} color="#FFA500" />
                   <Text style={styles.sectionTitle}>Club Information</Text>
                 </View>
                 <TouchableOpacity
                   style={styles.editButton}
                   onPress={() => handleEdit('club')}
                 >
-                  <Ionicons name="create-outline" size={20} color="#3F1F22" />
+                  <Ionicons name="create-outline" size={20} color="#FFA500" />
                   <Text style={styles.editButtonText}>Edit</Text>
                 </TouchableOpacity>
               </View>
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   headerSubtitle: {
     fontSize: 12,
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50',
   },
   stepActive: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
   },
   stepNumber: {
     color: 'white',
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
     maxWidth: 80,
   },
   stepLabelActive: {
-    color: '#3F1F22',
+    color: '#B45F00',
     fontWeight: '600',
   },
   progressLine: {
@@ -566,7 +566,7 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   editButton: {
     flexDirection: 'row',
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
   },
   editButtonText: {
     fontSize: 14,
-    color: '#3F1F22',
+    color: '#B45F00',
     fontWeight: '500',
   },
   infoRow: {
@@ -633,20 +633,20 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: 14,
-    color: '#3F1F22',
+    color: '#B45F00',
     fontWeight: '500',
     flex: 1,
     textAlign: 'right',
   },
   verifyButton: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 18,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 24,
     flexDirection: 'row',
     justifyContent: 'center',
-    shadowColor: '#3F1F22',
+    shadowColor: '#FFA500',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -703,7 +703,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -718,7 +718,7 @@ const styles = StyleSheet.create({
   passwordLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginBottom: 12,
   },
   passwordBox: {
@@ -732,7 +732,7 @@ const styles = StyleSheet.create({
   passwordText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: '#B45F00',
     textAlign: 'center',
     letterSpacing: 1,
   },
@@ -740,14 +740,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 10,
     gap: 8,
   },
   copyButtonText: {
-    color: 'white',
+    color: '#2A1500',
     fontSize: 14,
     fontWeight: '600',
   },

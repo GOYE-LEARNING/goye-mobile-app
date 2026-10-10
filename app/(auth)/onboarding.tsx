@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -106,12 +106,12 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   buttonText: {
-    color: 'white',
+    color: '#2A1500',
     fontSize: 16,
     fontWeight: '600',
   },
   buttonTextTwo: {
-    color: '#3F1F22',
+    color: '#B45F00',
     fontSize: 16,
     fontWeight: '600',
   }

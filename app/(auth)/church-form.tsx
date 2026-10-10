@@ -150,7 +150,7 @@ export default function ChurchForm() {
             onPress={() => router.back()}
             style={styles.backButton}
           >
-            <Ionicons name="chevron-back" size={28} color="#3F1F22" />
+            <Ionicons name="chevron-back" size={28} color="#FFA500" />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.headerTitle}>Church Information</Text>
@@ -173,7 +173,7 @@ export default function ChurchForm() {
 
           {/* Church Badge */}
           <View style={styles.churchBadge}>
-            <Ionicons name="church" size={20} color="#3F1F22" />
+            <Ionicons name="church" size={20} color="#FFA500" />
             <Text style={styles.churchBadgeText}>Church Ministry</Text>
           </View>
 
@@ -317,7 +317,7 @@ export default function ChurchForm() {
                       style={[styles.actionButton, styles.changeButton]}
                       onPress={pickImage}
                     >
-                      <Ionicons name="refresh" size={16} color="#3F1F22" />
+                      <Ionicons name="refresh" size={16} color="#FFA500" />
                       <Text style={styles.changeButtonText}>Change Logo</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
@@ -335,7 +335,7 @@ export default function ChurchForm() {
                   onPress={pickImage}
                 >
                   <View style={styles.uploadIconContainer}>
-                    <Ionicons name="cloud-upload-outline" size={32} color="#3F1F22" />
+                    <Ionicons name="cloud-upload-outline" size={32} color="#FFA500" />
                   </View>
                   <Text style={styles.uploadText}>Upload Church Logo</Text>
                   <Text style={styles.uploadSubtext}>
@@ -387,7 +387,7 @@ export default function ChurchForm() {
                     setSearchRole('');
                   }}
                 >
-                  <Ionicons name="close" size={24} color="#3F1F22" />
+                  <Ionicons name="close" size={24} color="#FFA500" />
                 </TouchableOpacity>
               </View>
               
@@ -414,7 +414,7 @@ export default function ChurchForm() {
                     onPress={() => handleSelectRole(role)}
                   >
                     <View style={styles.modalItemContent}>
-                      <Ionicons name="person-circle-outline" size={20} color="#3F1F22" style={styles.modalItemIcon} />
+                      <Ionicons name="person-circle-outline" size={20} color="#FFA500" style={styles.modalItemIcon} />
                       <Text style={[
                         styles.modalItemText,
                         formData.leadershipRole === role && styles.modalItemTextSelected
@@ -423,7 +423,7 @@ export default function ChurchForm() {
                       </Text>
                     </View>
                     {formData.leadershipRole === role && (
-                      <Ionicons name="checkmark" size={20} color="#3F1F22" />
+                      <Ionicons name="checkmark" size={20} color="#FFA500" />
                     )}
                   </TouchableOpacity>
                 ))}
@@ -448,7 +448,7 @@ export default function ChurchForm() {
                     setSearchSchedule('');
                   }}
                 >
-                  <Ionicons name="close" size={24} color="#3F1F22" />
+                  <Ionicons name="close" size={24} color="#FFA500" />
                 </TouchableOpacity>
               </View>
               
@@ -480,7 +480,7 @@ export default function ChurchForm() {
                     onPress={() => handleSelectSchedule(schedule)}
                   >
                     <View style={styles.modalItemContent}>
-                      <Ionicons name="calendar-outline" size={20} color="#3F1F22" style={styles.modalItemIcon} />
+                      <Ionicons name="calendar-outline" size={20} color="#FFA500" style={styles.modalItemIcon} />
                       <Text style={[
                         styles.modalItemText,
                         formData.weeklyService === schedule && styles.modalItemTextSelected
@@ -489,7 +489,7 @@ export default function ChurchForm() {
                       </Text>
                     </View>
                     {formData.weeklyService === schedule && (
-                      <Ionicons name="checkmark" size={20} color="#3F1F22" />
+                      <Ionicons name="checkmark" size={20} color="#FFA500" />
                     )}
                   </TouchableOpacity>
                 ))}
@@ -502,7 +502,7 @@ export default function ChurchForm() {
                     setSearchSchedule('');
                   }}
                 >
-                  <Ionicons name="add-circle-outline" size={24} color="#3F1F22" />
+                  <Ionicons name="add-circle-outline" size={24} color="#FFA500" />
                   <Text style={styles.customScheduleText}>Enter custom schedule</Text>
                 </TouchableOpacity>
               </ScrollView>
@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   headerSubtitle: {
     fontSize: 12,
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
   churchBadgeText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginLeft: 8,
   },
   formSection: {
@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginRight: 4,
   },
   required: {
@@ -737,12 +737,12 @@ const styles = StyleSheet.create({
   },
   changeButton: {
     backgroundColor: 'white',
-    borderColor: '#3F1F22',
+    borderColor: '#FFA500',
   },
   changeButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   removeButton: {
     backgroundColor: 'white',
@@ -777,7 +777,7 @@ const styles = StyleSheet.create({
   uploadText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginBottom: 4,
     textAlign: 'center',
   },
@@ -804,13 +804,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   continueButton: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 18,
     borderRadius: 12,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    shadowColor: '#3F1F22',
+    shadowColor: '#FFA500',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -922,7 +922,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   modalItemTextSelected: {
-    color: '#3F1F22',
+    color: '#B45F00',
     fontWeight: '500',
   },
   customScheduleOption: {
@@ -936,7 +936,7 @@ const styles = StyleSheet.create({
   },
   customScheduleText: {
     fontSize: 16,
-    color: '#3F1F22',
+    color: '#B45F00',
     fontWeight: '500',
     marginLeft: 12,
   },

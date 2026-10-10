@@ -140,7 +140,7 @@ export default function AddMaterial() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Add Material</Text>
         <TouchableOpacity onPress={handleSave} disabled={saving}>
-          {saving ? <ActivityIndicator size="small" color="#3F1F22" /> : <Text style={styles.saveButton}>Save</Text>}
+          {saving ? <ActivityIndicator size="small" color="#FFA500" /> : <Text style={styles.saveButton}>Save</Text>}
         </TouchableOpacity>
       </View>
 
@@ -186,7 +186,7 @@ export default function AddMaterial() {
           <Text style={styles.label}>Document</Text>
           {documentUri ? (
             <View style={styles.documentPreview}>
-              <Ionicons name="document-text" size={32} color="#3F1F22" />
+              <Ionicons name="document-text" size={32} color="#FFA500" />
               <View style={styles.documentDetails}>
                 <Text style={styles.documentName} numberOfLines={1}>{documentName}</Text>
               </View>
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f0f0f0',
   },
   headerTitle: { fontSize: 18, fontWeight: '600', color: '#333' },
-  saveButton: { fontSize: 16, fontWeight: '600', color: '#3F1F22' },
+  saveButton: { fontSize: 16, fontWeight: '600', color: '#B45F00' },
   content: { flex: 1, padding: 20 },
   field: { marginBottom: 20 },
   label: { fontSize: 13, fontWeight: '500', color: '#666', marginBottom: 8 },

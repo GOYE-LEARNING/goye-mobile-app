@@ -15,21 +15,21 @@ export default function OrganizationType() {
       label: 'Church', 
       icon: 'church', 
       description: 'Religious congregation or parish',
-      color: '#3F1F22'
+      color: '#B45F00'
     },
     { 
       id: 'school', 
       label: 'School', 
       icon: 'school', 
       description: 'Educational institution',
-      color: '#3F1F22'
+      color: '#B45F00'
     },
     { 
       id: 'club', 
       label: 'Community Club', 
       icon: 'people-circle', 
       description: 'Group or community organization',
-      color: '#3F1F22'
+      color: '#B45F00'
     },
   ];
 
@@ -58,7 +58,7 @@ export default function OrganizationType() {
             onPress={() => router.back()}
             style={styles.backButton}
           >
-            <Ionicons name="chevron-back" size={28} color="#3F1F22" />
+            <Ionicons name="chevron-back" size={28} color="#FFA500" />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.headerTitle}>Organization Type</Text>
@@ -98,7 +98,7 @@ export default function OrganizationType() {
                     <Ionicons 
                       name={type.icon} 
                       size={32} 
-                      color={selectedType === type.id ? '#FFFFFF' : '#3F1F22'} 
+                      color={selectedType === type.id ? '#2A1500' : '#FFA500'} 
                     />
                   </View>
                   
@@ -242,9 +242,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   typeCardSelected: {
-    borderColor: '#3F1F22',
+    borderColor: '#FFA500',
     backgroundColor: 'rgba(255, 245, 245, 0.95)',
-    shadowColor: '#3F1F22',
+    shadowColor: '#FFA500',
     shadowOpacity: 0.1,
   },
   typeCardContent: {
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   typeLabel: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#3F1F22',
+    color: '#B45F00',
     marginBottom: 4,
   },
   typeDescription: {
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   radioOuterSelected: {
-    borderColor: '#3F1F22',
+    borderColor: '#FFA500',
   },
   radioInner: {
     width: 12,
@@ -304,13 +304,13 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   continueButton: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    shadowColor: '#3F1F22',
+    shadowColor: '#FFA500',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,

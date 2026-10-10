@@ -234,7 +234,7 @@ export default function EditProfileOrg() {
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#3F1F22" />
+          <ActivityIndicator size="large" color="#FFA500" />
           <Text style={styles.loadingText}>Loading profile...</Text>
         </View>
         {AlertComponent}
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
     marginTop: 16, marginBottom: 12,
     paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: '#f0f0f0',
   },
-  sectionHeaderText: { fontSize: 15, fontWeight: '700', color: '#3F1F22' },
+  sectionHeaderText: { fontSize: 15, fontWeight: '700', color: '#B45F00' },
   inputGroup: { marginBottom: 20 },
   label: { fontSize: 12, color: '#999', marginBottom: 8 },
   input: { borderWidth: 1, borderColor: '#E0E0E0', padding: 16, fontSize: 16, color: '#333' },
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
     padding: 20, backgroundColor: '#fff',
     borderTopWidth: 1, borderTopColor: '#f0f0f0',
   },
-  saveButton: { backgroundColor: '#3F1F22', paddingVertical: 16, borderRadius: 8, alignItems: 'center' },
+  saveButton: { backgroundColor: '#FFA500', paddingVertical: 16, borderRadius: 8, alignItems: 'center' },
   saveButtonDisabled: { backgroundColor: '#9B8A8B' },
-  saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  saveButtonText: { color: '#2A1500', fontSize: 16, fontWeight: '600' },
 });

@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFA500',
   },
   loginButton: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
   },
   barButtonText: {
     fontSize: 13,

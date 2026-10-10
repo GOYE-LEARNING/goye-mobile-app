@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
   },
   otpBoxFilled: {
-    borderColor: '#3F1F22',
+    borderColor: '#FFA500',
     backgroundColor: 'white',
   },
   resendText: {
@@ -210,11 +210,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   timer: {
-    color: '#3F1F22',
+    color: '#B45F00',
     fontWeight: '600',
   },
   button: {
-    backgroundColor: '#3F1F22',
+    backgroundColor: '#FFA500',
     paddingVertical: 16,
     alignItems: 'center',
     width: '100%',
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buttonText: {
-    color: 'white',
+    color: '#2A1500',
     fontSize: 16,
     fontWeight: '600',
   },
