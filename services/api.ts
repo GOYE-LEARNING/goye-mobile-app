@@ -1337,7 +1337,7 @@ export const generateCertificate = async (
     console.log('[Certificate] generate:', result);
 
     if (!response.ok) {
-      throw new Error(result.message || `HTTP error! status: ${response.status}`);
+      throw new Error(result.error || result.message || `HTTP error! status: ${response.status}`);
     }
 
     return result;
@@ -1363,7 +1363,7 @@ export const getUserCertificates = async (
     console.log('[Certificate] user/certificates:', result);
 
     if (!response.ok) {
-      throw new Error(result.message || `HTTP error! status: ${response.status}`);
+      throw new Error(result.error || result.message || `HTTP error! status: ${response.status}`);
     }
 
     return result;

@@ -1,12 +1,13 @@
 // app/(tabs)/spiritual-growth.tsx
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { useTheme, lightColors } from '@/contexts/ThemeContext';
-import { getGrowthByProgressId, getUserCertificates } from '@/services/api';
+import { getGrowthByProgressId, getUserCertificates, generateCertificate } from '@/services/api';
+import CertificateGallery from '@/components/certificates/CertificateGallery';
 import { useTranslation } from 'react-i18next';
 import { useAlert } from '@/hooks/useAlert';
 
@@ -37,6 +38,9 @@ export default function SpiritualGrowth() {
   const [growthData, setGrowthData] = useState<any>(null);
   const [certificates, setCertificates] = useState<any[]>([]);
   const [loadingCertificates, setLoadingCertificates] = useState(false);
+  const [certError, setCertError] = useState(false);
+  const [generatingCourseId, setGeneratingCourseId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Fetch growth data using progressId from params
   useEffect(() => {
@@ -71,6 +75,7 @@ export default function SpiritualGrowth() {
   const fetchCertificates = async () => {
     if (!token) return;
     setLoadingCertificates(true);
+    setCertError(false);
     try {
       const result = await getUserCertificates(token);
       if (result?.data) {
@@ -82,32 +87,34 @@ export default function SpiritualGrowth() {
       }
     } catch (err: any) {
       console.error('[Certificates] fetch error:', err);
-      setCertificates([]);
+      setCertError(true);
     } finally {
       setLoadingCertificates(false);
     }
   };
 
-  const handleViewCertificate = (cert: any) => {
-    const certUrl = cert.url || cert.certificate_url;
-    alert(
-      t('home.growth.certificateDetailsTitle'),
-      `${t('home.growth.courseLabel')}: ${cert.courseTitle || cert.course_title || t('home.growth.defaultCertificateTitle')}\n` +
-      `${t('home.growth.issuedLabel')}: ${new Date(cert.issuedAt || cert.createdAt || Date.now()).toLocaleDateString()}\n` +
-      `${t('home.growth.idLabel')}: ${cert.id || cert._id || 'N/A'}`,
-      [
-        { text: t('home.growth.close'), style: 'cancel' },
-        ...(certUrl ? [{
-          text: t('home.growth.viewPdf'),
-          onPress: () => {
-            Linking.openURL(certUrl).catch(err => {
-              console.error('Error opening URL:', err);
-              alert(t('common.error'), t('home.growth.couldNotOpenCertificate'));
-            });
-          }
-        }] : [])
-      ]
-    );
+  // For a completed course whose certificate was not issued automatically.
+  const handleGenerateCertificate = async (courseId: string) => {
+    if (!token) return;
+    setGeneratingCourseId(courseId);
+    try {
+      await generateCertificate(token, { courseId } as any);
+      await fetchCertificates();
+    } catch (err: any) {
+      alert(t('common.error'), err?.message || t('home.growth.couldNotGenerateCertificate', { defaultValue: 'Could not generate the certificate. Please try again.' }));
+    } finally {
+      setGeneratingCourseId(null);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      if (activeTab === 'certificates') await fetchCertificates();
+      else if (params.progressId) await fetchGrowthData(params.progressId);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   // Extract data from the growth response
@@ -198,7 +205,10 @@ export default function SpiritualGrowth() {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />}
+      >
         {/* Progress Overview Card */}
         <View style={s.progressCard}>
           <View style={s.progressHeader}>
@@ -350,6 +360,19 @@ export default function SpiritualGrowth() {
                 <ActivityIndicator size="small" color={colors.brand} />
                 <Text style={s.loadingText}>{t('home.growth.loadingCertificates')}</Text>
               </View>
+            ) : certError && certificates.length === 0 ? (
+              <View style={s.emptyState}>
+                <Ionicons name="cloud-offline-outline" size={48} color={colors.textMuted} />
+                <Text style={s.emptyText}>
+                  {t('home.growth.certificatesLoadFailed', { defaultValue: "Couldn't load your certificates" })}
+                </Text>
+                <Text style={s.emptySubText}>
+                  {t('home.growth.checkConnection', { defaultValue: 'Check your connection and try again.' })}
+                </Text>
+                <TouchableOpacity style={s.browseButton} onPress={fetchCertificates}>
+                  <Text style={s.browseButtonText}>{t('home.growth.retry', { defaultValue: 'Try again' })}</Text>
+                </TouchableOpacity>
+              </View>
             ) : certificates.length === 0 ? (
               <View style={s.emptyState}>
                 <Ionicons name="ribbon-outline" size={48} color={colors.textMuted} />
@@ -366,6 +389,17 @@ export default function SpiritualGrowth() {
                         <View style={s.pendingBadge}>
                           <Text style={s.pendingBadgeText}>{t('home.growth.pending')}</Text>
                         </View>
+                        <TouchableOpacity
+                          style={s.generateButton}
+                          onPress={() => handleGenerateCertificate(course.courseId)}
+                          disabled={generatingCourseId === course.courseId}
+                        >
+                          {generatingCourseId === course.courseId ? (
+                            <ActivityIndicator size="small" color="#2A1500" />
+                          ) : (
+                            <Text style={s.generateButtonText}>{t('home.growth.getCertificate', { defaultValue: 'Get certificate' })}</Text>
+                          )}
+                        </TouchableOpacity>
                       </View>
                     ))}
                     <Text style={s.certificatePendingText}>
@@ -389,31 +423,7 @@ export default function SpiritualGrowth() {
                   </Text>
                 </View>
                 
-                {certificates.map((cert: any) => (
-                  <TouchableOpacity 
-                    key={cert.id || cert._id} 
-                    style={s.certificateCard}
-                    onPress={() => handleViewCertificate(cert)}
-                  >
-                    <View style={s.certificateIconContainer}>
-                      <Ionicons name="ribbon" size={32} color={colors.brand} />
-                    </View>
-                    <View style={s.certificateInfo}>
-                      <Text style={s.certificateTitle}>
-                        {cert.courseTitle || cert.course_title || t('home.growth.defaultCertificateTitle')}
-                      </Text>
-                      <Text style={s.certificateSubtitle}>
-                        {t('home.growth.issuedLabel')}: {new Date(cert.issuedAt || cert.createdAt || Date.now()).toLocaleDateString('en-US', {
-                          month: 'long', day: 'numeric', year: 'numeric',
-                        })}
-                      </Text>
-                      {cert.credentialId && (
-                        <Text style={s.certificateId}>{t('home.growth.idLabel')}: {cert.credentialId}</Text>
-                      )}
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-                  </TouchableOpacity>
-                ))}
+                <CertificateGallery certificates={certificates} />
               </View>
             )}
           </View>
@@ -762,6 +772,16 @@ function makeStyles(c: typeof lightColors) {
       fontStyle: 'italic',
       textAlign: 'center',
     },
+    generateButton: {
+      backgroundColor: '#FFA500',
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      marginLeft: 8,
+      minWidth: 84,
+      alignItems: 'center',
+    },
+    generateButtonText: { color: '#2A1500', fontSize: 12, fontWeight: '700' },
     browseButton: { 
       backgroundColor: c.brand, 
       paddingHorizontal: 24, 
