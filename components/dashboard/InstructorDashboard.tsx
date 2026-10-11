@@ -16,6 +16,7 @@ import {
   getOrgCoursesWithStats
 } from '@/services/api';
 import { NotificationBadge } from '@/components/NotificationBadge';
+import AnnouncementBanner from '@/components/dashboard/AnnouncementBanner';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useTranslation } from 'react-i18next';
 import {
@@ -305,6 +306,8 @@ export default function InstructorDashboard() {
         </View>
 
         <ScrollView style={s.content} showsVerticalScrollIndicator={false}>
+          <AnnouncementBanner />
+
           {/* Dashboard Title */}
           <Text style={s.dashboardTitle}>Organization Analytics</Text>
 
