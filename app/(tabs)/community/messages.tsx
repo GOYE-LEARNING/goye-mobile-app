@@ -18,8 +18,9 @@ import {
 } from '@/services/api';
 import { getImageUri } from '@/utils/helpers';
 import { io, Socket } from 'socket.io-client';
+import { SERVER_ORIGIN } from '@/constants/config';
 
-const SOCKET_URL = 'https://goye-platform-backend.onrender.com';
+const SOCKET_URL = SERVER_ORIGIN;
 type Tab = 'inbox' | 'people';
 
 export default function MessagesScreen() {

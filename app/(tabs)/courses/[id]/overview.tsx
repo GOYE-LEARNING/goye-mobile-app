@@ -22,6 +22,7 @@ import {
 import { getImageUri, getVideoUri } from '@/utils/helpers';
 import { useTranslation } from 'react-i18next';
 import { useAlert } from '@/hooks/useAlert';
+import { API_CONFIG } from '@/constants/config';
 
 export default function CourseOverview() {
   const params = useLocalSearchParams();
@@ -459,7 +460,7 @@ export default function CourseOverview() {
         onPress: async () => {
           try {
             const response = await fetch(
-              `https://goye-platform-backend.onrender.com/api/course/delete-course/${params.id}`,
+              `${API_CONFIG.BASE_URL}/course/delete-course/${params.id}`,
               {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
