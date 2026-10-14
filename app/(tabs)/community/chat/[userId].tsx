@@ -25,8 +25,9 @@ import {
 import { getImageUri } from "@/utils/helpers";
 import { io, Socket } from "socket.io-client";
 import { useAlert } from "@/hooks/useAlert";
+import { SERVER_ORIGIN } from "@/constants/config";
 
-const SOCKET_URL = "https://goye-platform-backend.onrender.com";
+const SOCKET_URL = SERVER_ORIGIN;
 
 interface Message {
   id: string;
@@ -153,7 +154,7 @@ export default function ChatRoom() {
       console.log("[Socket] 🔑 Fetching socket token...");
 
       // Option 1: Try to get a dedicated socket token from the API
-      const API_URL = "https://goye-platform-backend.onrender.com";
+      const API_URL = SERVER_ORIGIN;
       const response = await fetch(`${API_URL}/api/user/socket-token`, {
         method: "GET",
         headers: {
