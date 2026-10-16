@@ -23,6 +23,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   scheme: "goyemobileapp",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
+  // Over-the-air updates: a JS-only fix can be published with `eas update --channel production`
+  // and reaches every installed build with the same runtimeVersion. Bump `version` above whenever
+  // native code or native config changes, so an update never lands on an incompatible build.
+  runtimeVersion: { policy: "appVersion" },
+  updates: {
+    url: "https://u.expo.dev/c505a171-7492-4cf4-80a7-c651288a2cc7",
+    requestHeaders: { "expo-channel-name": "production" },
+    checkAutomatically: "ON_LOAD",
+    fallbackToCacheTimeout: 0,
+  },
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.goye.app",
@@ -32,6 +42,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.goye.app",
+    versionCode: 18,
     googleServicesFile:
       process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
     adaptiveIcon: {
