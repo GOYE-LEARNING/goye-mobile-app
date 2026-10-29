@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 
+
 export default function QuizReview() {
   const params = useLocalSearchParams();
   const {
@@ -27,14 +28,18 @@ export default function QuizReview() {
     questions: [] as { id: number; isCorrect: boolean }[]
   });
 
+
+
   useEffect(() => {
     // Convert URL params to actual data
+
     const score = parseInt(scoreParam as string) || 0;
     const correctAnswers = parseInt(correctCountParam as string) || 0;
     const totalQuestions = parseInt(totalQuestionsParam as string) || 0;
     const passed = passedParam === 'true';
     const incorrectAnswers = totalQuestions - correctAnswers;
 
+    
     // Real per-question results from the submission, not a guess.
     let realAnswers: { correct: boolean }[] = [];
     try {

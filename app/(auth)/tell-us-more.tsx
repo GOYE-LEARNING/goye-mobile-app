@@ -1,7 +1,6 @@
 // app/(auth)/tell-us-more.tsx
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Modal, ActivityIndicator } from 'react-native';
 import { useSignUp } from '@/contexts/SignUpContext';
-import { useUser } from '@/contexts/UserContext';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { router } from 'expo-router';
@@ -51,7 +50,6 @@ const LEVEL_API: Record<string, string> = { beginner: 'Beginners', intermediate:
 export default function TellUsMore() {
   const { alert, AlertComponent } = useAlert();
   const { data, setField } = useSignUp();
-  const { setUser } = useUser();
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [country, setCountry] = useState('');
@@ -140,7 +138,7 @@ export default function TellUsMore() {
 
       if (data.isGoogleAuth) {
         // ─── Google Sign Up ───────────────────────────────────────────
-        const result = await completeProfile(data.googleToken, {
+        await completeProfile(data.googleToken, {
           first_name: data.firstName,
           last_name: data.lastName,
           password: data.password,
@@ -154,12 +152,12 @@ export default function TellUsMore() {
           ...tutorFields(),
         });
 
-        // The server answers { accessToken, refreshToken, data: { user } }.
-        if (result.accessToken && result.data?.user) {
-          await setUser(result.data.user, result.accessToken, result.refreshToken);
-        }
-
-        router.push('/(auth)/success');
+        // NOTE: We intentionally do NOT call setUser() here. The signup/profile
+        // response does not contain the same role/adminRole/accountType fields
+        // that /user/login returns, which made the app open with the wrong
+        // account type. The user now confirms on the success screen and signs
+        // in normally, so UserContext is populated by the correct code path.
+        router.replace('/(auth)/success');
 
       } else {
         // ─── Regular Sign Up ──────────────────────────────────────────
@@ -190,11 +188,7 @@ export default function TellUsMore() {
         const result = await response.json();
 
         if (response.ok) {
-          // The server answers { accessToken, refreshToken, user }. The old code looked for
-          // result.token / result.data, so the login was never saved after signing up.
-          if (result.accessToken && result.user) {
-            await setUser(result.user, result.accessToken, result.refreshToken);
-          }
+          // Previously: setUser(result.user, ...) — removed on purpose (see Google branch note).
 
           setField('country', country);
           setField('state', state);
@@ -202,7 +196,7 @@ export default function TellUsMore() {
           setField('role', role);
           setField('level', level);
 
-          router.push('/(auth)/success');
+          router.replace('/(auth)/success');
 
         } else {
           console.error('❌ Signup failed with status:', response.status);
@@ -268,7 +262,7 @@ export default function TellUsMore() {
   const handleCountryChange = (value: string) => {
     setCountry(value);
     setStateVal('');
-    
+
     const countryData = COUNTRY_CODES.find(item => item.country === value);
     if (countryData) {
       setCountryCode(countryData.code);
@@ -337,8 +331,8 @@ export default function TellUsMore() {
         <View style={styles.content}>
           {step === 0 && (
             <>
-              <TouchableOpacity 
-                style={styles.pickerContainer} 
+              <TouchableOpacity
+                style={styles.pickerContainer}
                 onPress={() => setShowCountryModal(true)}
               >
                 <Text style={[styles.pickerText, !country && styles.placeholderText]}>
@@ -370,7 +364,7 @@ export default function TellUsMore() {
               )}
 
               <View style={styles.phoneContainer}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.countryCodeButton}
                   onPress={() => setShowCountryCodeModal(true)}
                   disabled={loading}
@@ -498,8 +492,8 @@ export default function TellUsMore() {
         </View>
       </ScrollView>
 
-      <TouchableOpacity 
-        style={[styles.button, loading && styles.buttonDisabled]} 
+      <TouchableOpacity
+        style={[styles.button, loading && styles.buttonDisabled]}
         onPress={handleNext}
         disabled={loading}
       >

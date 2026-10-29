@@ -17,13 +17,13 @@ import { useTranslation } from 'react-i18next';
 
 import EventCard from '@/components/community/EventCard';
 import { NotificationBadge } from '@/components/NotificationBadge';
-import AnnouncementBanner from '@/components/dashboard/AnnouncementBanner';
 import { useAlert } from '@/hooks/useAlert';
 import { useUnreadNotificationCount } from '@/hooks/useUnreadNotificationCount';
 import { useSignUp } from '@/contexts/SignUpContext';
 import { useTheme, lightColors } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
 import {
+  getAnnouncementsByAdmin,
   getEnrolledCourses,
   getGrowthByProgressId,
   getStudentGroupEvents,
@@ -72,6 +72,8 @@ export default function Dashboard() {
   const [eventsLoading, setEventsLoading] = useState(false);
   const [enrolledCourse, setEnrolledCourse] = useState<any>(null);
   const [courseLoading, setCourseLoading] = useState(true);
+  const [announcement, setAnnouncement] = useState<{ id: string; title: string; message: string } | null>(null);
+  const [showAnnouncement, setShowAnnouncement] = useState(true);
 
   const s = makeStyles(colors);
 
@@ -92,6 +94,17 @@ export default function Dashboard() {
       console.error('[Dashboard] enrolled course error:', err);
     } finally {
       setCourseLoading(false);
+    }
+  }, [token]);
+
+  const fetchAnnouncement = useCallback(async () => {
+    if (!token) return;
+    try {
+      const result = await getAnnouncementsByAdmin(token);
+      const list = Array.isArray(result?.data) ? result.data : [];
+      if (list.length > 0) setAnnouncement(list[0]);
+    } catch (err) {
+      console.error('[Dashboard] announcement error:', err);
     }
   }, [token]);
 
@@ -185,7 +198,8 @@ export default function Dashboard() {
     fetchEvents();
     checkJourneyStatus();
     fetchEnrolledCourse();
-  }, [fetchEvents, checkJourneyStatus, fetchEnrolledCourse]);
+    fetchAnnouncement();
+  }, [fetchEvents, checkJourneyStatus, fetchEnrolledCourse, fetchAnnouncement]);
 
   // Avatar is refreshed every time the tab gains focus so an upload on the
   // Profile screen is reflected here without a full app reload.
@@ -301,13 +315,31 @@ export default function Dashboard() {
         </TouchableOpacity>
       </View>
 
+
       <View style={s.modalContainer}>
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={s.headerRow}>
             <Text style={s.title}>{t('home.studentDashboard.dashboardTitle')}</Text>
           </View>
 
-          <AnnouncementBanner />
+          {/* Announcement */}
+          {announcement && showAnnouncement && (
+            <View style={s.announcementCard}>
+              <View style={s.announcementTopRow}>
+                <View style={s.announcementLabelRow}>
+                  <Ionicons name="megaphone-outline" size={14} color={colors.success} />
+                  <Text style={s.announcementLabel}>
+                    {t('home.studentDashboard.announcementLabel')}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => setShowAnnouncement(false)}>
+                  <Ionicons name="close" size={18} color={colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+              <Text style={s.announcementTitle}>{announcement.title}</Text>
+              <Text style={s.announcementMessage}>{announcement.message}</Text>
+            </View>
+          )}
 
           {/* My Courses */}
           <View style={s.card}>

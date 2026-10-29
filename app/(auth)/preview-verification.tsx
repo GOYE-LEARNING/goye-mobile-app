@@ -18,7 +18,7 @@ import { useState } from 'react';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { createOrganization } from '@/utils/organizationApi';
 import { useAlert } from '@/hooks/useAlert';
-import { useUser } from '@/contexts/UserContext';
+import { getCurrentLanguage } from '@/lib/i18n';
 
 type EditSection = 'organization' | 'user' | 'church' | 'school' | 'club';
 
@@ -31,7 +31,6 @@ export default function PreviewVerification() {
   const router = useRouter();
   const { alert, AlertComponent } = useAlert();
   const { organizationData } = useOrganization();
-  const { setUser } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState('');
@@ -77,17 +76,11 @@ export default function PreviewVerification() {
     setIsSubmitting(true);
     
     try {
-      const result = await createOrganization(organizationData);
-
+      const result = await createOrganization({
+  ...organizationData,
+  ...getCurrentLanguage(),
+});
       if (result.success) {
-        // A Google-authed owner has no password to see/copy - the backend
-        // already issued real session tokens, so sign them straight in
-        // instead of showing the (non-existent) generated-password modal.
-        if (result.isGoogleSignup) {
-          await setUser(result.data.user, result.data.accessToken, result.data.refreshToken);
-          router.replace('/(tabs)/home');
-          return;
-        }
         // Check if password was generated
         if (result.data.generatedPassword) {
           setGeneratedPassword(result.data.generatedPassword);
@@ -262,7 +255,7 @@ export default function PreviewVerification() {
                 <Ionicons name="person" size={20} color="#FFA500" />
                 <Text style={styles.sectionTitle}>Administrator Information</Text>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.editButton}
                 onPress={() => handleEdit('user')}
               >
@@ -271,6 +264,7 @@ export default function PreviewVerification() {
               </TouchableOpacity>
             </View>
             
+
             <InfoRow label="First Name" value={organizationData.userFirstName || ''} />
             <InfoRow label="Last Name" value={organizationData.userLastName || ''} />
             <InfoRow label="Email Address" value={organizationData.userEmail || ''} />
@@ -329,7 +323,7 @@ export default function PreviewVerification() {
               <InfoRow label="Address" value={organizationData.schoolAddress || ''} />
               <InfoRow label="Admin Name" value={organizationData.adminName || ''} />
               <InfoRow label="Admin Role" value={organizationData.adminRole || ''} />
-              <InfoRow label="Email Domain" value={organizationData.school_email || ''} />
+              <InfoRow label="Email Domain" value={organizationData.emailDomain || ''} />
               <InfoRow label="Website" value={organizationData.schoolWebsite || ''} />
               <InfoRow label="Accreditation Number" value={organizationData.accreditationNumber || ''} />
             </View>

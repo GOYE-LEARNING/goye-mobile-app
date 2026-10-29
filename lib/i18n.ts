@@ -21,6 +21,24 @@ const resources = {
   sw: { translation: sw },
 };
 
+export const languageNames: Record<string, string> = {
+  en: 'English',
+  fr: 'French',
+  ha: 'Hausa',
+  yo: 'Yoruba',
+  ig: 'Igbo',
+  sw: 'Swahili',
+};
+
+export const getCurrentLanguage = () => {
+  const code = (i18n.language || 'en').split('-')[0];
+  const languageCode = code in resources ? code : 'en';
+  return {
+    language: languageNames[languageCode],
+    languageCode,
+  };
+};
+
 export const initI18n = async () => {
   if (i18n.isInitialized) return i18n;
 

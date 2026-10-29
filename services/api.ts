@@ -617,7 +617,7 @@ export const inviteUsersToOrganization = async (
   try {
     const payload = { users };
 
-    const response = await fetchWithAuth(`/organizations/invite-users-to-organization/${organizationId}/${sentByUserId}`, {
+    const response = await fetchWithAuth(`/organizations/invite-users-to-organization/${organizationId}`, {
       method: 'POST',
       body: JSON.stringify(payload),
     }, token);

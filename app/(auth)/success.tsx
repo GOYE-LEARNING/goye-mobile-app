@@ -3,18 +3,18 @@ import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-nati
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useSignUp } from '@/contexts/SignUpContext';
-import { useUser } from '@/contexts/UserContext';
 import { Ionicons } from '@expo/vector-icons';
 
 const { height } = Dimensions.get('window');
 
 export default function Success() {
   const { data } = useSignUp();
-  const { setUser } = useUser();
 
-  // The email was verified before the account was created, so this always goes home.
+  // No session is created during signup anymore — the user signs in on the
+  // login screen, which is the code path that normalises role / adminRole /
+  // accountType correctly.
   const handleContinue = () => {
-    router.replace('/(tabs)/home');
+    router.replace('/(auth)/login');
   };
 
   return (
@@ -22,10 +22,10 @@ export default function Success() {
       <View style={styles.modalContainer}>
         <View style={styles.content}>
           <View style={styles.imageContainer}>
-            <Ionicons 
-              name="checkmark-circle" 
-              size={200} 
-              color="#E8F5E9" 
+            <Ionicons
+              name="checkmark-circle"
+              size={200}
+              color="#E8F5E9"
               style={styles.checkmarkBackground}
             />
             <Image
@@ -34,7 +34,7 @@ export default function Success() {
               contentFit="contain"
             />
           </View>
-          
+
           <Text style={styles.title}>Awesome!</Text>
           <Text style={styles.subtitle}>Your account has been created successfully.</Text>
           <Text style={styles.detail}>Welcome, {data.firstName}!</Text>
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingHorizontal: 20,
     paddingBottom: 40,
-    minHeight: height * 0.9, 
+    minHeight: height * 0.9,
     justifyContent: 'space-between',
   },
   content: {
@@ -78,28 +78,28 @@ const styles = StyleSheet.create({
   },
   checkmarkBackground: {
     position: 'absolute',
-    
+
   },
   illustration: {
     width: 300,
     height: 200,
   },
-  title: { 
-    fontSize: 32, 
-    fontWeight: '700', 
+  title: {
+    fontSize: 32,
+    fontWeight: '700',
     marginBottom: 15,
     textAlign: 'center',
   },
-  subtitle: { 
-    fontSize: 16, 
-    color: '#666', 
-    marginBottom: 15, 
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 15,
     textAlign: 'center',
     lineHeight: 24,
   },
-  detail: { 
-    fontSize: 18, 
-    color: '#B45F00', 
+  detail: {
+    fontSize: 18,
+    color: '#B45F00',
     fontWeight: '600',
   },
   doneButton: {

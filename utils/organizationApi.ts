@@ -10,7 +10,7 @@ export interface OrganizationData {
   state: string;
   yearEstablished: string;
   description: string;
-  
+
   userFirstName: string;
   userLastName: string;
   userEmail: string;
@@ -21,6 +21,10 @@ export interface OrganizationData {
   userFormType: string;
   googleIdToken?: string;
 
+  // Language (required by the server)
+  language?: string;
+  languageCode?: string;
+
   // Church fields
   ministryName?: string;
   leadPastor?: string;
@@ -29,7 +33,7 @@ export interface OrganizationData {
   churchWebsite?: string;
   churchAddress?: string;
   churchLogo?: string | null;
-  
+
   // School fields
   schoolName?: string;
   schoolType?: string;
@@ -40,7 +44,7 @@ export interface OrganizationData {
   schoolWebsite?: string;
   accreditationNumber?: string;
   schoolDocument?: string | null;
-  
+
   // Club fields
   clubName?: string;
   clubType?: string;
@@ -66,6 +70,10 @@ export const formatOrganizationDataForAPI = (data: OrganizationData) => {
     organization_description: data.description,
     organization_role: data.userRole || 'admin',
     organization_year: data.yearEstablished,
+
+    // Required by the server validation
+    language: data.language || 'English',
+    languageCode: data.languageCode || 'en',
 
     // A Google signup derives the owner's name/email from the verified
     // Google token server-side instead of these form fields (which are
@@ -123,7 +131,7 @@ export const formatOrganizationDataForAPI = (data: OrganizationData) => {
   return payload;
 };
 
-// NEW: Generate password for organization
+// Generate password for organization
 export const generateOrganizationPassword = async (organizationId: string) => {
   try {
     const response = await fetch(
@@ -155,10 +163,35 @@ export const generateOrganizationPassword = async (organizationId: string) => {
   }
 };
 
+// Turns the server's validation details into readable lines.
+// Supports { fields: { "body.x": { message } } } and { errors: [...] }.
+const formatValidationDetails = (responseData: any): string => {
+  if (responseData?.fields && typeof responseData.fields === 'object') {
+    return Object.entries(responseData.fields)
+      .map(([key, val]: [string, any]) => {
+        const name = key.replace(/^body\./, '');
+        return `${name}: ${val?.message || 'invalid'}`;
+      })
+      .join('\n');
+  }
+
+  if (Array.isArray(responseData?.errors)) {
+    return responseData.errors
+      .map((e: any) =>
+        typeof e === 'string'
+          ? e
+          : `${e.field || e.path || ''}: ${e.message || e.msg || ''}`
+      )
+      .join('\n');
+  }
+
+  return '';
+};
+
 export const createOrganization = async (data: OrganizationData) => {
   try {
     const payload = formatOrganizationDataForAPI(data);
-    
+
     // Convert any file URIs to base64 if they exist
     if (data.organizationType === 'school' && data.schoolDocument) {
       await convertFileToBase64IfNeeded(payload, data.schoolDocument, 'school_document');
@@ -169,7 +202,7 @@ export const createOrganization = async (data: OrganizationData) => {
     if (data.organizationType === 'church' && data.churchLogo) {
       await convertFileToBase64IfNeeded(payload, data.churchLogo, 'church_logo');
     }
-    
+
     const isGoogleSignup = !!data.googleIdToken;
     const response = await fetch(
       `${API_CONFIG.BASE_URL}/organizations/auth/${isGoogleSignup ? 'create-organization-google' : 'create-organization'}`,
@@ -194,10 +227,16 @@ export const createOrganization = async (data: OrganizationData) => {
     }
 
     if (!response.ok) {
-      throw new Error(responseData.message || `HTTP ${response.status}: Failed to create organization`);
+      console.log('Server response:', JSON.stringify(responseData, null, 2));
+
+      const details = formatValidationDetails(responseData);
+      const baseMessage =
+        responseData.message || `HTTP ${response.status}: Failed to create organization`;
+
+      throw new Error(details ? `${baseMessage}\n${details}` : baseMessage);
     }
 
-    // FIXED: Extract organization ID from the correct location
+    // Extract organization ID from the correct location
     const organizationId = responseData.data?.id ||
                           responseData.organizationId ||
                           responseData.id ||
@@ -223,7 +262,7 @@ export const createOrganization = async (data: OrganizationData) => {
 
     // Generate password
     const passwordResult = await generateOrganizationPassword(organizationId);
-    
+
     if (!passwordResult.success) {
       console.error('Failed to generate password:', passwordResult.error);
       // Still return success for organization creation, but flag password issue
@@ -259,7 +298,7 @@ const convertFileToBase64IfNeeded = async (payload: any, fileUri: string, fieldN
     if (fileUri.startsWith('file://')) {
       const response = await fetch(fileUri);
       const blob = await response.blob();
-      
+
       // Convert blob to base64
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -267,7 +306,7 @@ const convertFileToBase64IfNeeded = async (payload: any, fileUri: string, fieldN
         reader.onerror = reject;
         reader.readAsDataURL(blob);
       });
-      
+
       // Update the payload
       if (payload.school && fieldName === 'school_document') {
         payload.school.school_document = base64;

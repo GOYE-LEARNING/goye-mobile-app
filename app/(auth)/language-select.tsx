@@ -13,7 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useSignUp } from '@/contexts/SignUpContext';
-import { changeAppLanguage } from '@/lib/i18n';
+import { changeAppLanguage  } from '@/lib/i18n';
 
 const HAS_ONBOARDED_LANGUAGE_KEY = '@has_selected_language';
 
